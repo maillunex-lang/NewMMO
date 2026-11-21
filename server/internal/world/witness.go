@@ -33,6 +33,7 @@ type witnessFight struct {
 	safe       []Rect2
 	broken     map[string]bool
 	reinforced bool
+	circle     sectorCast
 }
 
 func (s *Sim) setupWitness(def WitnessDef, cat *combatdata.Catalog) error {
@@ -77,6 +78,9 @@ func (s *Sim) stepWitness(boss *Entity) bool {
 	w := s.witness
 	if w == nil || w.boss != boss.ID {
 		return false
+	}
+	if s.stepBrokenCircle(boss) {
+		return true
 	}
 	if w.deadline != 0 {
 		if s.tick >= w.deadline {
