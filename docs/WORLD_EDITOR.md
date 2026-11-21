@@ -27,4 +27,6 @@ Moving visual objects does not automatically change authoritative collision, nav
 
 ## Next iterations
 
-TileMapLayer terrain painting, reusable collision footprints, navigation baking, sprite asset catalog thumbnails, multi-place brush, map validation, controlled server export, Manual-safe regeneration tests.
+**EX-W01 (scheduled):** hybrid location generator — see `docs/director/LOCATION_GENERATOR_PLAN.md`. Generate into `Generated/*`; you keep editing details in this Godot project on your PC; Manual-safe regen is a hard acceptance gate.
+
+Also queued: TileMapLayer terrain painting, reusable collision footprints, navigation baking, sprite asset catalog thumbnails, multi-place brush, map validation, controlled server export.

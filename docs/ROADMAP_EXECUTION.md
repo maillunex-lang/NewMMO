@@ -43,7 +43,7 @@
 | DONE-A | Baseline audits | `docs/AUDIT_BASELINE.md` (+ legacy `AUDIT.md`, `AUDIT_CONTENT_SYNC.md`) | [x] EX-P00 |
 | DONE-B | Stage 1 visual slice | Dawn Valley `.tscn`, joystick/HUD, World Studio, procedural art | [x] `5846c1a` era / на `main` |
 | DONE-C | Agent process rules | `AGENTS.md`, `.cursor/rules/open-source-research.mdc` | [x] |
-| DONE-D | Location procgen research + decision D | `docs/research/location-procgen-isometric.md` — генератор отложен | [x] |
+| DONE-D | Location procgen research + decision D | `docs/research/location-procgen-isometric.md` — было отложено; **перепланировано → EX-W01** (owner 2026-11-21) | [x] |
 | DONE-E | MQ-01-01…05 local runtime | `client/data/quests/*`, `dialogues/*`, NPC-802/102, `mq01_smoke.gd` | [x] `11d48ca` — **локальный stub, не Go/Postgres** |
 | DONE-F | Canon files 01–14 on main | `docs/content/*.md` | [x] через `efe1c7b` |
 
@@ -191,6 +191,19 @@
 **Тесты:** CT-009, CT-017 + PG inventory + ONLINE_SMOKE inventory panel  
 **Статус:** [~] bag+server inventory done; loot/equip remain
 
+### EX-W01 — Hybrid location generator (editable `.tscn` in Godot)
+**Зависит от:** DONE-D research ✔; Godot 4.7.2 ✔; World Studio ✔  
+**План:** `docs/director/LOCATION_GENERATOR_PLAN.md`  
+**Смысл:** seed заполняет `Generated/*`; владелец на ПК в Godot двигает/ставит детали; regen **не** затирает `Manual/*`.  
+**Приёмка:**
+- [ ] контракт слоёв/seed (`location-generator.md`)
+- [ ] выбор инструмента (in-house / WFC / Gaea) — **OSS только после OK владельца**
+- [ ] generate одной локации (Dawn Valley / LOC-01 scale) в `.tscn`
+- [ ] тест: Manual дерево не исчезает после regen; сцена открывается и правится в Godot 4.7.2
+- [ ] генерация **только в редакторе** (не runtime Android)  
+**Старт:** по «делай генератор» или после играбельного куска EX-P08 (можно параллельно с P09, если не конфликтуют файлы)  
+**Статус:** [ ] запланирован (не начат)
+
 ### EX-P09 — First dungeon `DNG-01-001`
 **Зависит от:** EX-P08 (базовый бой/лут), `12_DUNGEONS.md`  
 **OSS research:** Godot dungeon instance patterns — ждать ОК  
@@ -301,8 +314,8 @@
 ## Актуальный handoff для Cursor-директора (2026-11-21)
 
 - **Завершено:** EX-P00–P03, T-018 REST auth, T-019 WebSocket (PR #2), T-020 quest engine (PR #3, `4461aa7`), T-022 login UI, T-015 Godot 4.7.2; EX-CONTENT-01 pilot интегрирован.
-- **Текущий этап:** EX-P08 [~]. **Стоп:** T-030 merged (`23fe4cc`). **Далее при возобновлении:** combat loot / equip; then EX-P09 dungeon.
-- **Не завершено:** live E2E against running Go server (manual/env), R-PROX (S-02), Android device measurements, EX-P08 loot/equip, EX-P09–P13. Не отмечать их `[x]` по наличию stub или документации.
+- **Текущий этап:** EX-P08 [~]. **Стоп:** T-030 merged (`23fe4cc`). **Далее при возобновлении:** combat loot / equip; then EX-P09 dungeon. **Параллельный трек:** EX-W01 location generator (запланирован, не начат) — `LOCATION_GENERATOR_PLAN.md`.
+- **Не завершено:** live E2E against running Go server (manual/env), R-PROX (S-02), Android device measurements, EX-P08 loot/equip, EX-W01 generator, EX-P09–P13. Не отмечать их `[x]` по наличию stub или документации.
 - **Рабочие масштабы локаций:** деревня 200×200 м, город 500×500 м, открытая зона 1000×1000 м, большая дикая 1500×1500 м, подземелье 150–400 м маршрута; источник `docs/content/03_LOCATIONS.md`, предварительно до Android-профилирования.
 - **Автономия Cursor:** может корректировать план, выдавать и принимать задачи, обновлять статусы и сливать прошедшие проверки изменения. Без согласия владельца не менять канон, игровой баланс/монетизацию, архитектурные пины, не добавлять зависимости, не развёртывать VPS и не удалять данные.
 - **Пауза:** владелец попросил остановиться после T-030 — разработка приостановлена до новой команды.

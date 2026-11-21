@@ -3,7 +3,7 @@
 **Date:** 2026-11-21  
 **Repo:** `maillunex-lang/NewMMO`  
 **Status:** Research only — **nothing installed or vendored**  
-**Owner decision (2026-11-21):** **D** — defer generator; keep hand-authored `.tscn` locations. Wait for further instructions before Stage 2 or any OSS spike.
+**Owner decision (2026-11-21):** **D** — defer generator initially. **Follow-up (same day):** schedule hybrid generator as **EX-W01** (`docs/director/LOCATION_GENERATOR_PLAN.md`) — output must stay editable in Godot; no OSS install until a later explicit OK.
 
 ## 1. Problem statement
 
@@ -165,12 +165,12 @@ Acceptance test (already required by WORLD_EDITOR):
 
 ## 8. Decision
 
-**Chosen: D** — defer procedural location generation. Continue with hand-authored editable `.tscn` locations and Lunex World Studio. Do not install Gaea, WFC, TileMapDual, or GenMap until a later explicit request.
+**Chosen then: D** (defer). **Now scheduled:** EX-W01 hybrid generator — hand-authored + Generated layers; Godot PC editing required. Do not install Gaea, WFC, TileMapDual, or GenMap until owner OK on the T-031 recommendation.
 
-Options not selected (kept for history):
+Options for T-031 re-check on Godot **4.7.2**:
 
 - **A.** Spike WFC (`godot-constraint-solving`) + Lunex wrapper  
-- **B.** Spike Gaea v1.X on Godot 4.3  
+- **B.** Spike Gaea (version compatible with 4.7.2)  
 - **C.** In-house generator only  
 
-**Nothing has been installed.** No candidate code was copied into this repository. Agent idle pending further owner instructions.
+**Nothing has been installed.** Plan only until «делай генератор» (+ OK on deps if not in-house).
