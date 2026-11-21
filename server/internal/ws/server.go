@@ -31,10 +31,19 @@ type Store interface {
 	LoadWSState(context.Context, string, int64) (auth.WSState, error)
 }
 
+// QuestHandler is optional EX-P04 quest engine (T-020). Nil → UNKNOWN_TYPE for quest mutations.
+type QuestHandler interface {
+	Accept(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any) (any, error)
+	Interact(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any) (any, error)
+	TurnIn(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any) (any, error)
+	SnapshotQuests(ctx context.Context, accountID string, characterID int64) (any, error)
+}
+
 type Server struct {
 	lifetime context.Context
 	cfg      Config
 	store    Store
+	quests   QuestHandler
 	logger   *slog.Logger
 
 	mu         sync.Mutex
@@ -53,6 +62,8 @@ func New(lifetime context.Context, cfg Config, store Store, logger *slog.Logger)
 		characters: make(map[int64]*peer),
 	}
 }
+
+func (s *Server) SetQuests(q QuestHandler) { s.quests = q }
 
 type admission struct {
 	attempts []time.Time
@@ -208,7 +219,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"heartbeat_ms": s.cfg.Heartbeat.Milliseconds(), "content_build_id": state.BuildID,
 	}, 0) ||
 		!p.enqueue("content.version", m.requestID, state.Revision, versionPayload, 0) ||
-		!p.enqueue("state.snapshot", m.requestID, state.Revision, snapshot(state, nil), 0) {
+		!p.enqueue("state.snapshot", m.requestID, state.Revision, s.snapshot(p.work, owner, id, state, nil), 0) {
 		return
 	}
 

@@ -269,7 +269,43 @@ func (s *Server) commands(p *peer, owner string, id, revision int64) {
 				continue
 			}
 			revision = state.Revision
-			if !p.enqueue("state.snapshot", m.requestID, revision, snapshot(state, scopes), 0) {
+			if !p.enqueue("state.snapshot", m.requestID, revision, s.snapshot(p.work, owner, id, state, scopes), 0) {
+				return
+			}
+		case m.typ == "quest.accept.request" || m.typ == "world.interact.request" || m.typ == "quest.turnin.request":
+			if s.quests == nil {
+				if !p.sendError(m.requestID, revision, "UNKNOWN_TYPE", 0, 0) {
+					return
+				}
+				continue
+			}
+			payload := rawPayload(m.payload)
+			ctx, cancel := context.WithTimeout(p.work, s.cfg.WriteTimeout)
+			var (
+				result any
+				err    error
+				reply  string
+			)
+			switch m.typ {
+			case "quest.accept.request":
+				result, err = s.quests.Accept(ctx, owner, id, m.typ, m.requestID, payload)
+				reply = "quest.accept.result"
+			case "world.interact.request":
+				result, err = s.quests.Interact(ctx, owner, id, m.typ, m.requestID, payload)
+				reply = "quest.progress.delta"
+			case "quest.turnin.request":
+				result, err = s.quests.TurnIn(ctx, owner, id, m.typ, m.requestID, payload)
+				reply = "quest.reward.granted"
+			}
+			cancel()
+			if err != nil {
+				if !p.sendError(m.requestID, revision, questErrorCode(err), 0, 0) {
+					return
+				}
+				continue
+			}
+			revision = revisionFromResult(result, revision)
+			if !p.enqueue(reply, m.requestID, revision, result, 0) {
 				return
 			}
 		default:
@@ -312,7 +348,7 @@ func snapshotScopes(payload map[string]json.RawMessage) ([]string, bool) {
 	return scopes, true
 }
 
-func snapshot(state auth.WSState, requested []string) map[string]any {
+func (s *Server) snapshot(ctx context.Context, owner string, id int64, state auth.WSState, requested []string) map[string]any {
 	scopes := make(map[string]any, 2)
 	if len(requested) == 0 {
 		requested = []string{"character", "quests"}
@@ -326,10 +362,70 @@ func snapshot(state auth.WSState, requested []string) map[string]any {
 				Gold       int64          `json:"gold"`
 				Reputation map[string]int `json:"reputation"`
 				RestedXP   int64          `json:"rested_xp"`
-			}{Character: state.Character, XP: state.XP, Gold: state.Gold, Reputation: map[string]int{}}
+			}{Character: state.Character, XP: state.XP, Gold: state.Gold, Reputation: map[string]int{}, RestedXP: 0}
 		case "quests":
-			scopes[name] = map[string][]string{"active": {}, "completed": {}, "available": {}}
+			quests := any(map[string]any{"active": []any{}, "completed": []string{}, "available": []string{}})
+			if s.quests != nil {
+				if q, err := s.quests.SnapshotQuests(ctx, owner, id); err == nil {
+					quests = q
+				}
+			}
+			scopes[name] = quests
 		}
 	}
 	return map[string]any{"scopes": scopes, "revision": state.Revision}
+}
+
+func rawPayload(payload map[string]json.RawMessage) map[string]any {
+	out := make(map[string]any, len(payload))
+	for k, raw := range payload {
+		var v any
+		if json.Unmarshal(raw, &v) == nil {
+			out[k] = v
+		}
+	}
+	return out
+}
+
+func questErrorCode(err error) string {
+	if err == nil {
+		return "INTERNAL"
+	}
+	msg := err.Error()
+	switch msg {
+	case "NOT_FOUND", "STATE_CONFLICT", "PREREQUISITE_NOT_MET", "LEVEL_TOO_LOW",
+		"UNSUPPORTED_EVENT", "INVALID_TARGET", "CONTENT_MISMATCH", "IDEMPOTENCY_CONFLICT",
+		"REGION_CLOSED", "BAD_REQUEST", "INTERNAL":
+		return msg
+	default:
+		if u := errors.Unwrap(err); u != nil {
+			return questErrorCode(u)
+		}
+		return "INTERNAL"
+	}
+}
+
+func revisionFromResult(result any, fallback int64) int64 {
+	switch v := result.(type) {
+	case interface{ GetRevision() int64 }:
+		return v.GetRevision()
+	default:
+		raw, err := json.Marshal(result)
+		if err != nil {
+			return fallback
+		}
+		var probe struct {
+			Revision          int64 `json:"revision"`
+			InventoryRevision int64 `json:"inventory_revision"`
+		}
+		if json.Unmarshal(raw, &probe) == nil {
+			if probe.Revision > 0 {
+				return probe.Revision
+			}
+			if probe.InventoryRevision > 0 {
+				return probe.InventoryRevision
+			}
+		}
+		return fallback
+	}
 }
