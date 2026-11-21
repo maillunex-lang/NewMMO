@@ -1,0 +1,73 @@
+---
+description: Mandatory open-source research before building large Lunex/NewMMO systems; no auto-install.
+alwaysApply: true
+---
+
+# Open-source research rules (NewMMO)
+
+## When this applies
+
+Before implementing or expanding a **large system** (examples: location/world generation, networking stacks, pathfinding, inventory frameworks, admin UI kits, combat tick libs, atlas tooling), run research first.
+
+Small bugfixes and thin adapters inside existing NewMMO code do not require a full report.
+
+## Where to search
+
+1. **GitHub** — repositories with working code, clear license, recent commits.
+2. **Hysen Labs** — curated project write-ups (treat as discovery, still verify upstream).
+3. **Godot Asset Library** — https://godotengine.org/asset-library/
+4. **Official docs** — Godot, Go, PostgreSQL, relevant RFCs.
+
+Also check Godot engine docs for built-in APIs that remove the need for a third-party addon.
+
+## Candidate checklist (every shortlisted project)
+
+For each candidate, record in `docs/research/<system-name>.md`:
+
+| Check | Requirement |
+|-------|-------------|
+| Upstream | Canonical repo URL; confirm source is available |
+| Working code | Builds/runs or has credible demos; not vaporware |
+| License | SPDX identity; **commercial use** allowed for Lunex shipping model |
+| Activity | Last push / release date; open issues health |
+| Godot fit | Compatible with project pin (**4.3 today**) and stated target (**4.7.x if/when pinned**); prefer `TileMapLayer` / Godot 4 APIs |
+| Android | Export-safe (no editor-only native deps that break mobile); note any desktop-only pieces |
+| Dependencies | Count and risk (native GDExtension, Python sidecars, AGPL viral, etc.) |
+| Security | No opaque installers; review network/exec usage |
+| Performance | Suitability for 6 GB Android targets / server load where relevant |
+| Architecture fit | Adaptable to authoritative Go server + editable `.tscn` + World Studio |
+| 2D constraint | Reject runtime-3D world/character solutions for the game client |
+
+Compare **≥ 3** suitable candidates when that many are found. If fewer exist, say so explicitly.
+
+## Hard prohibitions
+
+- **Do not copy** third-party code or assets into the repo until license is verified and recorded in `assets` license docs.
+- **Do not run** unknown install scripts, `curl | sh`, or untrusted binaries during research.
+- **Do not install or integrate** a candidate automatically. Present the research report and **wait for confirmation**.
+- **Do not replace** Godot or the Go server stack without explicit owner agreement.
+- Prefer **small, maintained** components over monorepo frameworks that take ownership of the project.
+
+## Location / world generation extras
+
+Any generator recommendation must preserve:
+
+- Editable Godot `.tscn` locations
+- Manual edit survival across regeneration (stable IDs, Manual vs Generated layers, diff/preview)
+- Server export of validated gameplay data (not “scene is truth”)
+
+## Report template
+
+Create `docs/research/<system-name>.md` with:
+
+1. Problem statement and NewMMO constraints
+2. Search sources used (with dates)
+3. Candidate table (links + checklist scores)
+4. Detailed notes per candidate
+5. Comparison matrix
+6. Recommendation: adopt (with safe integration sketch) **or** build in-house (with rationale)
+7. Explicit “Awaiting confirmation — nothing installed”
+
+## After approval
+
+Only then: vendor/add submodule or documented copy, update `LICENSES.md`, isolate under `addons/` or `tools/`, add tests, commit, and readiness report.
