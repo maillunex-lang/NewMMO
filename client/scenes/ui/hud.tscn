@@ -111,6 +111,19 @@ layout_mode = 2
 text = ""
 autowrap_mode = 3
 
+[node name="JournalBtn" type="Button" parent="SafeArea/Chrome"]
+custom_minimum_size = Vector2(120, 48)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -324.0
+offset_top = 102.0
+offset_right = -196.0
+offset_bottom = 150.0
+grow_horizontal = 0
+text = "ui.journal"
+
 [node name="Skills" type="HBoxContainer" parent="SafeArea/Chrome"]
 layout_mode = 1
 anchors_preset = 3
@@ -193,7 +206,7 @@ offset_top = -70.0
 offset_right = -390.0
 grow_horizontal = 0
 grow_vertical = 0
-text = "AUTO"
+text = "ui.auto"
 
 [node name="Interact" type="Button" parent="SafeArea/Chrome"]
 custom_minimum_size = Vector2(100, 56)
@@ -205,7 +218,7 @@ offset_left = 144.0
 offset_top = -70.0
 offset_right = 254.0
 grow_vertical = 0
-text = "TALK"
+text = "ui.talk"
 
 [node name="LootLog" type="Label" parent="SafeArea/Chrome"]
 layout_mode = 1

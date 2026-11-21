@@ -103,22 +103,22 @@ alignment = 2
 visible = false
 custom_minimum_size = Vector2(120, 48)
 layout_mode = 2
-text = "Принять"
+text = "ui.accept"
 
 [node name="ChoiceAsk" type="Button" parent="SafeArea/Chrome/Panel/Margin/VBox/Choices"]
 visible = false
 custom_minimum_size = Vector2(120, 48)
 layout_mode = 2
-text = "Спросить"
+text = "ui.ask"
 
 [node name="ChoiceTurnIn" type="Button" parent="SafeArea/Chrome/Panel/Margin/VBox/Choices"]
 visible = false
 custom_minimum_size = Vector2(120, 48)
 layout_mode = 2
-text = "Сдать"
+text = "ui.turn_in"
 
 [node name="Next" type="Button" parent="SafeArea/Chrome/Panel/Margin/VBox"]
 custom_minimum_size = Vector2(120, 48)
 layout_mode = 2
 size_flags_horizontal = 8
-text = "Далее"
+text = "ui.next"

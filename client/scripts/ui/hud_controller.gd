@@ -7,17 +7,15 @@ extends Control
 @onready var loot_log: Label = $SafeArea/Chrome/LootLog
 @onready var auto_btn: Button = $SafeArea/Chrome/AutoCombat
 @onready var interact_btn: Button = $SafeArea/Chrome/Interact
+@onready var journal_btn: Button = $SafeArea/Chrome/JournalBtn
 @onready var joystick: Control = $SafeArea/Chrome/Joystick
 @onready var skills: HBoxContainer = $SafeArea/Chrome/Skills
 
-## UI chrome labels live on the .tscn buttons; scripts only toggle state text.
 @export var player_name_placeholder := "…"
-@export var auto_label_off := "AUTO"
-@export var auto_label_on := "AUTO ON"
-@export var quest_complete_prefix := "✓ "
 
 var _player: Node = null
 var _quest: Node = null
+var _journal: Node = null
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -30,14 +28,30 @@ func _ready() -> void:
 		auto_btn.pressed.connect(_on_auto)
 	if interact_btn:
 		interact_btn.pressed.connect(_on_interact)
+	if journal_btn:
+		journal_btn.pressed.connect(_on_journal)
 	if joystick and joystick.has_signal("direction_changed"):
 		joystick.direction_changed.connect(_on_joystick)
 	loot_log.text = ""
+	_apply_chrome_labels()
 	call_deferred("_bind_world")
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED:
+		_apply_chrome_labels()
+
+func _apply_chrome_labels() -> void:
+	if auto_btn:
+		auto_btn.text = tr("ui.auto")
+	if interact_btn:
+		interact_btn.text = tr("ui.talk")
+	if journal_btn:
+		journal_btn.text = tr("ui.journal")
 
 func _bind_world() -> void:
 	_player = get_tree().get_first_node_in_group("player")
 	_quest = get_tree().get_first_node_in_group("quest_manager")
+	_journal = get_tree().get_first_node_in_group("quest_journal")
 	if _player:
 		if _player.has_signal("hp_changed"):
 			_player.hp_changed.connect(_on_hp)
@@ -47,13 +61,12 @@ func _bind_world() -> void:
 			_player.loot_gained.connect(_on_loot)
 		_on_hp(_player.hp, _player.max_hp)
 		_on_mp(_player.mp, _player.max_mp)
-		# Class/level binding stays stub until character sheet exists (no canon rewrite here).
 		name_label.text = player_name_placeholder
 	if _quest and _quest.has_signal("quest_updated"):
 		_quest.quest_updated.connect(_on_quest)
 		quest_text.text = _quest.get_tracker_text()
 	if _quest and _quest.has_signal("quest_completed"):
-		_quest.quest_completed.connect(func(_id, reward): _flash(quest_complete_prefix + str(reward)))
+		_quest.quest_completed.connect(func(_id, reward): _flash(tr("ui.quest_complete_prefix") + str(reward)))
 
 func _on_hp(hp: float, max_hp: float) -> void:
 	health.max_value = max_hp
@@ -87,9 +100,15 @@ func _on_skill(slot: int) -> void:
 func _on_auto() -> void:
 	if _player and _player.has_method("toggle_auto_combat"):
 		var on: bool = _player.toggle_auto_combat()
-		auto_btn.text = auto_label_on if on else auto_label_off
+		auto_btn.text = tr("ui.auto_on") if on else tr("ui.auto")
 		auto_btn.modulate = Color(1.0, 0.9, 0.5) if on else Color.WHITE
 
 func _on_interact() -> void:
 	if _player and _player.has_method("try_interact"):
 		_player.try_interact()
+
+func _on_journal() -> void:
+	if _journal == null:
+		_journal = get_tree().get_first_node_in_group("quest_journal")
+	if _journal and _journal.has_method("toggle"):
+		_journal.toggle()

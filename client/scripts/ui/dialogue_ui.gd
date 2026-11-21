@@ -13,11 +13,6 @@ signal action_chosen(action: String, npc_id: String)
 @onready var choice_ask: Button = $SafeArea/Chrome/Panel/Margin/VBox/Choices/ChoiceAsk
 @onready var choice_turn_in: Button = $SafeArea/Chrome/Panel/Margin/VBox/Choices/ChoiceTurnIn
 
-## Chrome labels are authored on the .tscn buttons (Theme/scene), not built here.
-@export var player_speaker_label := "Вы"
-@export var next_label := "Далее"
-@export var close_label := "Закрыть"
-
 var _npc_id := ""
 var _important := true
 var _flow: Array = []
@@ -37,6 +32,22 @@ func _ready() -> void:
 	if choice_turn_in:
 		choice_turn_in.pressed.connect(func(): _choose("TURN_IN"))
 	_hide_choice_buttons()
+	_apply_chrome_labels()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED:
+		_apply_chrome_labels()
+
+func _apply_chrome_labels() -> void:
+	if choice_accept:
+		choice_accept.text = tr("ui.accept")
+	if choice_ask:
+		choice_ask.text = tr("ui.ask")
+	if choice_turn_in:
+		choice_turn_in.text = tr("ui.turn_in")
+	if next_btn and next_btn.visible:
+		# Keep next/close dynamic via _show_current; only ensure base key when idle.
+		pass
 
 func open_flow(npc_id: String, display_name: String, flow_ids: PackedStringArray, portrait_tex: Texture2D = null, mode: String = "") -> void:
 	_npc_id = npc_id
@@ -49,7 +60,6 @@ func open_flow(npc_id: String, display_name: String, flow_ids: PackedStringArray
 	if portrait_tex:
 		portrait.texture = portrait_tex
 	for id in flow_ids:
-		# Skip PLAYER ACCEPT/TURN_IN/ASK lines; those become scene buttons
 		var line: Dictionary = {}
 		if _quest and _quest.has_method("get_line"):
 			line = _quest.get_line(str(id))
@@ -71,7 +81,7 @@ func _show_current() -> void:
 		line = _quest.get_line(dia_id)
 	var sp: String = str(line.get("speaker", ""))
 	if sp == "PLAYER":
-		speaker.text = player_speaker_label
+		speaker.text = tr("ui.you")
 	elif sp.begins_with("NPC-") and _quest and _quest.has_method("npc_display_name"):
 		speaker.text = _quest.npc_display_name(sp)
 	elif sp != "SYSTEM":
@@ -84,7 +94,7 @@ func _show_current() -> void:
 		_show_mode_actions_or_finish()
 	else:
 		next_btn.visible = true
-		next_btn.text = next_label if not last else close_label
+		next_btn.text = tr("ui.next") if not last else tr("ui.close")
 
 func _show_mode_actions_or_finish() -> void:
 	_hide_choice_buttons()
@@ -112,7 +122,6 @@ func _hide_choice_buttons() -> void:
 
 func _choose(action: String) -> void:
 	if action == "ASK":
-		# Show canon ASK response from data; do not accept quest
 		var qid := ""
 		if _quest and _quest.has_method("get_active_quest_id"):
 			qid = _quest.get_active_quest_id()
@@ -122,7 +131,7 @@ func _choose(action: String) -> void:
 		body.text = str(line.get("text", ""))
 		_hide_choice_buttons()
 		next_btn.visible = true
-		next_btn.text = close_label
+		next_btn.text = tr("ui.close")
 		_mode = ""
 		_index = _flow.size()
 		return
@@ -137,7 +146,7 @@ func _choose(action: String) -> void:
 		body.text = str(done_line.get("text", ""))
 		_hide_choice_buttons()
 		next_btn.visible = true
-		next_btn.text = close_label
+		next_btn.text = tr("ui.close")
 		_mode = ""
 		_index = _flow.size()
 		return

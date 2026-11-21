@@ -20,6 +20,11 @@ window/handheld/orientation=6
 [editor_plugins]
 enabled=PackedStringArray("res://addons/lunex_world_studio/plugin.cfg")
 
+[internationalization]
+locale/locale="ru"
+locale/fallback="ru"
+locale/translations=PackedStringArray("res://translations/ui.ru.translation", "res://translations/ui.en.translation")
+
 [layer_names]
 2d_physics/layer_1="world"
 
