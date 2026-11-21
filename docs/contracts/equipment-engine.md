@@ -14,8 +14,8 @@ One personal roll per kill: chance `equip_pct` of the loot table (exported with 
 ## 3. Inventory integration
 `inventory.Stack` gains `instance_id` (omitted for plain stacks). `inventory.move.request` may move gear only bag→bag onto an **empty** slot (`STATE_CONFLICT` otherwise). The plain-stack unique index is partial (`WHERE instance_id IS NULL`).
 
-## 4. Slice b (next): equip / unequip
-`inventory.equip.request {instance_id}` / `inventory.unequip.request {slot}`: ownership → class → `required_level` → slot swap (previous item returns to the freed bag slot) → `inventory_revision++` → idempotent result + equipment snapshot scope; stat totals (`gear_score = Σ budget`, informational per canon) in the snapshot. Then client UI (slice c) and feeding the totals into combat (`combat-engine.md`) after the owner approves the stat→AP/SP model use.
+## 4. Slice b (implemented, T-039b): equip / unequip
+`inventory.equip.request {instance_id}` / `inventory.unequip.request {slot}`: ownership → class → `required_level` → slot swap (previous item returns to the freed bag slot) → `inventory_revision++` → idempotent result + equipment snapshot scope; stat totals (`gear_score = Σ budget`, informational per canon) in the snapshot. Snapshot scope `inventory` now also carries `equipped[]`, `items{instance_id → details}`, `gear_score`. Next: client UI (slice c) and feeding the totals into combat (`combat-engine.md`) after the owner approves the stat→AP/SP model use.
 
 ## 5. Acceptance (slice a)
 Unit: budget/distribution/required level; roll class filter and bp thresholds. DB (CI `server-db`): drop creates instance + bag row with stats summing to the budget, replay is idempotent, two instances of one template coexist, gear move rules, full bag loses only the equipment, published build yields 5×6×9 templates.

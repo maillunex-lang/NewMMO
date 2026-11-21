@@ -51,6 +51,12 @@ type InventoryHandler interface {
 	SnapshotInventory(ctx context.Context, accountID string, characterID int64) (any, error)
 }
 
+// EquipmentHandler is the optional T-039b extension of InventoryHandler (detected by type assertion).
+type EquipmentHandler interface {
+	Equip(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any) (any, error)
+	Unequip(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any) (any, error)
+}
+
 // LootHandler is optional EX-P08 combat loot (T-034). Nil → UNKNOWN_TYPE for combat.loot.request.
 type LootHandler interface {
 	Claim(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any) (any, error)

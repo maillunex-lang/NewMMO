@@ -77,6 +77,8 @@ Canon events keep their names and required fields (§15.2); added fields are mar
 | `event.snapshot` | S→C | `event_instance_id, phase, remaining_ms` | canon |
 | `event.contribution` | S→C | `event_instance_id, contribution_score` | canon; server-computed only |
 | `inventory.move.request` ➕ (EX-P08) | C→S | `from_container, from_slot, to_container, to_slot`, opt `quantity` | mutation; server-validated (`inventory-engine.md`); answered by `inventory.delta` or `command.error` |
+| `inventory.equip.request` ➕ (T-039b, rev 1.6) | C→S | `instance_id` (only) | **mutation**; class + `required_level` + ownership checked (`equipment-engine.md` §4); swaps with the worn item; answered by `inventory.delta` (+ `equipped[]`, `items{}`, `gear_score`) or `command.error` (`NOT_FOUND`, `WRONG_CLASS`, `LEVEL_TOO_LOW`) |
+| `inventory.unequip.request` ➕ (T-039b, rev 1.6) | C→S | `slot` (`MH OH HD CH HA LG FT RG AM`, only) | **mutation**; item returns to the first free bag slot (`STATE_CONFLICT` if the bag is full); answered by `inventory.delta` |
 | `combat.loot.request` ➕ (EX-P08, rev 1.2) | C→S | `enemy_id` (only; no amounts, no extra keys) | mutation; **interim kill report** (`loot-engine.md` §1); answered by `combat.loot.result` (includes the bag `changes[]`; no separate `inventory.delta`) or `command.error` |
 | `combat.loot.result` ➕ | S→C | `enemy_id, loot_table_id, gold, items[{item_id,quantity}], gold_total, inventory_revision, changes[]` | server-rolled drop; idempotent replay returns the same result |
 | `dungeon.interact.request` ➕ (EX-P09, rev 1.3) | C→S | `instance_id, object_id` | mutation; `dungeon-engine.md` §4; answered by `dungeon.snapshot` |
@@ -104,7 +106,7 @@ Last Countdown sends critical `countdown_prepare` with all three ordered `sector
 **Reserved, not defined in v1** (separate contracts when EX-P08/P09 start): `movement.input`, `combat.ability.request`, `combat.result`, chat. Servers must reject unknown C→S types with `command.error UNKNOWN_TYPE` (no disconnect) and clients must ignore unknown S→C types (log only).
 
 ### Error codes (`command.error.code`)
-`BAD_REQUEST`, `UNAUTHENTICATED`, `UNKNOWN_TYPE`, `PROTOCOL_UNSUPPORTED`, `RATE_LIMITED` (+`retry_after_ms`), `NOT_FOUND`, `STATE_CONFLICT` (e.g. quest not READY), `PREREQUISITE_NOT_MET`, `OUT_OF_RANGE` (proximity), `CONTENT_MISMATCH`, `IDEMPOTENCY_CONFLICT`, `REGION_CLOSED` (rev 1.1), combat (rev 1.5): `ON_COOLDOWN`, `GCD`, `NOT_ENOUGH_RESOURCE`, `SKILL_LOCKED`, `UNSUPPORTED_SKILL`, `DEAD`, `INVALID_TARGET`, `INTERNAL`. `message_key` is a localization key (`error.<code>`), never free text.
+`BAD_REQUEST`, `UNAUTHENTICATED`, `UNKNOWN_TYPE`, `PROTOCOL_UNSUPPORTED`, `RATE_LIMITED` (+`retry_after_ms`), `NOT_FOUND`, `STATE_CONFLICT` (e.g. quest not READY), `PREREQUISITE_NOT_MET`, `OUT_OF_RANGE` (proximity), `CONTENT_MISMATCH`, `IDEMPOTENCY_CONFLICT`, `REGION_CLOSED` (rev 1.1), combat (rev 1.5): `ON_COOLDOWN`, `GCD`, `NOT_ENOUGH_RESOURCE`, `SKILL_LOCKED`, `UNSUPPORTED_SKILL`, `DEAD`, `INVALID_TARGET`, equipment (rev 1.6): `WRONG_CLASS`, `LEVEL_TOO_LOW`, `INTERNAL`. `message_key` is a localization key (`error.<code>`), never free text.
 
 ## 6. Revisions and snapshots
 - Envelope `revision` = the **character-state revision**: a per-character monotonic integer incremented by the server for every state change it pushes (quest, inventory, dialogue-choice flags). It is persisted with the state (EX-P04 `revision` columns).

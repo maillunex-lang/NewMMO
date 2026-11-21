@@ -363,6 +363,34 @@ func (s *Server) commands(p *peer, owner string, id, revision int64) {
 			if !p.enqueue("inventory.delta", m.requestID, revision, result, 0) {
 				return
 			}
+		case m.typ == "inventory.equip.request" || m.typ == "inventory.unequip.request":
+			gear, ok := s.inv.(EquipmentHandler)
+			if !ok {
+				if !p.sendError(m.requestID, revision, "UNKNOWN_TYPE", 0, 0) {
+					return
+				}
+				continue
+			}
+			payload := rawPayload(m.payload)
+			ctx, cancel := context.WithTimeout(p.work, s.cfg.WriteTimeout)
+			var result any
+			var err error
+			if m.typ == "inventory.equip.request" {
+				result, err = gear.Equip(ctx, owner, id, m.typ, m.requestID, payload)
+			} else {
+				result, err = gear.Unequip(ctx, owner, id, m.typ, m.requestID, payload)
+			}
+			cancel()
+			if err != nil {
+				if !p.sendError(m.requestID, revision, questErrorCode(err), 0, 0) {
+					return
+				}
+				continue
+			}
+			revision = revisionFromResult(result, revision)
+			if !p.enqueue("inventory.delta", m.requestID, revision, result, 0) {
+				return
+			}
 		case m.typ == "combat.loot.request":
 			if s.loot == nil {
 				if !p.sendError(m.requestID, revision, "UNKNOWN_TYPE", 0, 0) {
@@ -534,7 +562,7 @@ func questErrorCode(err error) string {
 	switch msg {
 	case "NOT_FOUND", "STATE_CONFLICT", "PREREQUISITE_NOT_MET", "LEVEL_TOO_LOW",
 		"UNSUPPORTED_EVENT", "INVALID_TARGET", "CONTENT_MISMATCH", "IDEMPOTENCY_CONFLICT",
-		"REGION_CLOSED", "RATE_LIMITED", "BAD_REQUEST", "INTERNAL",
+		"REGION_CLOSED", "RATE_LIMITED", "BAD_REQUEST", "INTERNAL", "WRONG_CLASS",
 		"ON_COOLDOWN", "GCD", "NOT_ENOUGH_RESOURCE", "OUT_OF_RANGE", "SKILL_LOCKED", "UNSUPPORTED_SKILL", "DEAD":
 		return msg
 	default:

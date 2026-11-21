@@ -79,7 +79,7 @@ func TestInventoryGrantMovePostgres(t *testing.T) {
 	}
 
 	move, err := engine.Move(ctx, accountID, characterID, Envelope{
-		Type: "inventory.move.request",
+		Type:      "inventory.move.request",
 		RequestID: "550e8400-e29b-41d4-a716-446655440301",
 		Payload: map[string]any{
 			"from_container": "materials", "from_slot": float64(snap.Materials[0].Slot),
@@ -90,7 +90,7 @@ func TestInventoryGrantMovePostgres(t *testing.T) {
 		t.Fatal(err)
 	}
 	again, err := engine.Move(ctx, accountID, characterID, Envelope{
-		Type: "inventory.move.request",
+		Type:      "inventory.move.request",
 		RequestID: "550e8400-e29b-41d4-a716-446655440301",
 		Payload: map[string]any{
 			"from_container": "materials", "from_slot": float64(snap.Materials[0].Slot),

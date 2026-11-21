@@ -39,11 +39,20 @@ type Scope struct {
 	Bag       []Stack  `json:"bag"`
 	Materials []Stack  `json:"materials"`
 	QuestKeys []string `json:"quest_keys"`
+	// T-039b: worn gear, details of every gear instance (bag + worn) and the informational gear score.
+	Equipped  []EquippedItem        `json:"equipped"`
+	Items     map[string]ItemDetail `json:"items"`
+	GearScore int                   `json:"gear_score"`
 }
 
 type Delta struct {
 	InventoryRevision int64   `json:"inventory_revision"`
 	Changes           []Stack `json:"changes"`
+	// Equip/unequip only: changed worn slots (instance_id "" = now empty), details of instances that
+	// appear, and the new gear score.
+	Equipped  []EquippedItem        `json:"equipped,omitempty"`
+	Items     map[string]ItemDetail `json:"items,omitempty"`
+	GearScore *int                  `json:"gear_score,omitempty"`
 }
 
 type Envelope struct {
@@ -60,6 +69,9 @@ func (e *Engine) Snapshot(ctx context.Context, accountID string, characterID int
 			return err
 		}
 		out.Bag, out.Materials = bag, mats
+		if out.Equipped, out.Items, out.GearScore, err = loadGear(ctx, tx, characterID); err != nil {
+			return err
+		}
 		keys, err := e.loadQuestKeys(ctx, tx, characterID)
 		if err != nil {
 			return err

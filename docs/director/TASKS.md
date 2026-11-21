@@ -16,7 +16,7 @@ Prompts live in `docs/director/prompts/T-NNN.md`. Protocol: `DIRECTOR.md`.
 | AUTO-COMBAT | PARTIAL | Исправлена дистанция и автокаст; device E2E ожидается |
 | UX-QUEST-NAV | PARTIAL | Камера 1.45x, HUD, NPC marker, tap quest → автопуть (A*, обход препятствий) → автовзаимодействие с NPC; `AUTOPATH_SMOKE_OK`; не проверено на устройстве; квест-цели-монстры не маршрутизируются |
 | T-039a | DONE (сервер) | Дроп экипировки + экземпляры + сумка; PG-тесты; без equip/UI/аффиксов |
-| T-039b | PROPOSED | `inventory.equip/unequip.request`, снапшот экипировки, gear score |
+| T-039b | DONE (сервер) | `inventory.equip/unequip.request`, снапшот `equipped/items/gear_score`, протокол rev 1.6, PG-тесты |
 | T-039c | PROPOSED | Клиент: окно экипировки (`.tscn`), подсказка предмета |
 | T-039d | PROPOSED | Награды, mail/pity, группы (после b/c) |
 
