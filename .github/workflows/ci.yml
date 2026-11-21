@@ -32,6 +32,10 @@ jobs:
         run: python3 -W error -m unittest discover -s tools/content/tests -v
       - name: Lint canon 01-13 (ERROR blocks publish)
         run: python3 tools/content/lint.py --out build/content
+      - name: Client data vs canon
+        run: python3 tools/content/check_client_sync.py
+      - name: Docs path references
+        run: python3 tools/content/check_docs_links.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

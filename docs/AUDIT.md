@@ -60,7 +60,7 @@ The repository is an early **preproduction skeleton**, not a playable MMORPG. Do
 ### Broken / risky
 
 - Plugin `set_owner` via undo-redo `add_do_method` is fragile; owner may not stick after undo/redo cycles.
-- `world.gd` uses `get_global_mouse_position()` for touch — OK for single pointer, but conflicts with future UI mouse_filter handling.
+- `game_world.gd` (formerly world.gd) uses `get_global_mouse_position()` for touch — OK for single pointer, but conflicts with future UI mouse_filter handling.
 - Godot feature string is **4.3**, not 4.7.2; export/Android not verified.
 - No `.godot` import cache committed (correct); first open needs editor import.
 

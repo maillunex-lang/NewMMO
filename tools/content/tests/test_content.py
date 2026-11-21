@@ -208,6 +208,35 @@ class CrossrefsAndGraphs(Sandbox):  # CT-002..CT-009 (static)
         self.assertTrue({"CT009_LOOT_ENEMY", "CT002_UNRESOLVED_REF"} & self.codes(self.run_lint()))
 
 
+class RepoSync(unittest.TestCase):
+    def test_client_data_matches_canon(self):
+        import check_client_sync
+        f = check_client_sync.run(ROOT, CANON)
+        self.assertEqual([x for x in f if x[0] == "ERROR"], [])
+
+    def test_client_sync_detects_drift(self):
+        import check_client_sync
+        tmp = tempfile.mkdtemp(prefix="cs_")
+        try:
+            shutil.copytree(os.path.join(ROOT, "client", "data"), os.path.join(tmp, "client", "data"))
+            shutil.copytree(os.path.join(ROOT, "content"), os.path.join(tmp, "content"))
+            qp = os.path.join(tmp, "client", "data", "quests", "mq_01_01_to_05.json")
+            with open(qp, encoding="utf-8") as fh:
+                q = json.load(fh)
+            q["quests"][0]["reward"]["xp"] = 999
+            q["quests"][1]["objectives"][0]["id"] = "OBJ-01-02-9"
+            with open(qp, "w", encoding="utf-8") as fh:
+                json.dump(q, fh, ensure_ascii=False)
+            codes = {x[1] for x in check_client_sync.run(tmp, CANON) if x[0] == "ERROR"}
+            self.assertTrue({"CS_REWARD", "CS_OBJ"} <= codes)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_docs_links(self):
+        import check_docs_links
+        self.assertEqual(check_docs_links.check(ROOT), [])
+
+
 class MiniSchema(unittest.TestCase):
     def test_keywords(self):
         s = {"type": "object", "required": ["a"], "properties": {"a": {"type": "integer", "minimum": 1},
