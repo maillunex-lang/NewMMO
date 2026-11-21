@@ -15,7 +15,8 @@ Prompts live in `docs/director/prompts/T-NNN.md`. Protocol: `DIRECTOR.md`.
 
 | ID | Lane | Title | Depends | Notes |
 |----|------|-------|---------|-------|
-| D-001 | director | Content export contract (`declarations.json`/`crossrefs.json` → loader tables) in `docs/contracts/` | EX-P02 ✔ | Unblocks T-005…; director does it |
+| D-001 | director | Content export contract + DB contract + toolchain pins in `docs/contracts/` | EX-P02 ✔ | **DONE** — `content-export.md`, `db-content.md`, `toolchain-pins.md`; exporter `tools/content/export.py` (deterministic, blocked by lint errors); CI jobs `server-db` + export step |
+| T-009 | server | EX-P03: goose migrations + loader (pgx) → `server/internal/content` + `contentctl` CLI + isolated Compose `deploy/newmmo/` | D-001 ✔, T-006 ✔ | **ISSUED** (`prompts/T-009.md`). Phase 2 (tools approved). CI `server-db` runs it |
 | D-002 | director | POI id mapping contract (stub `POI-BOARD-01` … → canon `POI-01-*`, C-POI-001) | — | Needed by client EX-P06/07 |
 | T-001 | research | OSS research: PostgreSQL migrations + Go DB access → `docs/research/db-migrations.md` | — | **DONE** `3fb9aa6` (branch `be9a5bb`, lane_check clean). Director spot-check of upstream `go.mod` at tags confirmed the report's Go-version warning (see ROADMAP EX-P03). Owner OK received 2026-11-21 (Go ≥1.25, goose + pgx) |
 | T-002 | research | Godot 4.7.2 upgrade gate → `docs/research/godot-4-7-2-upgrade.md` | — | **DONE** (branch `387d821`, lane_check clean). Director spot-checked: smoke script `|| true` + no MQ01/stage1 runs, MQ01 marker before xp check, `include_filter=""` — all **confirmed** → T-008. Recommendation: keep 4.3 until Android toolchain (B-APK) + 4.3 baseline on 6 GB device |
@@ -40,3 +41,4 @@ First parallel batch (different lanes, no dependencies, disjoint files): **T-001
 | 2026-11-21 | T-004 reviewed and merged; T-007 issued to Cursor |
 | 2026-11-21 | T-002 reviewed and merged; T-003 issued to ChatGPT; T-008 queued for Cursor |
 | 2026-11-21 | T-006 reviewed and merged; Codex idle until EX-P03 (needs owner «делай» + D-001) |
+| 2026-11-21 | Owner «делай» → EX-P03 started: D-001 contracts + exporter + CI `server-db`; T-009 issued to Codex |

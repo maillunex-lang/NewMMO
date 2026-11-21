@@ -127,7 +127,7 @@
 **Условия Фазы 2 (обязательны до `go get`/скачивания):** точные версии и контрольные суммы фиксируются в `docs/contracts/` (pin-матрица), проверяются LICENSE/SPDX на теге, `go.mod`/дерево зависимостей, GHSA/открытые issues; кандидаты: pgx v5.13.0 (Go 1.25.0), goose v3.30.0 CLI (готовый бинарь/образ, не сборка из исходников); запасной golang-migrate v4.20.1  
 **Приёмка:** миграции из §16 (адаптированные), rollback, content_builds loader  
 **Тесты:** migrate up/down на локальном/Compose Postgres  
-**Статус:** [ ]
+**Статус:** [~] запущен 2026-11-21: контракты D-001 [x], экспортёр `tools/content/export.py` [x] (4925 сущностей, детерминирован), CI `server-db` [x]; миграции + loader — T-009 (Codex) в работе
 
 ### EX-P04 — Go quest state machine (authoritative)
 **Зависит от:** EX-P03  

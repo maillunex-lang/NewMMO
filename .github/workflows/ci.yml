@@ -32,6 +32,8 @@ jobs:
         run: python3 -W error -m unittest discover -s tools/content/tests -v
       - name: Lint canon 01-13 (ERROR blocks publish)
         run: python3 tools/content/lint.py --out build/content
+      - name: Export bundle (deterministic, blocked by lint errors)
+        run: python3 tools/content/export.py --out build/content/export
       - name: Client data vs canon
         run: python3 tools/content/check_client_sync.py
       - name: Docs path references
@@ -41,6 +43,50 @@ jobs:
         with:
           name: content-validation
           path: build/content/
+
+  server-db:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: newmmo_ci
+          POSTGRES_PASSWORD: newmmo_ci
+          POSTGRES_DB: newmmo_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U newmmo_ci -d newmmo_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      NEWMMO_TEST_DATABASE_URL: postgres://newmmo_ci:newmmo_ci@127.0.0.1:5432/newmmo_ci?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build export bundle
+        run: python3 tools/content/export.py --out build/content/export
+      - name: Install goose (pinned, see docs/contracts/toolchain-pins.md)
+        run: |
+          GOTOOLCHAIN=auto go install github.com/pressly/goose/v3/cmd/goose@v3.30.0
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: Migrations up -> down -> up
+        run: |
+          if [ ! -d server/migrations ]; then echo "no server/migrations yet; skip"; exit 0; fi
+          goose -dir server/migrations postgres "$NEWMMO_TEST_DATABASE_URL" up
+          goose -dir server/migrations postgres "$NEWMMO_TEST_DATABASE_URL" reset
+          goose -dir server/migrations postgres "$NEWMMO_TEST_DATABASE_URL" up
+      - name: Go vet + tests with database
+        working-directory: server
+        env:
+          NEWMMO_CONTENT_EXPORT_DIR: ${{ github.workspace }}/build/content/export
+        run: |
+          go vet ./...
+          go test ./... -race -count=1
+          go mod verify
 
   lane-check:
     runs-on: ubuntu-latest
