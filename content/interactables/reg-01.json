@@ -210,6 +210,138 @@
    "canon_poi": "POI-01-002",
    "canon_loc": "LOC-01-002",
    "note": "return survey journal"
+  },
+  {
+   "objective_id": "SQO-01-002-01",
+   "quest_id": "SQ-01-002",
+   "event": "npc_talk",
+   "target_id": "SQA-01-002-01",
+   "count": 2,
+   "instances": ["SQA-01-002-01#1", "SQA-01-002-01#2"],
+   "canon_poi": "POI-01-001",
+   "canon_loc": "LOC-01-001",
+   "note": "two map copies"
+  },
+  {
+   "objective_id": "SQO-01-002-02",
+   "quest_id": "SQ-01-002",
+   "event": "reach_trigger",
+   "target_id": "SQA-01-002-02",
+   "count": 1,
+   "instances": null,
+   "canon_poi": "POI-01-001",
+   "canon_loc": "LOC-01-001",
+   "note": "well mark"
+  },
+  {
+   "objective_id": "SQO-01-002-03",
+   "quest_id": "SQ-01-002",
+   "event": "choose_option",
+   "target_id": "SQA-01-002-03",
+   "count": 1,
+   "instances": null,
+   "canon_poi": "POI-01-001",
+   "canon_loc": "LOC-01-001",
+   "note": "choose map copy"
+  },
+  {
+   "objective_id": "SQO-01-003-01",
+   "quest_id": "SQ-01-003",
+   "event": "operate_mechanism",
+   "target_id": "SQA-01-003-01",
+   "count": 1,
+   "instances": null,
+   "canon_poi": "POI-01-001",
+   "canon_loc": "LOC-01-001",
+   "note": "wagon invoice"
+  },
+  {
+   "objective_id": "SQO-01-003-02",
+   "quest_id": "SQ-01-003",
+   "event": "npc_talk",
+   "target_id": "SQA-01-003-02",
+   "count": 1,
+   "instances": null,
+   "canon_poi": "POI-01-001",
+   "canon_loc": "LOC-01-001",
+   "note": "square clerk"
+  },
+  {
+   "objective_id": "SQO-01-003-03",
+   "quest_id": "SQ-01-003",
+   "event": "npc_talk",
+   "target_id": "NPC-102",
+   "count": 1,
+   "instances": null,
+   "canon_poi": "POI-01-001",
+   "canon_loc": "LOC-01-001",
+   "note": "deliver forgery to Ilra"
+  },
+  {
+   "objective_id": "SQO-01-004-01",
+   "quest_id": "SQ-01-004",
+   "event": "reach_trigger",
+   "target_id": "SQA-01-004-01",
+   "count": 1,
+   "instances": null,
+   "canon_poi": "POI-01-003",
+   "canon_loc": "LOC-01-003",
+   "note": "find carter"
+  },
+  {
+   "objective_id": "SQO-01-004-02",
+   "quest_id": "SQ-01-004",
+   "event": "escort_checkpoint",
+   "target_id": "SQA-01-004-02",
+   "count": 3,
+   "instances": ["SQA-01-004-02#1", "SQA-01-004-02#2", "SQA-01-004-02#3"],
+   "canon_poi": "POI-01-003",
+   "canon_loc": "LOC-01-003",
+   "note": "safe path checkpoints"
+  },
+  {
+   "objective_id": "SQO-01-004-03",
+   "quest_id": "SQ-01-004",
+   "event": "operate_mechanism",
+   "target_id": "SQA-01-004-03",
+   "count": 1,
+   "instances": null,
+   "canon_poi": "POI-01-003",
+   "canon_loc": "LOC-01-003",
+   "note": "confirm testimony"
+  },
+  {
+   "objective_id": "SQO-01-005-01",
+   "quest_id": "SQ-01-005",
+   "event": "collect_quest_evidence",
+   "target_id": "SQA-01-005-01",
+   "count": 3,
+   "instances": ["SQA-01-005-01#1", "SQA-01-005-01#2", "SQA-01-005-01#3"],
+   "canon_poi": "POI-01-003",
+   "canon_loc": "LOC-01-003",
+   "note": "three beams"
+  },
+  {
+   "objective_id": "SQO-01-005-02",
+   "quest_id": "SQ-01-005",
+   "event": "operate_mechanism",
+   "target_id": "SQA-01-005-02",
+   "count": 2,
+   "instances": ["SQA-01-005-02#1", "SQA-01-005-02#2"],
+   "canon_poi": "POI-01-003",
+   "canon_loc": "LOC-01-003",
+   "note": "bridge supports"
+  },
+  {
+   "objective_id": "SQO-01-005-03",
+   "quest_id": "SQ-01-005",
+   "event": "inspect_object",
+   "target_id": "SQA-01-005-03",
+   "count": 1,
+   "instances": null,
+   "canon_poi": "POI-01-003",
+   "canon_loc": "LOC-01-003",
+   "note": "passage check with Neris"
   }
  ]
 }
