@@ -45,7 +45,7 @@ The file is the canonical body: keys sorted, separators `(",",":")`, UTF-8, non-
 - `payload` is the parsed typed record for that kind (shapes = `content/schemas/<kind>.schema.json` `fields`); the loader stores it as `jsonb` **unchanged** and does not interpret gameplay.
 - Typed relations live in the payload (e.g. quest `prereqs`, `npcs`, `locations`, `reward.evidence`; objective `quest_id`; enemy `spawn_refs`; dungeon `entrance/miniboss/boss`; event `world_boss`; loot table `enemy`). Use them; do not regex IDs out of text.
 
-### Kinds in build 1 (4925 entities)
+### Kinds in build 1 (4958 entities)
 `chapter 6 · class 5 · dialogue_line 3122 · dialogue_template 1 · dungeon 12 · ending 3 · enemy 96 · equipment 270 · event 18 · faction 8 · item 8 · item_set 30 · location 48 · loot_table 96 · material 36 · npc 32 · objective 720 · poi 72 · quest_item 36 · quest_main 120 · quest_side 120 · recipe 36 · region 6 · scene 6 · settlement 18`.
 (`*_ref` catalog mirrors are not exported. Settlements use `STL-RR-NN`; armor sets `SET-CC-RR` — C-SET-001.)
 

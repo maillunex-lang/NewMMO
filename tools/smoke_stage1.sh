@@ -70,6 +70,9 @@ run_godot_capture "MQ01 smoke script" "MQ01_SMOKE_OK" -- \
 run_godot_capture "Net protocol smoke" "NET_SMOKE_OK" -- \
   --headless --path "$ROOT/client" --script res://scripts/dev/net_smoke.gd
 
+run_godot_capture "Auth REST smoke" "AUTH_SMOKE_OK" -- \
+  --headless --path "$ROOT/client" --script res://scripts/dev/auth_smoke.gd
+
 echo "== Server tests =="
 (cd "$ROOT/server" && go test ./...)
 

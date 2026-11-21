@@ -101,6 +101,8 @@ def run(root, content_dir):
             if qid not in decl:
                 add("ERROR", "CS_FLOW", f"{n}: flow for unknown quest {qid}")
             for stage, ids in fl.items():
+                if isinstance(ids, dict):  # state-dependent variants keyed by completed-objective count
+                    ids = [x for v in ids.values() for x in v]
                 for i in ids:
                     flows_ids.add(i)
                     if i not in data["lines"]:

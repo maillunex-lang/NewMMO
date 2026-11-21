@@ -80,8 +80,8 @@ func TestContentRegistryPostgres(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if real.manifest.EntityCount != 4925 {
-		t.Fatalf("real export has %d entities; want 4925", real.manifest.EntityCount)
+	if real.manifest.EntityCount != 4958 {
+		t.Fatalf("real export has %d entities; want 4958", real.manifest.EntityCount)
 	}
 
 	original, err := store.ActiveBuildID(ctx)
@@ -100,7 +100,7 @@ func TestContentRegistryPostgres(t *testing.T) {
 	for _, row := range rows {
 		counts[row.Kind]++
 	}
-	if len(rows) != 4925 || !maps.Equal(counts, real.manifest.Counts) {
+	if len(rows) != 4958 || !maps.Equal(counts, real.manifest.Counts) {
 		t.Fatalf("read back %d rows with counts %v; want %v", len(rows), counts, real.manifest.Counts)
 	}
 	var samePayload bool

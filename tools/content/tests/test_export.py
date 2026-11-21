@@ -31,7 +31,7 @@ class Export(unittest.TestCase):
 
     def test_bundle_consistent(self):
         m, out = self.run_export("a")
-        self.assertEqual(m["entity_count"], 4925)
+        self.assertEqual(m["entity_count"], 4958)
         with open(os.path.join(out, "entities.jsonl"), "rb") as fh:
             raw = fh.read()
         self.assertEqual(hashlib.sha256(raw).hexdigest(), m["entities_sha256"])

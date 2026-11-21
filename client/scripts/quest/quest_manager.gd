@@ -171,13 +171,33 @@ func report_world_event(event: String, target_id: String, player: Node = null) -
 
 func _open_flow(npc_id: String, mode: String) -> void:
 	var flow: Dictionary = _flows.get(_active_id, {})
-	var ids: Array = flow.get(mode, [])
+	var ids: Array = []
+	var raw: Variant = flow.get(mode, [])
+	if typeof(raw) == TYPE_DICTIONARY:
+		# State-dependent variants, keyed by the number of fully completed objectives ("0", "1", "2"…).
+		var key := str(_completed_objective_count())
+		var variants: Dictionary = raw
+		if variants.has(key):
+			ids = variants[key]
+		elif not variants.is_empty():
+			ids = variants[variants.keys()[0]]
+	else:
+		ids = raw
 	var packed := PackedStringArray()
 	for id in ids:
 		packed.append(str(id))
 	if packed.is_empty():
 		return
 	dialogue_flow_requested.emit(npc_id, packed, mode)
+
+func _completed_objective_count() -> int:
+	var q := _quest_by_id(_active_id)
+	var done := 0
+	for obj in q.get("objectives", []):
+		var oid: String = str(obj.get("id", ""))
+		if int(_progress.get(oid, 0)) >= int(obj.get("count", 1)):
+			done += 1
+	return done
 
 func _accept(_player: Node) -> void:
 	if _status != "available":
