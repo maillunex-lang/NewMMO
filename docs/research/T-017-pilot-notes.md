@@ -7,3 +7,13 @@
 5. Bureaucratic sarcasm should expose an absurd rule, never mock the endangered person. One line should change one piece of knowledge; object hints must precede completion, reactions must follow confirmation. This is an original editorial rule, not third-party text.
 
 **Decision:** keep the existing `DIA.*` format, no dependencies, no copied prose, no installation. Research metadata is discovery-only, not a compatibility test.
+
+## Revision 1 (director feedback)
+
+- Replaced repeated generic objective reactions and progress lines with distinct evidence, maps, signatures, escort, and bridge details.
+- Added explicit LATER dialogue and NPC response to every START; no state mutation.
+- Added canonical participant voices NPC-102 for MQ handoff, NPC-801 for returned journal, NPC-101 for scribe testimony, and NPC-903 for escort; no new IDs.
+- SQ-01-002 copy selection is not an A/B state branch. Existing CHOICE keys remain; any selected copy completes the existing objective.
+- Fixed SQ-01-005 terminal punctuation.
+- Compared all NPC/PLAYER utterances by exact text across six updated files (94 lines): 0 duplicates. Repository Python strict lint not run because no command execution is available via GitHub connector.
+- Preflight comparison showed main ahead by 3 commits; GitHub connector cannot perform a non-destructive git rebase. Changes committed on original task branch without rewriting history.
