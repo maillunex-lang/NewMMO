@@ -25,7 +25,7 @@ func NormalizePassword(password string) (string, bool) {
 	}
 	password = norm.NFC.String(password)
 	count := utf8.RuneCountInString(password)
-	return password, count >= 10 && count <= 128
+	return password, count >= 4 && count <= 128
 }
 
 func hashPassword(password string, iterations int) (string, error) {

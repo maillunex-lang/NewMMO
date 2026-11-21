@@ -3,6 +3,22 @@
 Status: `PROPOSED` (not issued) · `ISSUED` (prompt given to executor) · `REVIEW` · `DONE <sha>` · `REWORK` · `BLOCKED`.
 Prompts live in `docs/director/prompts/T-NNN.md`. Protocol: `DIRECTOR.md`.
 
+## Актуальная приёмка VPS alpha (2026-11-21)
+
+**Режим:** владелец назначил ChatGPT директором/исполнителем; локальная разработка в `main` на VPS, GitHub только по явной команде владельца. Исторические делегирования ниже не являются текущим назначением.
+
+| Задача | Статус | Проверка / ограничение |
+|---|---|---|
+| T-038f delta fanout + Zone.Tick JSON sink | PARTIAL | Go world tests и vet; не реальные WebSocket/Android |
+| DEPLOY-ALPHA | PARTIAL | Публичный сайт, сервер, БД, debug APK и живой roadmap доступны; нет device E2E и воспроизводимого деплоя |
+| AUTH-VALIDATION | DONE VPS | Пароль 4–128 символов, unit tests, сервер и APK обновлены |
+| ANDROID-ORIENTATION | DONE VPS | Landscape, APK собран; физическое устройство не проверено |
+| AUTO-COMBAT | PARTIAL | Исправлена дистанция и автокаст; device E2E ожидается |
+| UX-QUEST-NAV | PARTIAL | Камера 1.45x, HUD, NPC marker, tap quest → move intent; без обхода препятствий и авто-диалога |
+| T-039 | PROPOSED | Экипировка, награды, mail/pity, группы |
+
+**Следующее:** ручной E2E на Android, исправление навигации с pathfinding и взаимодействием, T-038f реальные WS замеры, затем T-039.
+
 ## Owner decisions (2026-11-21)
 
 **Temporary handoff (2026-11-21):** director + executor role passes from Claude to **ChatGPT Codex** — see `prompts/CODEX_HANDOFF.md`. State at handoff: main contains T-038d, T-032/T-033, D-005; next queue T-038e → T-038f → T-039 → daily loop T-041…45 → EX-W01 tails.

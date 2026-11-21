@@ -4,6 +4,7 @@ extends Control
 @onready var health: ProgressBar = $SafeArea/Chrome/TopBar/Stats/Bars/Health
 @onready var mana: ProgressBar = $SafeArea/Chrome/TopBar/Stats/Bars/Mana
 @onready var quest_text: Label = $SafeArea/Chrome/Quest/QuestText
+@onready var quest_panel: PanelContainer = $SafeArea/Chrome/Quest
 @onready var loot_log: Label = $SafeArea/Chrome/LootLog
 @onready var auto_btn: Button = $SafeArea/Chrome/AutoCombat
 @onready var interact_btn: Button = $SafeArea/Chrome/Interact
@@ -33,6 +34,10 @@ func _ready() -> void:
 			(btn as Button).pressed.connect(func(): _on_skill(slot))
 	if auto_btn:
 		auto_btn.pressed.connect(_on_auto)
+	if quest_panel:
+		quest_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+		quest_panel.gui_input.connect(_on_quest_tapped)
+		quest_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if interact_btn:
 		interact_btn.pressed.connect(_on_interact)
 	if journal_btn:
@@ -55,7 +60,7 @@ func _notification(what: int) -> void:
 
 func _apply_chrome_labels() -> void:
 	if auto_btn:
-		auto_btn.text = tr("ui.auto")
+		auto_btn.text = tr("ui.auto_on") if _player != null and _player.auto_combat else tr("ui.auto")
 	if interact_btn:
 		interact_btn.text = tr("ui.talk")
 	if journal_btn:
@@ -142,6 +147,16 @@ func _on_auto() -> void:
 func _on_interact() -> void:
 	if _player and _player.has_method("try_interact"):
 		_player.try_interact()
+
+func _on_quest_tapped(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var world := get_tree().get_first_node_in_group("game_world")
+		if world != null and world.has_method("navigate_to_quest"):
+			world.navigate_to_quest()
+	elif event is InputEventScreenTouch and event.pressed:
+		var world := get_tree().get_first_node_in_group("game_world")
+		if world != null and world.has_method("navigate_to_quest"):
+			world.navigate_to_quest()
 
 func _on_journal() -> void:
 	if _journal == null:

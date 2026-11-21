@@ -102,13 +102,13 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -324.0
-offset_bottom = 94.0
+offset_left = -390.0
+offset_bottom = 116.0
 grow_horizontal = 0
 
 [node name="QuestText" type="Label" parent="SafeArea/Chrome/Quest"]
 layout_mode = 2
-text = ""
+text = "Нажми для автопути →"
 autowrap_mode = 3
 
 [node name="JournalBtn" type="Button" parent="SafeArea/Chrome"]
@@ -118,9 +118,9 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -324.0
-offset_top = 102.0
+offset_top = 124.0
 offset_right = -196.0
-offset_bottom = 150.0
+offset_bottom = 172.0
 grow_horizontal = 0
 text = "ui.journal"
 
@@ -131,9 +131,9 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -192.0
-offset_top = 102.0
+offset_top = 124.0
 offset_right = -96.0
-offset_bottom = 142.0
+offset_bottom = 164.0
 grow_horizontal = 0
 item_count = 2
 popup/item_0/text = "RU"
@@ -148,9 +148,9 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -324.0
-offset_top = 158.0
+offset_top = 180.0
 offset_right = -228.0
-offset_bottom = 206.0
+offset_bottom = 228.0
 grow_horizontal = 0
 text = "ui.inventory"
 
@@ -161,9 +161,9 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -216.0
-offset_top = 158.0
+offset_top = 180.0
 offset_right = -96.0
-offset_bottom = 206.0
+offset_bottom = 228.0
 grow_horizontal = 0
 text = "ui.credits"
 

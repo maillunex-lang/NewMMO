@@ -27,10 +27,21 @@ func TestPasswordFormatAndNormalization(t *testing.T) {
 	if match, _, err := verifyPassword("different password", hash); err != nil || match {
 		t.Fatal("incorrect password verified")
 	}
-	for _, raw := range []string{"short", strings.Repeat("Ж", 129), "\xff"} {
+	for _, raw := range []string{"abc", strings.Repeat("Ж", 129), "\xff"} {
 		if _, ok := NormalizePassword(raw); ok {
 			t.Fatal("invalid password accepted")
 		}
+	}
+}
+
+func TestFourCharacterPassword(t *testing.T) {
+	for _, sample := range []string{"abcd", "1234", "тест"} {
+		if _, ok := NormalizePassword(sample); !ok {
+			t.Fatalf("four-character password rejected: %q", sample)
+		}
+	}
+	if _, ok := NormalizePassword("abc"); ok {
+		t.Fatal("three-character password accepted")
 	}
 }
 

@@ -9,6 +9,7 @@ extends Node2D
 @onready var camera: Camera2D = $DawnValley/Player/Camera2D
 
 func _ready() -> void:
+	add_to_group("game_world")
 	# Prefer user://settings.cfg (EX-P06), else project.godot locale pin.
 	var LocaleSettings = load("res://scripts/ui/locale_settings.gd")
 	if LocaleSettings != null:
@@ -33,6 +34,7 @@ func _ready() -> void:
 		camera.limit_bottom = 1480
 		camera.position_smoothing_enabled = true
 		camera.position_smoothing_speed = 6.0
+		camera.zoom = Vector2(1.45, 1.45)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if dialogue and dialogue.visible:
@@ -63,6 +65,32 @@ func _unhandled_input(event: InputEvent) -> void:
 		pos = get_global_mouse_position()
 	if tap and player and player.has_method("move_to_world"):
 		player.move_to_world(pos)
+
+## Tap the quest tracker to run to its next NPC / objective.
+## Uses existing movement intent and server reconciliation, not teleportation.
+func navigate_to_quest() -> void:
+	if player == null or quest_manager == null:
+		return
+	var target_id := str(quest_manager.get_navigation_target())
+	if target_id == "":
+		player.show_hint("Нет активной цели задания")
+		return
+	var found: Node2D = null
+	for npc in get_tree().get_nodes_in_group("npcs"):
+		if str(npc.get("npc_id")) == target_id:
+			found = npc as Node2D
+			break
+	if found == null:
+		for poi in get_tree().get_nodes_in_group("interactables"):
+			if str(poi.get("interact_id")) == target_id:
+				found = poi as Node2D
+				break
+	if found == null:
+		player.show_hint("Цель задания не найдена на этой локации")
+		return
+	player.auto_combat = false
+	player.move_to_world(found.global_position)
+	player.show_hint("Путь к цели: " + target_id)
 
 func _on_flow(npc_id: String, flow_ids: PackedStringArray, mode: String) -> void:
 	var tex: Texture2D = load("res://assets/ui/portrait_mira.png") if npc_id == "NPC-102" else load("res://assets/ui/portrait_player.png")

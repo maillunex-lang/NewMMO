@@ -6,7 +6,7 @@
 **Главный канон-оркестратор:** `docs/content/14_CONTENT_INTEGRATION.md`  
 **Канон контента:** `docs/content/01_WORLD.md` … `14_CONTENT_INTEGRATION.md`  
 **Процесс:** `AGENTS.md`, `.cursor/rules/open-source-research.mdc`  
-**Обновлено:** 2026-11-21 · EX-P00…P07 [x]; EX-P08 [~] (T-029/T-030 DONE; loot/equip remain); EX-W01 v1 [x]; EX-P09 в работе (T-038a–e DONE; T-038f частично: tick + snapshot + JSON fanout + approximate retained heap; active AI/real WS/Android остаются); директор временно = ChatGPT Codex (`CODEX_HANDOFF.md`); Claude = директор + исполнитель (`CLAUDE_HANDOFF.md`).
+**Обновлено:** 2026-11-21 · EX-P00…P07 [x]; EX-P08 [~] (T-029/T-030 DONE; loot/equip remain); EX-W01 v1 [x]; EX-P09 в работе (T-038a–e DONE; T-038f частично: tick + snapshot + JSON fanout + approximate retained heap; active AI/real WS/Android остаются); директор и исполнитель = ChatGPT по поручению владельца; работа на VPS main, публикация GitHub только по команде владельца.
 
 ---
 
@@ -189,7 +189,7 @@
 - [x] класс CLS-01…05 selectable (character create, T-018)
 - [x] combat loot (T-034) — merge `b63d903`: server-rolled drops + append-only ledger + client request/HUD feedback (interim R-KILL, C-LOOT-001); [ ] equip UI + equipment drops remain  
 **Тесты:** CT-009, CT-017 + PG inventory + ONLINE_SMOKE inventory panel  
-**Статус:** [~] bag+server inventory done; loot/equip remain
+**Статус:** [~] bag + server inventory + combat loot реализованы; экипировка и выпадение экипировки ещё не готовы
 
 ### EX-W01 — Hybrid location generator (editable `.tscn` in Godot) — **v1 [x]** (T-032, in-house, CLI; editor dock + server obstacle consumption pending)
 **Зависит от:** DONE-D research ✔; Godot 4.7.2 ✔; World Studio ✔  
@@ -202,7 +202,7 @@
 - [ ] тест: Manual дерево не исчезает после regen; сцена открывается и правится в Godot 4.7.2
 - [ ] генерация **только в редакторе** (не runtime Android)  
 **Старт:** по «делай генератор» или после играбельного куска EX-P08 (можно параллельно с P09, если не конфликтуют файлы)  
-**Статус:** [ ] запланирован (не начат)
+**Статус:** [~] генератор v1 реализован в T-032; editor dock и использование сервером препятствий остаются
 
 ### EX-P09 — First dungeon `DNG-01-001`
 **Зависит от:** EX-P08 (базовый бой/лут), `12_DUNGEONS.md`  
@@ -213,7 +213,7 @@
 - [x] клиентские сцены R01…R07 (T-037) — merge `379e699`; заглушечная графика, монстры stage-1 как подмена
 - [~] серверный бой вместо отчётов (T-038, решение владельца ✔: вариант A, 10 Гц; T-038a ✔ (данные+формулы), T-038b ✔ (ядро симуляции), T-038c1+c2 ✔ (бой, ИИ, лут по убийству); T-038d ✔ (клиент мира, `e921bb3`); T-038e ✔ (серверный бой `8721282`, фазы Криптария `ad23ade`, `167e096`, `c0315ff`). Соло-проход по WebSocket на тестовом персонаже 60-го уровня проверил три фазы и первую награду. Отдельная гибель проверила восстановление R05 с сохранением победы над мини-боссом. Далее T-038f: замеры зон и Android.
 **Тесты:** CT-006, CT-015, dungeon registry sync, PG-тесты движка  
-**Статус:** [~] T-036 ✔ T-037 ✔; далее T-038 серверный бой (нужен research + ОК владельца)
+**Статус:** [~] T-036/T-037/T-038a–e выполнены; T-038f частично (CPU/heap, delta fanout и Zone.Tick JSON sink); T-039 запланирован
 
 ### EX-P10 — First public event `EVT-01-001`
 **Зависит от:** EX-P07+; `13_WORLD_EVENTS.md`  
@@ -303,6 +303,17 @@
 
 ---
 
+## Публичная Android alpha и UX-приёмка (2026-11-21)
+
+- [x] Публичный тестовый контур VPS: `https://rikagro.ru/newmmo/`, Go + PostgreSQL, контентный экспорт, HTTPS API, WebSocket, лендинг и скачивание debug APK. Дорожная карта сайта читается из `docs/ROADMAP_EXECUTION.md` рабочей копии VPS (обновление браузера раз в 60 секунд). Деплой вне Git: `/srv/newmmo-public/`, systemd `newmmo-game` и `newmmo-site`, отдельный Docker Compose.
+- [x] Регистрация: пароль от 4 символов, серверные проверки и сообщения клиента; безопасность: короткие пароли слабее.
+- [x] Android: запуск сразу в landscape; APK собирается отдельно в `/srv/newmmo-public/android-client` с публичным URL и экраном авторизации. **Это deploy-конфигурация, не исходный `client/project.godot` полностью**.
+- [~] Автобой мага: исправлен выбор класса при подключении и дальность/автоприменение навыков; проверены импорт Godot и APK, но боевой сценарий на физическом телефоне ещё не принят.
+- [~] UX: камера 1.45x, тёмно-синий HUD, NPC-маркер активного задания, нажатие на трекер вызывает перемещение к ближайшей цели. Нет навигационной сетки, обхода препятствий, автооткрытия диалога; тест на устройстве ожидается.
+- [~] T-038f: benchmark `DeltaFor` JSON fanout и `Zone.Tick` с JSON sink на VPS, 1/10/50 игроков; без настоящего WS-транспорта, Android и смешанного боевого трафика. См. `docs/research/T-038f-performance.md`.
+- [ ] E2E Android: регистрация → создание мага → автокаст → тап по квесту → достижение NPC → диалог, проверить на устройстве. Публичный debug APK не считать production release.
+- [ ] Устранить рассинхронизацию: VPS-сервис, сборочный Android overlay и Git-репозиторий пока разворачиваются разными шагами; автоматизированный reproducible deploy ещё не реализован.
+
 ## 6. Следующий этап (актуально)
 
 **Закрыто:** EX-P00…P07, EX-DIR, EX-CONTENT-01 pilot.  
@@ -311,11 +322,8 @@
 
 Не отмечать этапы `[x]` по docs/stubs. Live E2E и R-PROX — честные интеримы.
 
-## Актуальный handoff для Claude-директора (2026-11-21)
+## Текущий handoff (2026-11-21)
 
-- **Завершено:** EX-P00–P07; T-015 Godot 4.7.2; T-018…T-030 (auth, WS, quests, dialogue, locale, SQ pilot, inventory engine + bag UI). Merge tips: T-030 `23fe4cc`, accept docs `8c7369e`, EX-W01 plan `06d5751`.
-- **Текущий этап:** EX-P08 [~]. **Далее:** combat loot / equip (предложить T-034+); затем EX-P09. **Параллельно по запросу:** EX-W01 (D-005 stub contract exists — дописать; T-031…T-033).
-- **Не завершено:** live E2E (`NEWMMO_ONLINE=1`), R-PROX, R-DEVICE metrics, EX-P08 loot/equip, EX-W01 implementation, EX-P09–P13.
-- **Плейтест (офлайн):** диалог/«ГОВОРИТЬ» ненадёжен; коды вместо имён в трекере; debug-лейблы на карте; нет фидбека наград после боя — учесть в UX, не путать с закрытыми EX-P*.
-- **Автономия Claude:** план, задачи, код, CI, PR, merge. Без согласия владельца — не канон/баланс/монетизация/пины/deps/VPS/destructive.
-- **Промпт владельца → Claude:** `docs/director/prompts/CLAUDE_HANDOFF.md`.
+Владелец назначил ChatGPT директором и исполнителем. Разработка ведётся непосредственно в `main` на VPS. По команде владельца все локальные изменения публикуются в GitHub `main`. Канон `docs/content/01_*.md`…`14_*.md` не изменять без отдельного согласования.
+
+**Приоритет:** исправления альфа-версии по результатам тестирования на Android → полноценный автопуть и интеракция с NPC → T-038f реальные WS/Android замеры → T-039 экипировка/награды. EX-P08 и EX-P09 остаются PARTIAL, не маркировать DONE без полной приёмки.

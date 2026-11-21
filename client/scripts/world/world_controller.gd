@@ -50,6 +50,7 @@ var _level := 1
 var _self_state: Dictionary = {}
 var _server_position := Vector2.ZERO
 var _attack_reach := 0.0
+var _auto_cast_timer := 0.0
 
 func _ready() -> void:
 	add_to_group("world_controller")
@@ -114,6 +115,11 @@ func _on_snapshot(p: Dictionary) -> void:
 		_reset_stream(p)
 
 func _reset_stream(p: Dictionary) -> void:
+	# The first snapshot may arrive before the initial session-ready callback.
+	# Resolve the class from the persisted character before building skill slots.
+	var session := get_tree().get_first_node_in_group("online_session")
+	if session != null and typeof(session.get("character")) == TYPE_DICTIONARY:
+		_class_id = str(session.get("character").get("class_id", _class_id))
 	_clear_boss_marker()
 	_you = int(p.get("you", 0))
 	var legacy_reach := LEGACY_MELEE_REACH if _class_id in ["CLS-01", "CLS-02"] else LEGACY_RANGED_REACH
@@ -137,6 +143,7 @@ func _reset_stream(p: Dictionary) -> void:
 	_waiting_snapshot = false
 	set_process(true)
 	_rebuild_skills()
+	_auto_cast_timer = 0.0
 	joined.emit(str(p.get("zone_id", ZONE_ID)))
 
 func _on_delta(p: Dictionary) -> void:
@@ -263,6 +270,7 @@ func _on_error(p: Dictionary) -> void:
 # ----- movement intent -----------------------------------------------------------
 
 func _process(delta: float) -> void:
+	_auto_cast_timer = maxf(0.0, _auto_cast_timer - delta)
 	if _waiting_snapshot:
 		return
 	_send_t += delta
@@ -369,15 +377,38 @@ func cast_slot(slot: int) -> void:
 	pl.animator.play_attack()  # visual only; the result is the server's
 
 func auto_tick() -> void:
-	var pl := _get_player()
-	var e = nearest_enemy(900.0)
-	if pl == null or e == null:
+	if not _active or _waiting_snapshot or _skills.is_empty():
 		return
-	if pl.global_position.distance_to(e.global_position) > 100.0:
-		pl.tap_target = e.global_position
+	var pl := _get_player()
+	if pl == null or bool(pl.get("online_dead")):
+		return
+	# Ranged classes should cast from their server-defined reach instead of
+	# running into melee range. Movement and damage remain server-authoritative.
+	var e = nearest_enemy(900.0, true)
+	if e == null:
+		pl.tap_active = false
+		return
+	var dist := _server_position.distance_to(e.target_pos)
+	var reach := maxf(65.0, _attack_reach - 35.0)
+	if dist > reach:
+		pl.tap_target = e.target_pos
 		pl.tap_active = true
-	else:
-		cast_slot(0)
+		return
+	pl.tap_active = false
+	if _auto_cast_timer > 0.0:
+		return
+	var cds: Dictionary = _self_state.get("cooldowns", {})
+	for slot in range(_skills.size()):
+		var skill: Dictionary = _skills[slot]
+		if str(skill.get("target", "")) != "enemy":
+			continue
+		if int(cds.get(str(skill.get("id", "")), 0)) > 0:
+			continue
+		if float(_self_state.get("resource", 0)) < float(skill.get("cost", 0)):
+			continue
+		_auto_cast_timer = 0.5
+		cast_slot(slot)
+		return
 
 # ----- helpers -------------------------------------------------------------------------
 

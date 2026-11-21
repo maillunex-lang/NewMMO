@@ -158,6 +158,21 @@ func get_tracker_text() -> String:
 			lines.append(_status)
 	return "\n".join(lines)
 
+## Navigation resolves the next incomplete objective, then the quest giver.
+## It never changes quest progress or bypasses server validation.
+func get_navigation_target() -> String:
+	var q := _quest_by_id(_active_id)
+	if q.is_empty():
+		return ""
+	if _status == "available" or _status == "objectives_complete":
+		return str(q.get("contact", ""))
+	if _status == "active":
+		for obj in q.get("objectives", []):
+			var oid := str(obj.get("id", ""))
+			if int(_progress.get(oid, 0)) < int(obj.get("count", 1)):
+				return str(obj.get("target", ""))
+	return str(q.get("contact", ""))
+
 func get_active_quest_id() -> String:
 	return _active_id
 

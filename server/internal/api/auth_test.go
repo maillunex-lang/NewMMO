@@ -13,7 +13,7 @@ func TestValidationBeforeDatabase(t *testing.T) {
 		body string
 	}{
 		{"/v1/accounts", `{"login":"ABC","password":"long enough password"}`},
-		{"/v1/accounts", `{"login":"valid","password":"short"}`},
+		{"/v1/accounts", `{"login":"valid","password":"abc"}`},
 		{"/v1/accounts", `{"login":"valid","password":"long enough password","email":"x"}`},
 		{"/v1/auth/login", `{"login":"valid","login":"duplicate","password":"long enough password"}`},
 		{"/v1/auth/login", `{"login":"valid","password":null}`},

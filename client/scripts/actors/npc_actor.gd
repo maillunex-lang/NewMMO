@@ -27,7 +27,11 @@ func _physics_process(_delta: float) -> void:
 		return
 	_player_near = global_position.distance_to(player.global_position) < 70.0
 	if prompt:
-		prompt.visible = _player_near
+		var quests := get_tree().get_first_node_in_group("quest_manager")
+		var quest_target := quests != null and quests.has_method("get_navigation_target") and str(quests.get_navigation_target()) == npc_id
+		prompt.visible = _player_near or quest_target
+		prompt.text = "◆ ЗАДАНИЕ · " + display_name if quest_target else "Поговорить"
+		prompt.modulate = Color(0.55, 0.95, 1.0) if quest_target else Color.WHITE
 	animator.set_direction_from_vector(player.global_position - global_position)
 	animator.play_idle()
 

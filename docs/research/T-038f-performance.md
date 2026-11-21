@@ -41,3 +41,31 @@ Same VPS, Go 1.26.11, 2026-11-21. Command: `cd server && go test ./internal/worl
 `go test ./internal/world -run '^TestZoneRetainedHeapApprox$' -v` (one diagnostic sample per size) reported **approximate live-heap deltas** of 43,896 / 54,128 / 89,472 bytes for 1/10/50 players with 50 passive enemies. These deltas include snapshot-known-set state; they are GC-sensitive and can be negative on other runs. Do not use them as capacity guarantees.
 
 **Director review:** `go test ./internal/world` and `go vet ./internal/world` pass. Important scaling observation: 50-player all-to-all full JSON fanout costs about 2.8 ms on this VPS, before network I/O. Actual world updates use deltas and interest filtering; measure them with active AI/combat and real WebSocket traffic before any capacity claim. No new dependencies, no gameplay/canon changes. Android remains unmeasured; T-038f stays PARTIAL.
+
+## VPS-only continuation: steady-state movement delta fanout (2026-11-21)
+
+Command: `cd server && go test ./internal/world -run '^$' -bench BenchmarkZoneDeltaFanoutJSON -benchmem -benchtime=200ms -count=1`. All players share a large interest radius, alternate movement targets each iteration, and the benchmark runs `Step`, `DeltaFor` and JSON encoding for each observer. Passive enemies; no real network socket or active AI.
+
+| Players + 50 passive enemies | Movement delta fanout (µs/op) | B/op |
+|---|---:|---:|
+| 1 | 10.6 | 2,208 |
+| 10 | 175 | 84,831 |
+| 50 | 2,261 | 1,374,806 |
+
+**Review:** movement delta fanout still scales substantially when all moving players see one another. This is a synthetic upper-bound visibility pattern, not a typical populated map or a proven production bottleneck. Do not extrapolate throughput without active combat and actual WS delivery. First benchmark attempt exposed a test-fixture issue (movement targets were eventually reached), fixed by alternating server-authorized targets with monotonic sequence numbers. Final benchmark, `go test ./internal/world`, and `go vet ./internal/world` pass. Android and live WS profiling remain outstanding.
+
+Owner's current deployment instruction: continue on VPS `main`, **do not push to GitHub until explicitly requested**.
+
+## VPS-only continuation: actual Zone.Tick dispatch with JSON sink (2026-11-21)
+
+`cd server && go test ./internal/world -run '^$' -bench BenchmarkZoneTickPushJSON -benchmem -benchtime=150ms -count=1`
+
+This benchmark instantiates `NewZone` with the test combat catalog and 50 configured melee enemies, joins 1/10/50 player sessions, sends monotonic movement commands, executes the actual `Zone.Tick` dispatch loop, and JSON-encodes each pushed payload in an in-process sink. No TCP/WebSocket/TLS, PostgreSQL, physical Android, or realistic mixed combat load. All players have a deliberately large shared interest radius; enemies are mostly passive because they are distant from the spawn.
+
+| Players + 50 enemies | Zone.Tick + JSON sink (µs/op) | B/op |
+|---|---:|---:|
+| 1 | 9.38 | 2,217 |
+| 10 | 178 | 84,905 |
+| 50 | 2,084 | 1,373,323 |
+
+Director self-review: all world tests and `go vet ./internal/world` pass. These numbers isolate in-process push serialization, **not real WebSocket throughput**. Scaling in the worst-case all-visible pattern warrants follow-up on interest culling and actual combat traffic. T-038f stays PARTIAL until real transport and device tests.
