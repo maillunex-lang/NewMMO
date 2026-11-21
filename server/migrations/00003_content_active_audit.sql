@@ -1,11 +1,13 @@
 -- +goose Up
 CREATE TABLE public.content_active (
     id smallint PRIMARY KEY CHECK (id = 1),
-    build_id text NOT NULL REFERENCES public.content_builds(build_id),
+    build_id text REFERENCES public.content_builds(build_id),
     previous_build_id text REFERENCES public.content_builds(build_id),
     switched_at timestamptz NOT NULL DEFAULT now(),
     switched_by text NOT NULL
 );
+
+INSERT INTO public.content_active (id, build_id, switched_by) VALUES (1, NULL, 'migration');
 
 CREATE TABLE public.content_audit (
     audit_id bigserial PRIMARY KEY,
