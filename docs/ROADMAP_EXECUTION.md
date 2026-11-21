@@ -191,7 +191,7 @@
 **Тесты:** CT-009, CT-017 + PG inventory + ONLINE_SMOKE inventory panel  
 **Статус:** [~] bag+server inventory done; loot/equip remain
 
-### EX-W01 — Hybrid location generator (editable `.tscn` in Godot)
+### EX-W01 — Hybrid location generator (editable `.tscn` in Godot) — **v1 [x]** (T-032, in-house, CLI; editor dock + server obstacle consumption pending)
 **Зависит от:** DONE-D research ✔; Godot 4.7.2 ✔; World Studio ✔  
 **План:** `docs/director/LOCATION_GENERATOR_PLAN.md`  
 **Смысл:** seed заполняет `Generated/*`; владелец на ПК в Godot двигает/ставит детали; regen **не** затирает `Manual/*`.  
