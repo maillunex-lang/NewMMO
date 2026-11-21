@@ -338,6 +338,27 @@ func (s *Server) commands(p *peer, owner string, id, revision int64) {
 			if !p.enqueue("dialogue.node.state", m.requestID, revision, result, 0) {
 				return
 			}
+		case m.typ == "inventory.move.request":
+			if s.inv == nil {
+				if !p.sendError(m.requestID, revision, "UNKNOWN_TYPE", 0, 0) {
+					return
+				}
+				continue
+			}
+			payload := rawPayload(m.payload)
+			ctx, cancel := context.WithTimeout(p.work, s.cfg.WriteTimeout)
+			result, err := s.inv.Move(ctx, owner, id, m.typ, m.requestID, payload)
+			cancel()
+			if err != nil {
+				if !p.sendError(m.requestID, revision, questErrorCode(err), 0, 0) {
+					return
+				}
+				continue
+			}
+			revision = revisionFromResult(result, revision)
+			if !p.enqueue("inventory.delta", m.requestID, revision, result, 0) {
+				return
+			}
 		default:
 			if !p.sendError(m.requestID, revision, "UNKNOWN_TYPE", 0, 0) {
 				return
@@ -401,6 +422,14 @@ func (s *Server) snapshot(ctx context.Context, owner string, id int64, state aut
 				}
 			}
 			scopes[name] = quests
+		case "inventory":
+			inv := any(map[string]any{"inventory_revision": 0, "bag": []any{}, "materials": []any{}, "quest_keys": []string{}})
+			if s.inv != nil {
+				if snap, err := s.inv.SnapshotInventory(ctx, owner, id); err == nil {
+					inv = snap
+				}
+			}
+			scopes[name] = inv
 		}
 	}
 	return map[string]any{"scopes": scopes, "revision": state.Revision}

@@ -45,12 +45,19 @@ type DialogueHandler interface {
 	Choice(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any) (any, error)
 }
 
+// InventoryHandler is optional EX-P08 inventory (T-029). Nil → UNKNOWN_TYPE for inventory.move.
+type InventoryHandler interface {
+	Move(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any) (any, error)
+	SnapshotInventory(ctx context.Context, accountID string, characterID int64) (any, error)
+}
+
 type Server struct {
 	lifetime context.Context
 	cfg      Config
 	store    Store
 	quests   QuestHandler
 	dialogue DialogueHandler
+	inv      InventoryHandler
 	logger   *slog.Logger
 
 	mu         sync.Mutex
@@ -73,6 +80,8 @@ func New(lifetime context.Context, cfg Config, store Store, logger *slog.Logger)
 func (s *Server) SetQuests(q QuestHandler) { s.quests = q }
 
 func (s *Server) SetDialogue(d DialogueHandler) { s.dialogue = d }
+
+func (s *Server) SetInventory(i InventoryHandler) { s.inv = i }
 
 type admission struct {
 	attempts []time.Time

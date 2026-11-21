@@ -173,17 +173,22 @@
 **Объём (не 240):**  
 - [x] 5 MQ локально (DONE-E) — **перевести на сервер**  
 - [x] MQ-01-01…05 на Go + persist (T-020…T-025)  
-- [~] + 5 SQ из `09_QUESTS_SIDE.md` (только REG-01) — SQ-01-001 ✔ (T-027); SQ-01-002…005 (T-028)  
+- [x] + 5 SQ из `09_QUESTS_SIDE.md` (только REG-01) — SQ-01-001…005 server path (T-027/T-028); client world props remain stub IDs  
 - [x] награды через ledger (T-020; SQ uses same path)  
 **Тесты:** CT-012, CT-018 (урезанный), `mq01_smoke` против API, PG SQ-01-001…005  
-**Статус:** [~] T-028 in review
+**Статус:** [x] **EX-P07 закрыт 2026-11-21** — MQ+SQ REG-01 pilot on Go (`0057a66`); live world SQ props / full client SQ UX optional polish
 
 ### EX-P08 — Inventory, loot, 5 classes
-**Зависит от:** EX-P07; канон 05 + 11  
-**OSS research:** inventory patterns — ждать ОК  
-**Приёмка:** серверный инвентарь; `MAT-01-*` / `ITEM-Q-*` как QUEST_KEY; класс CLS-01…05 selectable  
-**Тесты:** CT-009, CT-017  
-**Статус:** [ ]
+**Зависит от:** EX-P07 ✔; канон 05 + 11  
+**OSS research:** [x] T-029 `docs/research/T-029-inventory.md` — in-house Go+PG; no new deps  
+**Контракт:** `docs/contracts/inventory-engine.md`  
+**Приёмка:**
+- [~] серверный инвентарь (T-029 bag/materials + move)
+- [~] `MAT-01-*` stacks; `ITEM-Q-*` via `character_quest_items` (QUEST_KEY)
+- [x] класс CLS-01…05 selectable (character create, T-018)
+- [ ] combat loot tables / equip UI (follow-up)  
+**Тесты:** CT-009, CT-017 + PG inventory  
+**Статус:** [~] T-029 in review
 
 ### EX-P09 — First dungeon `DNG-01-001`
 **Зависит от:** EX-P08 (базовый бой/лут), `12_DUNGEONS.md`  
@@ -295,8 +300,8 @@
 ## Актуальный handoff для Cursor-директора (2026-11-21)
 
 - **Завершено:** EX-P00–P03, T-018 REST auth, T-019 WebSocket (PR #2), T-020 quest engine (PR #3, `4461aa7`), T-022 login UI, T-015 Godot 4.7.2; EX-CONTENT-01 pilot интегрирован.
-- **Текущий этап:** EX-P07 [~]. **Сейчас:** T-028 SQ-01-002…005. **Далее:** EX-P07 closeout / EX-P08 inventory.
-- **Не завершено:** live E2E against running Go server (manual/env), R-PROX (S-02), Android device measurements, EX-P07–P13. Не отмечать их `[x]` по наличию stub или документации.
+- **Текущий этап:** EX-P08 [~]. **Сейчас:** T-029 inventory engine. **Далее:** bag UI + loot from combat; then EX-P09 dungeon.
+- **Не завершено:** live E2E against running Go server (manual/env), R-PROX (S-02), Android device measurements, EX-P08–P13. Не отмечать их `[x]` по наличию stub или документации.
 - **Рабочие масштабы локаций:** деревня 200×200 м, город 500×500 м, открытая зона 1000×1000 м, большая дикая 1500×1500 м, подземелье 150–400 м маршрута; источник `docs/content/03_LOCATIONS.md`, предварительно до Android-профилирования.
 - **Автономия Cursor:** может корректировать план, выдавать и принимать задачи, обновлять статусы и сливать прошедшие проверки изменения. Без согласия владельца не менять канон, игровой баланс/монетизацию, архитектурные пины, не добавлять зависимости, не развёртывать VPS и не удалять данные.
-- **Первое действие:** принять T-028; закрыть EX-P07 server SQ slice.
+- **Первое действие:** принять T-029; продолжить EX-P08 UI/loot.

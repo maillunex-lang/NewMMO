@@ -258,7 +258,8 @@ func sessionID() string {
 func isMutation(typ string) bool {
 	switch typ {
 	case "quest.accept.request", "quest.turnin.request", "world.interact.request",
-		"dialogue.open.request", "dialogue.choice.request", "dungeon.enter.request":
+		"dialogue.open.request", "dialogue.choice.request",
+		"inventory.move.request", "dungeon.enter.request":
 		return true
 	}
 	return false
