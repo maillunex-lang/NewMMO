@@ -5,7 +5,8 @@ extends RefCounted
 
 const HttpTransport = preload("res://scripts/net/http_transport.gd")
 
-const DEFAULT_API_URL := "http://127.0.0.1:18086"
+## Public API on the VPS (owner: https://rikagro.ru/newmmo). Dev/CI override: NEWMMO_API_URL (e.g. http://127.0.0.1:18086).
+const DEFAULT_API_URL := "https://rikagro.ru/newmmo"
 const PREFS_PATH := "user://auth_prefs.json"
 const REQUEST_TIMEOUT_SEC := 15.0
 

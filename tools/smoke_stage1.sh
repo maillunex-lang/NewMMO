@@ -94,6 +94,12 @@ run_godot_capture "Autopath smoke (routes around props, auto-interact)" "AUTOPAT
 run_godot_capture "Grass footprint smoke (hold 0.7 s, then recover)" "GRASS_SMOKE_OK" -- \
   --headless --path "$ROOT/client" --script res://scripts/dev/grass_smoke.gd
 
+run_godot_capture "Startup smoke (login screen first, online by default, VPS API, Android export contract)" "STARTUP_SMOKE_OK" -- \
+  --headless --path "$ROOT/client" --script res://scripts/dev/startup_smoke.gd
+
+run_godot_capture "Anim smoke (no walk/idle flicker between physics tick and render rate)" "ANIM_SMOKE_OK" -- \
+  --headless --path "$ROOT/client" --script res://scripts/dev/anim_smoke.gd
+
 echo "== Server tests =="
 (cd "$ROOT/server" && go test ./...)
 
