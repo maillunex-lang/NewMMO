@@ -47,10 +47,10 @@ Any location generator must:
 
 ## Delivery loop
 
-1. Branch from the agreed base (`cursor/<name>-6dd6` when using Cloud Agent branch policy).
+1. **Work only on `main`.** Do not create feature branches or PRs unless the owner explicitly asks.
 2. Implement the smallest working slice; keep the game bootable.
 3. Test (headless smoke, `go test`, manual checks as applicable).
-4. Commit, push, update PR; report what is done / stubbed / blocked (APK, VPS, etc.).
+4. Commit and push directly to `main`; report what is done / stubbed / blocked (APK, VPS, etc.).
 5. Do not mix “docs written” with “feature shipped.”
 
 ## First vertical priorities (context)
