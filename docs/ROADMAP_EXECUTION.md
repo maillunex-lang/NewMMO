@@ -226,6 +226,7 @@
 | 2026-11-21 | EX-P02 crossrefs + CT-003…009 | `59f5cbd` | unittest 32 OK; lint 0 ERROR | C-ITEMQ-001 найден (36 ITEM-Q без объявления) |
 | 2026-11-21 | C-ITEMQ-001 A (по решению владельца) | `8a61c6b` | unittest 32 OK | 36 `ITEM-Q-*` в `11` §12.1, имена — рабочие |
 | 2026-11-21 | Полная сверка связей: client-sync + docs-links + CI | см. `git log` | unittest 35 OK; client-sync 0 ERR; docs-links 0 | клиент == канон; 1 doc-путь починен (`AUDIT.md`) |
+| 2026-11-21 | T-002 Godot 4.7.2 gate research (ChatGPT) | см. `git log` | docs-only; director spot-check of smoke/export claims | 4.7.2 вышел 2026-08-18; рекомендация: держать 4.3 до B-APK + базы на 6 ГБ; найдены пробелы смоука/экспорта → T-008 |
 | 2026-11-21 | T-004 client UI safe-area + scene choices (Cursor) | см. `git log` | smokes (executor): stage1/MQ01/boot OK; client-sync 0 err | в P06 сделано: safe-area, кнопки выбора в `.tscn`; журнал квестов и i18n → T-007 |
 | 2026-11-21 | T-005 Go server hardening (Codex) | `b026eab` | go vet + test -race OK; live smoke OK | stdlib only; replaced by T-006 follow-up (go 1.25 directive, WS-ready wrapper) |
 | 2026-11-21 | EX-DIR multi-agent protocol | см. `git log` | unittest 11 OK (lane_check) | задачи не выданы, ждём ответов владельца |
@@ -237,7 +238,7 @@
 | ID | Риск | Действие |
 |----|------|----------|
 | R-GO | Go 1.22 vs актуальные pgx/goose | **RESOLVED**: апгрейд Go ≥1.25 одобрен 2026-11-21 (CI 1.25.x; `server/go.mod` — в задаче P03) |
-| R-GODOT | Target 4.7.2; pin 4.3 | C-GODOT-001 B — не апгрейдить до отдельной проверки |
+| R-GODOT | Target 4.7.2; pin 4.3 | C-GODOT-001 B — не апгрейдить до отдельной проверки; гейт описан в `docs/research/godot-4-7-2-upgrade.md` (Phase 2 — по OK владельца) |
 | R-AUTH | Квесты на клиенте | EX-P04 обязателен до «готово онлайн» |
 | R-DIA | `DLG-*` в 13/14 | **RESOLVED A** — канон только `DIA.*`; `DLG-*` obsolete |
 | R-POI | Клиентские stub POI ≠ `POI-01-*` | OPEN (C-POI-001) → задача D-002 (контракт маппинга) |
