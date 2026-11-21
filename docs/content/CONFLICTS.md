@@ -91,6 +91,15 @@ Recorded by EX-P00 audit. **Do not silently pick a side in code.** Owner decides
 | Interim | Drops use the template's base level as `item_level`; `required_level = max(1, item_level − 3)` (R1 gear wearable from level 5). Affixes (`11` §7) are not rolled yet; stat budget (`11` §4 formulas, class split) is the only stat source. |
 | Owner decision needed | Per-drop `item_level` scaling inside a region (§6 "варианты уровней") and the real wear requirement. |
 
+## C-MAGE-001 — a level-1 Mage cannot kill a single level-4 enemy
+
+| Field | Value |
+|-------|--------|
+| Status | **OPEN — owner decision needed** (2026-11-21, found by the live playtest bot, `client/scripts/dev/playtest.gd`) |
+| Problem | `05_CLASSES.md`: all classes except the Mage have a free level-1 basic attack (cost 0, builds their resource: Guard/Rage/Focus/Light). `CLS-03-SK01` «Искра Узора» costs **20 mana**, CD 3 s, `1.05*SP`; mana is 100 with regen **5/s out of combat, 2/s in combat** (`05` §3). Region-1 open-world enemies are level 4: 258 HP vs ~36 damage per cast ⇒ 7 casts = 140 mana, but a mage has 100 and regains 2/s. Measured over 60 s with auto-combat: Mage dies (HP 288→0, enemy left with 6 HP); Guardian/Berserker/Ranger/Oracle survive and win. |
+| Options | (a) `CLS-03-SK01` cost 0 and +mana on cast like the others; (b) cost 8–10; (c) in-combat regen ≥ 5/s; (d) level-1 open-world enemies of level 1–2 (also fixes the first-fight difficulty of every class). |
+| Interim | None applied: all four numbers are canon. |
+
 ## Other open notes
 
 | ID | Note |

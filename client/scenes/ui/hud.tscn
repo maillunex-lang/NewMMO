@@ -174,41 +174,59 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -374.0
-offset_top = -70.0
+offset_left = -420.0
+offset_top = -76.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_constants/separation = 6
 mouse_filter = 0
 
 [node name="Skill1" type="Button" parent="SafeArea/Chrome/Skills"]
-custom_minimum_size = Vector2(56, 56)
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
+size_flags_horizontal = 0
+theme_override_font_sizes/font_size = 13
+clip_text = true
 text = "1"
 
 [node name="Skill2" type="Button" parent="SafeArea/Chrome/Skills"]
-custom_minimum_size = Vector2(56, 56)
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
+size_flags_horizontal = 0
+theme_override_font_sizes/font_size = 13
+clip_text = true
 text = "2"
 
 [node name="Skill3" type="Button" parent="SafeArea/Chrome/Skills"]
-custom_minimum_size = Vector2(56, 56)
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
+size_flags_horizontal = 0
+theme_override_font_sizes/font_size = 13
+clip_text = true
 text = "3"
 
 [node name="Skill4" type="Button" parent="SafeArea/Chrome/Skills"]
-custom_minimum_size = Vector2(56, 56)
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
+size_flags_horizontal = 0
+theme_override_font_sizes/font_size = 13
+clip_text = true
 text = "4"
 
 [node name="Skill5" type="Button" parent="SafeArea/Chrome/Skills"]
-custom_minimum_size = Vector2(56, 56)
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
+size_flags_horizontal = 0
+theme_override_font_sizes/font_size = 13
+clip_text = true
 text = "5"
 
 [node name="Skill6" type="Button" parent="SafeArea/Chrome/Skills"]
-custom_minimum_size = Vector2(56, 56)
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
+size_flags_horizontal = 0
+theme_override_font_sizes/font_size = 13
+clip_text = true
 text = "6"
 
 [node name="Joystick" type="Panel" parent="SafeArea/Chrome"]
@@ -244,9 +262,9 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -500.0
-offset_top = -70.0
-offset_right = -390.0
+offset_left = -546.0
+offset_top = -76.0
+offset_right = -432.0
 grow_horizontal = 0
 grow_vertical = 0
 text = "ui.auto"

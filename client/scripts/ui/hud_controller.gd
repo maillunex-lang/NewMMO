@@ -103,6 +103,9 @@ func _bind_world() -> void:
 		_on_hp(_player.hp, _player.max_hp)
 		_on_mp(_player.mp, _player.max_mp)
 		name_label.text = player_name_placeholder
+		var sess := get_tree().get_first_node_in_group("online_session")
+		if sess != null and typeof(sess.get("character")) == TYPE_DICTIONARY and str((sess.character as Dictionary).get("name", "")) != "":
+			name_label.text = str(sess.character.get("name"))
 	if _quest and _quest.has_signal("quest_updated"):
 		_quest.quest_updated.connect(_on_quest)
 		quest_text.text = _quest.get_tracker_text()
