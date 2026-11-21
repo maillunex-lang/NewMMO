@@ -24,6 +24,7 @@ func Address(getenv func(string) string) string {
 
 type Application struct {
 	API   http.Handler
+	WS    http.Handler
 	Ready func(context.Context) error
 }
 
@@ -90,6 +91,9 @@ func NewHandler(lifetime context.Context, logger *slog.Logger, app Application) 
 	})
 	if app.API != nil {
 		mux.Handle("/v1/", app.API)
+	}
+	if app.WS != nil {
+		mux.Handle("/v1/ws", app.WS)
 	}
 	mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) {
 		ready := lifetime.Err() == nil

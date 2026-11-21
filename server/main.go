@@ -12,6 +12,7 @@ import (
 	"github.com/maillunex-lang/NewMMO/server/internal/auth"
 
 	"github.com/maillunex-lang/NewMMO/server/internal/httpservice"
+	"github.com/maillunex-lang/NewMMO/server/internal/ws"
 )
 
 func main() {
@@ -28,6 +29,10 @@ func run(logger *slog.Logger) error {
 
 	address := httpservice.Address(os.Getenv)
 	config, err := auth.LoadConfig(os.Getenv, address)
+	if err != nil {
+		return err
+	}
+	wsConfig, err := ws.LoadConfig(os.Getenv)
 	if err != nil {
 		return err
 	}
@@ -59,7 +64,24 @@ func run(logger *slog.Logger) error {
 		<-cleanupDone
 	}()
 
+	socket := ws.New(ctx, wsConfig, store, logger)
+	socketLifetime, stopSocket := context.WithCancel(ctx)
+	socketDone := make(chan struct{})
+	go func() {
+		defer close(socketDone)
+		<-socketLifetime.Done()
+		drainCtx, cancel := context.WithTimeout(context.Background(), ws.ShutdownTimeout)
+		defer cancel()
+		if err := socket.Shutdown(drainCtx); err != nil {
+			logger.Warn("websocket drain deadline reached")
+		}
+	}()
+	defer func() {
+		stopSocket()
+		<-socketDone
+	}()
+
 	return httpservice.Run(ctx, address, logger, httpservice.Application{
-		API: api.New(store, config.WSURL), Ready: store.Ready,
+		API: api.New(store, config.WSURL), WS: socket, Ready: store.Ready,
 	})
 }
