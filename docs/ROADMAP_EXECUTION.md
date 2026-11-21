@@ -191,6 +191,19 @@
 **Тесты:** CT-009, CT-017 + PG inventory + ONLINE_SMOKE inventory panel  
 **Статус:** [~] bag+server inventory done; loot/equip remain
 
+### EX-W01 — Hybrid location generator (editable `.tscn` in Godot)
+**Зависит от:** DONE-D research ✔; Godot 4.7.2 ✔; World Studio ✔  
+**План:** `docs/director/LOCATION_GENERATOR_PLAN.md`  
+**Смысл:** seed заполняет `Generated/*`; владелец на ПК в Godot двигает/ставит детали; regen **не** затирает `Manual/*`.  
+**Приёмка:**
+- [ ] контракт слоёв/seed (`location-generator.md`)
+- [ ] выбор инструмента (in-house / WFC / Gaea) — **OSS только после OK владельца**
+- [ ] generate одной локации (Dawn Valley / LOC-01 scale) в `.tscn`
+- [ ] тест: Manual дерево не исчезает после regen; сцена открывается и правится в Godot 4.7.2
+- [ ] генерация **только в редакторе** (не runtime Android)  
+**Старт:** по «делай генератор» или после играбельного куска EX-P08 (можно параллельно с P09, если не конфликтуют файлы)  
+**Статус:** [ ] запланирован (не начат)
+
 ### EX-P09 — First dungeon `DNG-01-001`
 **Зависит от:** EX-P08 (базовый бой/лут), `12_DUNGEONS.md`  
 **OSS research:** Godot dungeon instance patterns — ждать ОК  
