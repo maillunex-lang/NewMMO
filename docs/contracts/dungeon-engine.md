@@ -33,5 +33,9 @@ character `FOR UPDATE` → instance `COMPLETED` & unclaimed → roll each table 
 ## 5. Data
 Migration `00012_dungeons.sql`: `dungeon_instances` (one active instance per character via partial unique index), `dungeon_event_log` (append-only), `dungeon_progress`, `dungeon_reward_claims`. Definitions are loaded from `content/dungeons/*.json` and validated at startup against the published content build (enemies, loot tables exist).
 
+## 5.1 Room simulation geometry (T-038e)
+
+The registry stores each room's floor width and height, entry point, and each spawn's position. Coordinates are pixels in the editable dungeon scene. The registry gate checks the room, enemy ID and position of each spawn against the scene. Room simulations use the existing 10 Hz combat rules and 180 px/s movement. Automatic respawns are disabled in rooms, with persisted defeat flags used when rebuilding a room. These simulation rules are ready for the dungeon session integration.
+
 ## 6. Acceptance
 Closed door until clear condition; wrong object in room ⇒ `INVALID_TARGET`; puzzle reset/solved; wipe → checkpoint rules; reconnect returns same state; idle expiry; double `claim`/`report` never doubles rewards (parallel claims test); first clear once; inventory-full claim retryable; one active instance per character; event log append-only. CI `server-db`.

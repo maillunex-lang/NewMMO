@@ -16,6 +16,16 @@ sys.path.insert(0, HERE)
 import lint  # noqa: E402
 
 
+def position(block):
+    match = re.search(r"^position = Vector2\(([^,]+), ([^)]+)\)$", block, re.MULTILINE)
+    return {"x": float(match[1]), "y": float(match[2])} if match else {"x": 0, "y": 0}
+
+
+def offset(block, side):
+    match = re.search(rf"^offset_{side} = (\S+)$", block, re.MULTILINE)
+    return float(match[1]) if match else 0
+
+
 def check_scene(root, d, name, err):
     """The editable client scene must mirror the registry (rooms, objects, spawns, enemies)."""
     slug = d["dungeon_id"].lower().replace("-", "_")
@@ -26,7 +36,7 @@ def check_scene(root, d, name, err):
     text = open(path, encoding="utf-8").read()
     # node blocks: [node name="X" ... parent="Rooms/R01/Objects" ...] followed by its properties
     blocks = re.split(r"\n(?=\[node )", text)
-    objs, spawns, rooms = {}, {}, set()
+    objs, spawns, nodes, rooms = {}, {}, {}, set()
     for b in blocks:
         header = b.split("\n", 1)[0]
         if not header.startswith("[node "):
@@ -34,6 +44,7 @@ def check_scene(root, d, name, err):
         nm = re.search(r'name="([^"]+)"', header).group(1)
         pm = re.search(r'parent="([^"]*)"', header)
         parent = pm.group(1) if pm else ""
+        nodes[parent, nm] = b
         if parent == "Rooms":
             rooms.add(nm)
         om = re.search(r'dungeon_object_id = "([^"]+)"', b)
@@ -41,20 +52,33 @@ def check_scene(root, d, name, err):
             objs[om.group(1)] = parent
         if parent.endswith("/Spawns"):
             em = re.search(r'metadata/enemy_id = "([^"]+)"', b)
-            spawns[nm] = em.group(1) if em else None
+            spawns[nm] = (parent, em.group(1) if em else None, position(b))
     want_rooms = {r["id"].split("-")[-1] for r in d["rooms"]}
     if rooms != want_rooms:
         err("DR_SCENE", f"{name}: scene rooms {sorted(rooms)} != registry {sorted(want_rooms)}")
     for r in d["rooms"]:
         rn = r["id"].split("-")[-1]
+        room_path = f"Rooms/{rn}"
+        floor = nodes.get((room_path, "Floor"))
+        entry = nodes.get((room_path, "Entry"))
+        if floor is None or entry is None:
+            err("DR_SCENE", f"{name}: room {rn} missing Floor or Entry")
+        else:
+            geometry = {"width": offset(floor, "right"), "height": offset(floor, "bottom"), "entry": position(entry)}
+            if r.get("layout") != geometry or offset(floor, "left") or offset(floor, "top"):
+                err("DR_SCENE", f"{name}: room {rn} floor or entry differs from registry")
+            for key in (("Rooms", rn), (room_path, "Spawns")):
+                block = nodes.get(key, "")
+                if re.search(r"^(position|rotation|scale|skew|transform) =", block, re.MULTILINE):
+                    err("DR_SCENE", f"{name}: {key} must use the room simulation coordinate system")
         for o in r.get("objects", []) + r.get("optional_objects", []):
             if objs.get(o) != f"Rooms/{rn}/Objects":
                 err("DR_SCENE", f"{name}: object {o} missing/misplaced in scene room {rn}")
         for s in r.get("spawns", []):
             if s["id"] not in spawns:
                 err("DR_SCENE", f"{name}: spawn {s['id']} missing in scene")
-            elif spawns[s["id"]] != s["enemy_id"]:
-                err("DR_SCENE", f"{name}: spawn {s['id']} enemy {spawns[s['id']]} != registry {s['enemy_id']}")
+            elif spawns[s["id"]] != (f"{room_path}/Spawns", s["enemy_id"], s.get("position")):
+                err("DR_SCENE", f"{name}: spawn {s['id']} room, enemy or position differs from registry")
     all_obj = {o for r in d["rooms"] for o in r.get("objects", []) + r.get("optional_objects", [])}
     all_sp = {s["id"] for r in d["rooms"] for s in r.get("spawns", [])}
     for o in set(objs) - all_obj:

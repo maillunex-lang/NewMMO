@@ -65,6 +65,15 @@ Recorded by EX-P00 audit. **Do not silently pick a side in code.** Owner decides
 | Interim | `world.Combat`: 1 m = 32 world units; single-target range 2.5 m for CLS-01/02 and 9 m for CLS-03/04/05, +1 m latency slack; enemy respawn 30 s. Tunables only; no balance claim. |
 | Owner decision needed | Real per-skill ranges (or per-class), unit scale, respawn timers per spawn. |
 
+## C-DNG-001 — ritual window for DNG-01-001
+
+| Field | Value |
+|-------|--------|
+| Status | **OPEN, interim approved** (2026-11-21, T-038e) |
+| Problem | `12_DUNGEONS.md` §4.1 requires linking three flames within a ritual window. It gives neither the duration nor the triggering event. The 2.2 s in `06_ENEMIES.md` applies to taking cover during `AB-ENM-01-301-C`. |
+| Interim | The owner confirmed that the first authoritative combat slice keeps the existing three flame interactions without a deadline. |
+| Owner decision needed | Specify the duration and trigger when introducing the ritual timer. |
+
 ## Other open notes
 
 | ID | Note |

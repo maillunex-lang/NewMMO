@@ -33,12 +33,7 @@ func testDef() ZoneDef {
 	d := ZoneDef{ZoneID: "ZONE-T", RegionID: "REG-01", TickRate: 10, PlayerSpeed: 180, InterestRadius: 600}
 	d.Bounds.MaxX, d.Bounds.MaxY = 2048, 1400
 	d.PlayerSpawn.X, d.PlayerSpawn.Y = 100, 100
-	d.Enemies = append(d.Enemies, struct {
-		SpawnID string  `json:"spawn_id"`
-		EnemyID string  `json:"enemy_id"`
-		X       float64 `json:"x"`
-		Y       float64 `json:"y"`
-	}{"ZS-1", "ENM-01-001", 300, 100})
+	d.Enemies = []SpawnDef{{SpawnID: "ZS-1", EnemyID: "ENM-01-001", X: 300, Y: 100}}
 	return d
 }
 

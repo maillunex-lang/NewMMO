@@ -6,12 +6,15 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+
+	"github.com/maillunex-lang/NewMMO/server/internal/world"
 )
 
 type Spawn struct {
-	ID       string `json:"id"`
-	EnemyID  string `json:"enemy_id"`
-	Optional bool   `json:"optional"`
+	ID       string     `json:"id"`
+	EnemyID  string     `json:"enemy_id"`
+	Optional bool       `json:"optional"`
+	Position *world.Vec `json:"position"`
 }
 
 type Clear struct {
@@ -20,13 +23,20 @@ type Clear struct {
 	Puzzle    bool     `json:"puzzle"`
 }
 
+type RoomLayout struct {
+	Width  float64    `json:"width"`
+	Height float64    `json:"height"`
+	Entry  *world.Vec `json:"entry"`
+}
+
 type Room struct {
-	ID              string   `json:"id"`
-	Kind            string   `json:"kind"` // entrance | fight | puzzle | miniboss | rest | boss | exit
-	Objects         []string `json:"objects"`
-	OptionalObjects []string `json:"optional_objects"`
-	Spawns          []Spawn  `json:"spawns"`
-	Clear           Clear    `json:"clear"`
+	ID              string      `json:"id"`
+	Kind            string      `json:"kind"` // entrance | fight | puzzle | miniboss | rest | boss | exit
+	Objects         []string    `json:"objects"`
+	OptionalObjects []string    `json:"optional_objects"`
+	Spawns          []Spawn     `json:"spawns"`
+	Clear           Clear       `json:"clear"`
+	Layout          *RoomLayout `json:"layout"`
 }
 
 type Definition struct {
@@ -93,6 +103,9 @@ func (d Definition) Validate() error {
 			return fmt.Errorf("%s: duplicate or empty room id %q", d.DungeonID, r.ID)
 		}
 		seen[r.ID] = true
+		if _, err := r.zoneDef(nil); err != nil {
+			return err
+		}
 		for _, o := range append(append([]string{}, r.Objects...), r.OptionalObjects...) {
 			if prev, dup := objs[o]; dup {
 				return fmt.Errorf("%s: object %s in rooms %s and %s", d.DungeonID, o, prev, r.ID)

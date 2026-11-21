@@ -21,6 +21,13 @@ var (
 	ErrInternal      = errors.New("INTERNAL")
 )
 
+type SpawnDef struct {
+	SpawnID string  `json:"spawn_id"`
+	EnemyID string  `json:"enemy_id"`
+	X       float64 `json:"x"`
+	Y       float64 `json:"y"`
+}
+
 // ZoneDef is content/zones/*.json.
 type ZoneDef struct {
 	ZoneID         string  `json:"zone_id"`
@@ -34,22 +41,15 @@ type ZoneDef struct {
 		MaxX float64 `json:"max_x"`
 		MaxY float64 `json:"max_y"`
 	} `json:"bounds"`
-	PlayerSpawn struct {
-		X float64 `json:"x"`
-		Y float64 `json:"y"`
-	} `json:"player_spawn"`
-	Enemies []struct {
-		SpawnID string  `json:"spawn_id"`
-		EnemyID string  `json:"enemy_id"`
-		X       float64 `json:"x"`
-		Y       float64 `json:"y"`
-	} `json:"enemies"`
+	PlayerSpawn Vec        `json:"player_spawn"`
+	Enemies     []SpawnDef `json:"enemies"`
+	NoRespawn   bool       `json:"-"`
 }
 
 func (d ZoneDef) Config() Config {
 	return Config{TickRate: d.TickRate, PlayerSpeed: d.PlayerSpeed, InterestRadius: d.InterestRadius,
 		Bounds:      Rect{d.Bounds.MinX, d.Bounds.MinY, d.Bounds.MaxX, d.Bounds.MaxY},
-		PlayerSpawn: Vec{d.PlayerSpawn.X, d.PlayerSpawn.Y}}
+		PlayerSpawn: d.PlayerSpawn, NoRespawn: d.NoRespawn}
 }
 
 func (d ZoneDef) Validate() error {
