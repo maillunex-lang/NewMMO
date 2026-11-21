@@ -44,7 +44,7 @@ func get_line(dia_id: String) -> Dictionary:
 func get_tracker_text() -> String:
 	var q := _quest_by_id(_active_id)
 	if q.is_empty():
-		return "Нет активного основного задания"
+		return tr("ui.no_active_quest")
 	var lines: PackedStringArray = PackedStringArray()
 	lines.append("%s · %s" % [q.get("id", ""), q.get("title", "")])
 	match _status:
@@ -71,6 +71,55 @@ func get_active_quest_id() -> String:
 
 func get_status() -> String:
 	return _status
+
+## Read-only journal adapter for UI (EX-P06). Same method names can later wrap a server source.
+## Does not mutate quest state.
+func get_journal_active() -> Dictionary:
+	var q := _quest_by_id(_active_id)
+	if q.is_empty():
+		return {}
+	var objectives: Array = []
+	for obj in q.get("objectives", []):
+		var oid: String = str(obj.get("id", ""))
+		var need: int = int(obj.get("count", 1))
+		var have: int = int(_progress.get(oid, 0))
+		objectives.append({
+			"id": oid,
+			"text": str(obj.get("text", oid)),
+			"have": mini(have, need),
+			"need": need,
+		})
+	var reward: Dictionary = q.get("reward", {})
+	return {
+		"id": str(q.get("id", "")),
+		"title": str(q.get("title", "")),
+		"journal": str(q.get("journal", "")),
+		"status": _status,
+		"contact": str(q.get("contact", "")),
+		"objectives": objectives,
+		"reward": {
+			"xp": int(reward.get("xp", 0)),
+			"gold": int(reward.get("gold", 0)),
+			"reputation": int(reward.get("reputation", 0)),
+			"evidence": str(reward.get("evidence", "")),
+		},
+	}
+
+func get_journal_completed() -> Array:
+	var out: Array = []
+	var active_idx := _index_of(_active_id)
+	for i in range(_quests.size()):
+		var q: Dictionary = _quests[i]
+		var qid := str(q.get("id", ""))
+		var done := false
+		if active_idx < 0:
+			# Chain finished or empty active — treat every loaded MQ as completed when status says so.
+			done = (_status == "completed")
+		else:
+			done = i < active_idx
+		if done:
+			out.append({"id": qid, "title": str(q.get("title", ""))})
+	return out
 
 func npc_display_name(npc_id: String) -> String:
 	match npc_id:

@@ -3,10 +3,15 @@ extends Node2D
 
 @onready var player: CharacterBody2D = $DawnValley/Player
 @onready var dialogue: Control = $CanvasLayer/Dialogue
+@onready var quest_journal: Control = $CanvasLayer/QuestJournal
 @onready var quest_manager: Node = $QuestManager
 @onready var camera: Camera2D = $DawnValley/Player/Camera2D
 
 func _ready() -> void:
+	# Honor project.godot [internationalization] locale/locale (OS locale otherwise wins).
+	var forced := str(ProjectSettings.get_setting("internationalization/locale/locale", ""))
+	if forced != "":
+		TranslationServer.set_locale(forced)
 	if quest_manager and quest_manager.has_signal("dialogue_flow_requested"):
 		quest_manager.dialogue_flow_requested.connect(_on_flow)
 	if dialogue and dialogue.has_signal("closed"):
@@ -23,6 +28,8 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if dialogue and dialogue.visible:
+		return
+	if quest_journal and quest_journal.visible:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
