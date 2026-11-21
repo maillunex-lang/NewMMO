@@ -6,7 +6,7 @@
 **Главный канон-оркестратор:** `docs/content/14_CONTENT_INTEGRATION.md`  
 **Канон контента:** `docs/content/01_WORLD.md` … `14_CONTENT_INTEGRATION.md`  
 **Процесс:** `AGENTS.md`, `.cursor/rules/open-source-research.mdc`  
-**Обновлено:** 2026-11-21 · tip `main` — EX-P00 [x]; EX-P01 next; EX-CONTENT-01 plan awaiting approval
+**Обновлено:** 2026-11-21 · tip `main` — EX-P00 [x]; EX-P01 [x]; EX-P02 next (ждёт «делай»); EX-CONTENT-01 plan awaiting approval
 
 ---
 
@@ -72,12 +72,14 @@
 **OSS research first:** schema/lint tooling (не ставить без подтверждения)  
 **Артефакты:** `tools/content/`, `content/schemas/` (или адаптация под текущее дерево `client/data/`)  
 **Приёмка:**
-- [ ] Профильный парсер по документам (не глобальный regex-как-истина)
-- [ ] Отчёт validation; ERROR блокирует «publish»
-- [ ] CI job на lint content  
+- [x] Профильный парсер по документам (не глобальный regex-как-истина) — `tools/content/profiles.py`
+- [x] Отчёт validation; ERROR блокирует «publish» — `validation-report.json`, `content.manifest.json` (`publishable`), exit 1
+- [x] CI job на lint content — `.github/workflows/ci.yml` → `content-lint`  
 **Тесты:** CT-001…CT-002 из §19  
 **OSS research:** [x] `docs/research/content-validation.md` (stdlib-only рекомендация; **ничего не установлено**)  
-**Статус:** [ ] реализация/CI **не закрыты** — следующий исполнительный шаг после «делай»
+**Статус:** [x] `ea7f7e9` (2026-11-21) — Python stdlib, 0 зависимостей; 24 JSON Schema в `content/schemas/`; 16 unittest (CT-001/CT-002) OK; `lint.py` на каноне: 0 ERROR / 16 WARN → PUBLISHABLE (при allowlist C-SET-001)
+**Не входит (→ EX-P02):** полное разрешение crossrefs, `crossrefs.json`, CT-003…009 (графы квестов, лут, диалоговые переходы)
+**Найдено каноном:** C-SET-001 (15 ID `SET-*` совпадают у поселений 03 и сетов 11) — OPEN в `CONFLICTS.md`, allowlist до 2026-12-31
 
 ### EX-CONTENT-01 — Dialogue expansion (not new quests)
 **Зависит от:** EX-P01 (lint) + owner approval of plan  
@@ -194,6 +196,7 @@
 | 2026-11-21 | EX-P00 baseline audit | `7567a54` | docs-only | local rewards + authority gaps documented |
 | 2026-11-21 | EX-CONTENT-01 plan (draft) | `ad45425` | — | ждёт утверждения владельца |
 | 2026-11-21 | EX-P01 research only | `663ecc5` | — | content-validation.md; no deps installed |
+| 2026-11-21 | EX-P01 parsers + schema + CI | `ea7f7e9` | unittest 16 OK; lint 0 ERROR | stdlib only; C-SET-001 найден, не правился канон |
 
 ---
 
@@ -212,9 +215,9 @@
 
 ## 6. Следующий этап (предложение)
 
-**EX-P00 закрыт.** В работе по очереди владельца:
+**EX-P00 и EX-P01 закрыты.** По очереди владельца:
 
-1. **EX-P01** — content parsers + JSON Schema (если ещё не закрыт).
+1. **EX-P02** — ID registry, crossrefs, manifest (после «делай»). Перед ним желательно решение владельца по **C-SET-001**.
 2. **EX-CONTENT-01** — только после утверждения `docs/CONTENT_EXPANSION_PLAN.md` (пилот MQ-01-01…05 / SQ-01-001…005).
 
 Не начинать полный объём 240 диалогов и не трогать P02+ без команды **«делай»**.
