@@ -210,19 +210,21 @@ func _on_event(p: Dictionary) -> void:
 			"respawn":
 				if target == _you:
 					_hint(tr("world.hint.respawned"))
-			"witness_telegraph", "sector_telegraph":
+			"witness_telegraph", "sector_telegraph", "countdown_prepare":
 				_clear_boss_marker()
 				_boss_marker = TELEGRAPH.new()
 				var seconds := float(e.get("amount", 0)) / 1000.0
 				if t == "witness_telegraph":
 					_boss_marker.setup_safe_areas(e.get("safe_areas", []), seconds)
 				else:
-					_boss_marker.setup_sectors(e.get("sectors", []), seconds)
+					_boss_marker.setup_sectors(e.get("sectors", []), seconds, t == "countdown_prepare")
 				var pl := _get_player()
 				var parent := pl.get_parent() if pl != null else get_parent()
 				parent.add_child(_boss_marker)
 			"witness_end", "sector_end":
 				_clear_boss_marker()
+			"boss_vulnerable":
+				_hint(tr("dungeon.countdown.vulnerable"))
 			"telegraph":
 				var tg = TELEGRAPH.new()
 				tg.setup(float(e.get("radius", 64)), float(e.get("amount", 800)) / 1000.0)

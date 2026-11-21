@@ -329,7 +329,11 @@ func (s *Sim) Cast(id EntityID, skillID string, target EntityID) (CastOutcome, e
 		if sk.Scale == "SP" {
 			power, def = float64(p.pstats.SP), float64(victim.estats.Resist)
 		}
-		d := damage.Damage(sk.Coef, power, 0, def, 1, 1)
+		modifier := 1.0
+		if w := s.witness; w != nil && w.boss == victim.ID && s.tick < w.countdown.vulnerableEnd {
+			modifier = 1.15
+		}
+		d := damage.Damage(sk.Coef, power, 0, def, 1, modifier)
 		crit := s.rng.Float64() < damage.ClampCrit(s.combat.CritChance)
 		if crit {
 			d = int(math.Round(float64(d) * damage.CritMultPvE))
@@ -337,7 +341,6 @@ func (s *Sim) Cast(id EntityID, skillID string, target EntityID) (CastOutcome, e
 		absorbed := min(victim.shield, d)
 		victim.shield -= absorbed
 		victim.HP = max(0, victim.HP-(d-absorbed))
-		victim.changed = s.tick
 		victim.contrib[p.Ref] += d
 		s.addThreat(victim, p.ID, float64(d))
 		out.Target, out.Amount, out.Crit, out.TargetHP = victim.ID, d, crit, victim.HP
@@ -345,6 +348,8 @@ func (s *Sim) Cast(id EntityID, skillID string, target EntityID) (CastOutcome, e
 		if victim.HP == 0 {
 			s.killEnemy(victim)
 		}
+		// Commands apply between ticks, before the next published delta.
+		victim.changed = s.tick + 1
 	case "shield":
 		amt := min(int(math.Round(sk.Coef*float64(p.MaxHP))), damage.ShieldCap(p.MaxHP))
 		p.shield = amt
@@ -354,7 +359,7 @@ func (s *Sim) Cast(id EntityID, skillID string, target EntityID) (CastOutcome, e
 	case "heal":
 		h := damage.Heal(sk.Coef, float64(p.pstats.SP), 0, 1, p.MaxHP-p.HP)
 		p.HP += h
-		p.changed = s.tick
+		p.changed = s.tick + 1
 		out.Amount = h
 		s.emit(Event{Type: "heal", Caster: id, Target: id, Skill: skillID, Amount: h, HP: p.HP})
 	}
@@ -370,6 +375,7 @@ func (s *Sim) killEnemy(v *Entity) {
 	if s.witness != nil && s.witness.boss == v.ID {
 		s.endWitness()
 		s.endBrokenCircle(v)
+		s.endCountdown(v)
 	}
 	if v.temporary {
 		return

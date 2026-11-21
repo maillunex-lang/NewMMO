@@ -363,7 +363,7 @@ func (z *Zone) tickLocked() {
 			critical := false
 			for _, event := range mine {
 				switch event.Type {
-				case "witness_telegraph", "witness_crystal", "witness_end", "sector_telegraph", "sector_end":
+				case "witness_telegraph", "witness_crystal", "witness_end", "sector_telegraph", "sector_end", "countdown_prepare", "boss_vulnerable":
 					critical = true
 				}
 			}

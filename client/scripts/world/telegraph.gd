@@ -7,6 +7,7 @@ var duration := 0.8
 var _t := 0.0
 var _safe_areas: Array[Rect2] = []
 var _sectors: Array[PackedVector2Array] = []
+var _numbered := false
 
 func setup(p_radius: float, p_duration: float) -> void:
 	radius = p_radius
@@ -21,8 +22,9 @@ func setup_safe_areas(areas: Array, seconds: float) -> void:
 		var bottom_right := Vector2(float(area["max_x"]), float(area["max_y"]))
 		_safe_areas.append(Rect2(top_left, bottom_right - top_left))
 
-func setup_sectors(sectors: Array, seconds: float) -> void:
+func setup_sectors(sectors: Array, seconds: float, numbered: bool = false) -> void:
 	setup(0.0, seconds)
+	_numbered = numbered
 	for sector in sectors:
 		var points := PackedVector2Array()
 		for point in sector:
@@ -49,11 +51,16 @@ func _draw() -> void:
 				Color(0.95, 1.0, 0.96), 5.0)
 		return
 	if not _sectors.is_empty():
-		for points in _sectors:
+		for i in range(_sectors.size()):
+			var points := _sectors[i]
 			draw_colored_polygon(points, Color(0.9, 0.12, 0.12, 0.18 + 0.32 * k))
 			var outline := points.duplicate()
 			outline.append(points[0])
 			draw_polyline(outline, Color(1.0, 0.45, 0.35), 3.0, true)
+			if _numbered:
+				var label_at := points[0].lerp(points[roundi(float(points.size()) * 0.5)], 0.62)
+				draw_string(ThemeDB.fallback_font, label_at + Vector2(-7, 7), str(i + 1),
+					HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(1.0, 0.96, 0.92))
 		return
 	# True circle: the server hit area is a circle in world units; the fill grows with the wind-up.
 	var pts := PackedVector2Array()

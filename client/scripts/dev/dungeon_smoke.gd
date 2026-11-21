@@ -142,6 +142,21 @@ func _run() -> void:
 	await process_frame
 	_assert(get_nodes_in_group("telegraphs").is_empty(), "phase 1 warning clears on resolution")
 
+	ft.inject_text(_s2c("world.event", {"encounter_id": arena, "events": [
+		{"type": "countdown_prepare", "amount": 4000, "sectors": sector + sector + sector},
+	]}))
+	net.poll(0.016)
+	await process_frame
+	warnings = get_nodes_in_group("telegraphs")
+	_assert(warnings.size() == 1 and warnings[0]._numbered and warnings[0]._sectors.size() == 3, "phase 3 previews all three sectors")
+	ft.inject_text(_s2c("world.event", {"encounter_id": arena, "events": [
+		{"type": "sector_telegraph", "amount": 1100, "sectors": sector},
+	]}))
+	net.poll(0.016)
+	await process_frame
+	warnings = get_nodes_in_group("telegraphs")
+	_assert(warnings.size() == 1 and not warnings[0]._numbered and warnings[0]._sectors.size() == 1, "phase 3 highlights the current strike")
+
 	# Phase 2 highlights cover and routes crystal interaction to the live stream.
 	var crystal_id := "OBJ-DNG-01-001-CRYSTAL-1"
 	var crystal: Area2D = scene.get_node("Rooms/R06/Objects/" + crystal_id)

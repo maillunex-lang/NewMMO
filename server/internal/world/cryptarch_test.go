@@ -2,6 +2,8 @@ package world
 
 import (
 	"math"
+	"slices"
+	"strconv"
 	"testing"
 
 	"github.com/maillunex-lang/NewMMO/server/internal/combatdata"
@@ -66,5 +68,76 @@ func TestBrokenCircleHasAnEscapeAtArenaEdges(t *testing.T) {
 		if b.Clamp(escape) != escape || insideSector(escape, quarterCircle(origin, angle, radius)) {
 			t.Fatalf("unsafe escape from arena corner %v via %v", origin, escape)
 		}
+	}
+}
+
+func TestLastCountdownPreviewsAndResolvesThreeStrikesThenExposesBoss(t *testing.T) {
+	s, boss, player := witnessFixture(t)
+	boss.HP = 340
+	boss.estats.AP = 100
+	s.combat.CritChance = 0
+	s.combat.Skills["hit"] = combatdata.Skill{ID: "hit", ClassID: "CLS-01", Level: 1,
+		Target: "enemy", EffectKind: "damage", Coef: 0.6, Scale: "AP"}
+	player.pstats.AP = 100
+	player.Pos = Vec{boss.Pos.X + 50, boss.Pos.Y}
+	victims := []*Entity{player}
+	for i := 1; i <= 2; i++ {
+		id := s.AddPlayer(strconv.Itoa(7+i), "Exposed", 10, 1000)
+		victim := s.entities[id]
+		angle := float64(i) * 2 * math.Pi / 3
+		victim.Pos = Vec{boss.Pos.X + 50*math.Cos(angle), boss.Pos.Y + 50*math.Sin(angle)}
+		victims = append(victims, victim)
+	}
+	s.Step()
+	events := s.DrainEvents()
+	if len(events) != 1 || events[0].Type != "countdown_prepare" || events[0].Amount != 4000 ||
+		len(events[0].Sectors) != 3 {
+		t.Fatalf("countdown preparation = %+v", events)
+	}
+	preview := events[0].Sectors
+	for range 39 {
+		s.Step()
+	}
+	if player.HP != 1000 || len(s.DrainEvents()) != 0 {
+		t.Fatal("countdown started striking before the four-second warning elapsed")
+	}
+	s.Step()
+	for i := range victims {
+		events = s.DrainEvents()
+		if len(events) == 0 {
+			t.Fatal("missing next strike warning")
+		}
+		warning := events[len(events)-1]
+		if warning.Type != "sector_telegraph" || warning.Amount != 1100 ||
+			len(warning.Sectors) != 1 || !slices.Equal(warning.Sectors[0], preview[i]) {
+			t.Fatalf("strike %d differs from the preview: %+v", i, warning)
+		}
+		for range 11 {
+			s.Step()
+		}
+		for j, victim := range victims {
+			want := 1000
+			if j <= i {
+				want = 890
+			}
+			if victim.HP != want {
+				t.Fatalf("strike %d, victim %d HP=%d; want %d", i, j, victim.HP, want)
+			}
+		}
+	}
+	events = s.DrainEvents()
+	if last := events[len(events)-1]; last.Type != "boss_vulnerable" || last.Amount != 3000 {
+		t.Fatalf("missing three-second vulnerability: %+v", events)
+	}
+	boosted, err := s.Cast(player.ID, "hit", boss.ID)
+	if err != nil || boosted.Amount != 69 {
+		t.Fatalf("window damage %+v, %v", boosted, err)
+	}
+	for range 30 {
+		s.Step()
+	}
+	normal, err := s.Cast(player.ID, "hit", boss.ID)
+	if err != nil || normal.Amount != 60 {
+		t.Fatalf("post-window damage %+v, %v", normal, err)
 	}
 }

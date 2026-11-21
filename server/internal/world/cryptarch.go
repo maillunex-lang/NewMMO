@@ -1,6 +1,10 @@
 package world
 
-import "math"
+import (
+	"math"
+
+	"github.com/maillunex-lang/NewMMO/server/internal/combatdata"
+)
 
 const brokenCircleMS = 1500
 
@@ -48,20 +52,24 @@ func (s *Sim) stepBrokenCircle(boss *Entity) bool {
 		return false
 	}
 	if s.tick >= cast.resolve {
-		for _, player := range s.entities {
-			if player.Kind != KindPlayer || player.Dead {
-				continue
-			}
-			for _, area := range cast.areas {
-				if insideSector(player.Pos, area) {
-					s.hitPlayer(boss, player, boss.def.B)
-					break
-				}
-			}
-		}
+		s.hitSectors(boss, boss.def.B, cast.areas)
 		s.endBrokenCircle(boss)
 	}
 	return true
+}
+
+func (s *Sim) hitSectors(boss *Entity, ability combatdata.Ability, areas [][]Vec) {
+	for _, player := range s.entities {
+		if player.Kind != KindPlayer || player.Dead {
+			continue
+		}
+		for _, area := range areas {
+			if insideSector(player.Pos, area) {
+				s.hitPlayer(boss, player, ability)
+				break
+			}
+		}
+	}
 }
 
 func (s *Sim) endBrokenCircle(boss *Entity) {
@@ -69,4 +77,72 @@ func (s *Sim) endBrokenCircle(boss *Entity) {
 		s.witness.circle = sectorCast{}
 		s.emit(Event{Type: "sector_end", Caster: boss.ID, Skill: boss.def.B.ID})
 	}
+}
+
+const (
+	countdownStrikeMS = 1100
+	countdownExposeMS = 3000
+)
+
+type countdownCast struct {
+	deadline      uint64
+	vulnerableEnd uint64
+	strike        int // -1 during preparation
+	areas         [][]Vec
+}
+
+func (s *Sim) inCountdownPhase(boss *Entity) bool {
+	return s.witness != nil && s.witness.boss == boss.ID && boss.HP*100 < boss.MaxHP*35
+}
+
+func (s *Sim) stepCountdown(boss *Entity) bool {
+	w := s.witness
+	cast := &w.countdown
+	if cast.deadline == 0 {
+		if !s.inCountdownPhase(boss) || s.tick < cast.vulnerableEnd || boss.ai.state != stChase {
+			return false
+		}
+		target := s.pickTarget(boss)
+		if target == nil {
+			return false
+		}
+		angle := math.Atan2(target.Pos.Y-boss.Pos.Y, target.Pos.X-boss.Pos.X)
+		radius := s.blastRadius(boss)
+		cast.areas = make([][]Vec, 3)
+		for i := range cast.areas {
+			cast.areas[i] = quarterCircle(boss.Pos, angle+float64(i)*2*math.Pi/3, radius)
+		}
+		boss.Moving, boss.changed = false, s.tick
+		cast.strike = -1
+		cast.deadline = s.tick + s.ticks(w.finisher.TelegraphS)
+		s.emit(Event{Type: "countdown_prepare", Caster: boss.ID, Skill: w.finisher.ID,
+			Amount: int(math.Round(w.finisher.TelegraphS * 1000)), Sectors: cast.areas})
+		return true
+	}
+	if s.tick < cast.deadline {
+		return true
+	}
+	if cast.strike >= 0 {
+		s.hitSectors(boss, w.finisher, cast.areas[cast.strike:cast.strike+1])
+	}
+	cast.strike++
+	if cast.strike >= len(cast.areas) {
+		cast.deadline, cast.areas = 0, nil
+		cast.vulnerableEnd = s.tick + s.ticks(float64(countdownExposeMS)/1000)
+		s.emit(Event{Type: "sector_end", Caster: boss.ID, Skill: w.finisher.ID})
+		s.emit(Event{Type: "boss_vulnerable", Caster: boss.ID, Skill: w.finisher.ID, Amount: countdownExposeMS})
+		return true
+	}
+	cast.deadline = s.tick + s.ticks(float64(countdownStrikeMS)/1000)
+	s.emit(Event{Type: "sector_telegraph", Caster: boss.ID, Skill: w.finisher.ID, Amount: countdownStrikeMS,
+		Sectors: cast.areas[cast.strike : cast.strike+1]})
+	return true
+}
+
+func (s *Sim) endCountdown(boss *Entity) {
+	w := s.witness
+	if w.countdown.deadline != 0 {
+		s.emit(Event{Type: "sector_end", Caster: boss.ID, Skill: w.finisher.ID})
+	}
+	w.countdown = countdownCast{}
 }
