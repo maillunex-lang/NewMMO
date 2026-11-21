@@ -166,6 +166,13 @@ func request_inventory_move(from_container: String, from_slot: int, to_container
 		payload["quantity"] = quantity
 	return send_mutation("inventory.move.request", payload)
 
+## T-039c: wear a bag instance / take a worn slot back (server checks class, level, ownership).
+func request_equip(instance_id: String) -> String:
+	return send_mutation("inventory.equip.request", {"instance_id": instance_id})
+
+func request_unequip(slot: String) -> String:
+	return send_mutation("inventory.unequip.request", {"slot": slot})
+
 ## T-034: report a kill of a canon enemy; the server rolls the drop (loot-engine.md). Never sends amounts.
 func request_loot(enemy_id: String) -> String:
 	return send_mutation("combat.loot.request", {"enemy_id": enemy_id})
@@ -405,7 +412,8 @@ func _dispatch_typed(type_name: String, payload: Dictionary, request_id: String)
 			# One message carries the bag change too (a second same-revision delta would look like a gap).
 			var changes: Variant = payload.get("changes", [])
 			if typeof(changes) == TYPE_ARRAY and (changes as Array).size() > 0:
-				inventory_delta.emit({"inventory_revision": payload.get("inventory_revision", 0), "changes": changes})
+				inventory_delta.emit({"inventory_revision": payload.get("inventory_revision", 0), "changes": changes,
+					"items": payload.get("gear_items", {})})
 		"command.error":
 			_handle_command_error(payload, request_id)
 		"dungeon.state.delta", "event.snapshot", "event.contribution":

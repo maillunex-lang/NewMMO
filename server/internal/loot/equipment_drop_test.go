@@ -74,6 +74,9 @@ func TestEquipmentDropPostgres(t *testing.T) {
 		t.Fatalf("equipment claim: %#v err=%v", res, err)
 	}
 	inst := res.Items[0].InstanceID
+	if d, ok := res.GearItems[inst]; !ok || d.Rarity != "RARE" || d.RequiredLevel != 5 || d.Stats["VIT"] == 0 {
+		t.Fatalf("gear_items detail missing/wrong: %#v", res.GearItems)
+	}
 	var budgetSum int
 	var stats map[string]int
 	var req int

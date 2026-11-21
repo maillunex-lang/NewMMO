@@ -73,6 +73,9 @@ type Result struct {
 	Changes           []inventory.Stack `json:"changes"`
 	// EquipmentLost is true when an equipment roll hit but the bag was full (the drop is not granted).
 	EquipmentLost bool `json:"equipment_lost,omitempty"`
+	// GearItems carries the server-rolled details (stats) of dropped gear so the client can show it
+	// without a snapshot round trip; keyed by instance_id.
+	GearItems map[string]inventory.ItemDetail `json:"gear_items,omitempty"`
 }
 
 // Claim rolls the drop for one reported kill, server-side, exactly once per request_id.
@@ -186,6 +189,10 @@ func (e *Engine) claim(ctx context.Context, accountID string, characterID int64,
 			invRev = newRev
 			rolled.Items = append(rolled.Items, drop)
 			res.Items = rolled.Items
+			res.GearItems = map[string]inventory.ItemDetail{drop.InstanceID: {
+				TemplateID: drop.ItemID, Rarity: drop.Rarity, ItemLevel: drop.ItemLevel,
+				RequiredLevel: equipment.RequiredLevel(drop.ItemLevel),
+				Stats:         equipment.Distribute(classID, equipment.StatBudget(drop.ItemLevel, drop.Rarity, tpl.Slot))}}
 			res.Changes = mergeChanges(res.Changes, []inventory.Stack{stack})
 		} else {
 			res.EquipmentLost = true

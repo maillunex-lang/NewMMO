@@ -128,6 +128,54 @@ func _run() -> void:
 	var move_msg := _take_type(ft, "inventory.move.request")
 	_assert(not move_msg.is_empty(), "move sent")
 	_assert(str(move_msg.get("payload", {}).get("from_container", "")) == "bag", "move from")
+	# T-039c: gear in the bag → select → equip request; delta wears it; unequip request from the worn slot.
+	ft.inject_text(_s2c("state.snapshot", {
+		"scopes": {
+			"quests": {"active": [], "completed": [], "available": ["MQ-01-01"]},
+			"inventory": {
+				"inventory_revision": 5,
+				"bag": [{"container": "bag", "slot": 1, "item_id": "EQ-01-01-HD-01", "quantity": 1, "instance_id": "7b1d0000-0000-4000-8000-000000000001"}],
+				"materials": [], "quest_keys": [],
+				"equipped": [],
+				"items": {"7b1d0000-0000-4000-8000-000000000001": {"template_id": "EQ-01-01-HD-01", "rarity": "RARE", "item_level": 8, "required_level": 5, "stats": {"VIT": 10, "DEF": 5, "STR": 2}}},
+				"gear_score": 0,
+			},
+		},
+		"revision": 0,
+	}, 0))
+	net.poll(0.016)
+	var gear_text := str(bag_list.get_item_text(0))
+	_assert(gear_text.contains("Шлем") or gear_text.contains("Head"), "gear row shows slot name, got: " + gear_text)
+	var action_btn: Button = inv_ui.get_node("SafeArea/Chrome/EquipPanel/Margin/VBox/Action")
+	var worn_list: ItemList = inv_ui.get_node("SafeArea/Chrome/EquipPanel/Margin/VBox/EquippedList")
+	_assert(action_btn.disabled, "action disabled before selection")
+	bag_list.select(0)
+	bag_list.item_selected.emit(0)
+	_assert(not action_btn.disabled, "action enabled for a selected gear item")
+	action_btn.pressed.emit()
+	net.poll(0.016)
+	var eq_msg := _take_type(ft, "inventory.equip.request")
+	_assert(not eq_msg.is_empty() and str(eq_msg.get("payload", {}).get("instance_id", "")) == "7b1d0000-0000-4000-8000-000000000001", "equip request sent with the instance id")
+	ft.inject_text(_s2c("inventory.delta", {
+		"inventory_revision": 6,
+		"changes": [{"container": "bag", "slot": 1, "item_id": "EQ-01-01-HD-01", "quantity": 0}],
+		"equipped": [{"slot": "HD", "instance_id": "7b1d0000-0000-4000-8000-000000000001"}],
+		"items": {"7b1d0000-0000-4000-8000-000000000001": {"template_id": "EQ-01-01-HD-01", "rarity": "RARE", "item_level": 8, "required_level": 5, "stats": {"VIT": 10, "DEF": 5, "STR": 2}}},
+		"gear_score": 17,
+	}, 1))
+	net.poll(0.016)
+	var gs: Label = inv_ui.get_node("SafeArea/Chrome/EquipPanel/Margin/VBox/GearScore")
+	_assert(gs.text.contains("17"), "gear score label: " + gs.text)
+	_assert(worn_list.item_count == 9 and not worn_list.get_item_text(2).ends_with("—"), "head slot filled")
+	_assert(worn_list.get_item_text(0).ends_with("—"), "main hand empty")
+	worn_list.select(2)
+	worn_list.item_selected.emit(2)
+	action_btn.pressed.emit()
+	net.poll(0.016)
+	var un_msg := _take_type(ft, "inventory.unequip.request")
+	_assert(not un_msg.is_empty() and str(un_msg.get("payload", {}).get("slot", "")) == "HD", "unequip request sent for HD")
+	ft.inject_text(_s2c("command.error", {"code": "WRONG_CLASS", "request_id": "x"}, 1))
+	net.poll(0.016)
 	inv_ui.toggle()
 	_assert(inv_ui.visible == false, "inventory closed")
 

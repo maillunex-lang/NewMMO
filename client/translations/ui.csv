@@ -94,3 +94,27 @@ world.hint.unsupported,Это умение пока недоступно.,This s
 dungeon.witness.crystal,Кристалл арены,Arena crystal
 dungeon.witness.cover,Встаньте в подсвеченную зону или разбейте оба кристалла.,Reach a highlighted area or break both crystals.
 dungeon.countdown.vulnerable,Босс уязвим!,Boss vulnerable!
+ui.equipment_title,Экипировка,Equipment
+ui.gear_score,Мощь снаряжения: %d,Gear score: %d
+ui.equip,Надеть,Equip
+ui.unequip,Снять,Unequip
+ui.item_pick_hint,Выберите предмет,Select an item
+ui.item_level_req,Ур. предмета %d · нужен ур. %d,Item lvl %d · requires lvl %d
+ui.slot_MH,Оружие,Main hand
+ui.slot_OH,Вторая рука,Off hand
+ui.slot_HD,Шлем,Head
+ui.slot_CH,Нагрудник,Chest
+ui.slot_HA,Перчатки,Hands
+ui.slot_LG,Поножи,Legs
+ui.slot_FT,Сапоги,Feet
+ui.slot_RG,Кольцо,Ring
+ui.slot_AM,Амулет,Amulet
+ui.rarity_COMMON,Обычный,Common
+ui.rarity_UNCOMMON,Необычный,Uncommon
+ui.rarity_RARE,Редкий,Rare
+ui.rarity_EPIC,Эпический,Epic
+ui.rarity_LEGENDARY,Легендарный,Legendary
+ui.rarity_MYTHIC,Мифический,Mythic
+ui.err_wrong_class,Предмет другого класса,Item of another class
+ui.err_level_low,Недостаточный уровень,Level too low
+ui.err_bag_full,Сумка полна,Bag is full
