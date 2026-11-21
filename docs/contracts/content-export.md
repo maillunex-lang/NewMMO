@@ -1,6 +1,6 @@
 # Contract: content export bundle (D-001)
 
-**Owner:** director · **Version:** `schema_version = 1` · **Producer:** `python3 tools/content/export.py` · **Consumer (EX-P03):** → `server/internal/content`
+**Owner:** director · **Version:** `schema_version = 1`, contract rev **1.1** (T-010 review applied) · **Producer:** `python3 tools/content/export.py` · **Consumer (EX-P03):** → `server/internal/content`
 Source of truth is the canon `docs/content/01…13`; the bundle is a deterministic, hash-addressed snapshot of it. Executors implement
 against this file; changes go through a director task (bump `schema_version`).
 
@@ -8,7 +8,8 @@ against this file; changes go through a director task (bump `schema_version`).
 
 | File | Content |
 |------|---------|
-| `manifest.json` | metadata + hashes (below) |
+| `manifest.json` | **canonical one-line JSON body** + LF (below). Its **raw bytes** define the build id |
+| `BUILD_ID` | 64 lowercase hex + LF = `sha256(raw bytes of manifest.json)` |
 | `entities.jsonl` | UTF-8, LF, one canonical JSON object per line, **sorted by `(kind, id)`**, trailing newline |
 | `crossrefs.json` | ID registry (`declared_in`, `referenced_from`) from lint; informational for the server, verified by hash |
 
@@ -16,6 +17,10 @@ against this file; changes go through a director task (bump `schema_version`).
 Same canon ⇒ byte-identical files and the same `build_id` (no timestamps inside the bundle).
 
 ## 2. `manifest.json`
+
+The file is the canonical body: keys sorted, separators `(",",":")`, UTF-8, non-ASCII unescaped, **one line + LF**. **`build_id = manifest_sha256 = SHA-256 of the exact file bytes`**
+(canon `14` §13.2). The loader **never re-serializes** the manifest: it hashes the raw bytes, compares with `BUILD_ID`, then parses. (This removes any cross-language JSON canonicalization risk — T-010 R-12.)
+`manifest_sha256`/`build_id` are therefore **not** fields inside the file.
 
 | Field | Type | Meaning |
 |-------|------|---------|
@@ -28,8 +33,6 @@ Same canon ⇒ byte-identical files and the same `build_id` (no timestamps insid
 | `entities_sha256` | hex64 | SHA-256 of the exact bytes of `entities.jsonl` |
 | `crossrefs_sha256` | hex64 | SHA-256 of the exact bytes of `crossrefs.json` |
 | `lint` | `{errors, warnings}` | `errors` is always `0` in an exported bundle |
-| `manifest_sha256` | hex64 | SHA-256 of the **canonical JSON** (sorted keys, `(",",":")` separators, UTF-8, non-ASCII unescaped) of the manifest **without** `manifest_sha256` and `build_id` |
-| `build_id` | hex64 | `== manifest_sha256` (canon `14` §13.2: content build id = SHA-256 of the normalized manifest) |
 
 ## 3. Entity line
 
@@ -46,11 +49,18 @@ Same canon ⇒ byte-identical files and the same `build_id` (no timestamps insid
 `chapter 6 · class 5 · dialogue_line 3122 · dialogue_template 1 · dungeon 12 · ending 3 · enemy 96 · equipment 270 · event 18 · faction 8 · item 8 · item_set 30 · location 48 · loot_table 96 · material 36 · npc 32 · objective 720 · poi 72 · quest_item 36 · quest_main 120 · quest_side 120 · recipe 36 · region 6 · scene 6 · settlement 18`.
 (`*_ref` catalog mirrors are not exported. Settlements use `STL-RR-NN`; armor sets `SET-CC-RR` — C-SET-001.)
 
-## 4. Loader obligations (verification before a build can become `staged`-complete)
+## 4. Loader obligations (verification before a build can be staged)
 
-1. `manifest_sha256` recomputed from the manifest body equals the stored value; `build_id == manifest_sha256`.
-2. `schema_version` supported; `lint.errors == 0`.
-3. SHA-256 of `entities.jsonl` bytes equals `entities_sha256`; line count equals `entity_count`; per-kind counts equal `counts`.
-4. Every line has exactly the 7 keys of §3; ids unique; `kind` ∈ `counts` keys.
-5. `crossrefs.json` hash matches `crossrefs_sha256`.
-Any failure ⇒ reject, write an audit row, leave the active pointer untouched.
+1. `sha256(raw manifest.json bytes) == BUILD_ID` (64 hex); `build_id` = that value. `manifest.json` is one line + LF.
+2. Parse manifest strictly; `schema_version` supported; `lint.errors == 0`; `source_files` has exactly 14 entries.
+3. SHA-256 of the exact bytes of `entities.jsonl` equals `entities_sha256`; line count equals `entity_count`; per-kind counts equal `counts`.
+4. **Strict parsing (T-010 R-05):** valid UTF-8 only (no BOM); reject duplicate object keys, NaN/Infinity, non-object lines; every line has exactly the 7 keys of §3 with the right types; `id` unique; `kind ∈ counts`; lines sorted by `(kind, id)`; LF only.
+5. **Bounds:** bundle ≤ 64 MiB, `entities.jsonl` line ≤ 1 MiB, JSON nesting ≤ 16, `entity_count` ≤ 100 000; streaming read (no whole-file buffering of unbounded input).
+6. `crossrefs.json` hash matches `crossrefs_sha256`.
+Any failure ⇒ reject with a structured error code (`db-content.md` §3), best-effort audit, active pointer untouched.
+
+## 5. Invariants and mappings
+
+- **Global ID namespace (T-010 R-06):** entity ids are unique across **all kinds** within a build. Enforced at the producer (lint duplicate scan across every declaration + objectives; export is blocked on violation) and by the DB key `(build_id, entity_id)`. A future kind that needs a clashing id must be renamed in canon first.
+- **Canon §14 fields (T-010 R-07):** `id`, `kind`, `schema_version`, `source_file`, `source_line`, `region_id` are top-level (§3). `content_version` ≡ `build_id` (envelope of the build). `enabled`: every v1 entity is enabled (disabling is not modelled; will be added with a `schema_version` bump). `dependencies[]` ≡ typed payload relations (`prereqs`, `npcs`, `locations`, `reward.evidence`, `spawn_refs`, `entrance/miniboss/boss`, `world_boss`, `enemy`, `quest_id`). `title_key`: canon text is not localized-key based except dialogues (`dialogue.<id>` keys derive from the `DIA.*` id). Canon's sample `kind=main_quest` is illustrative; the export kind is `quest_main`.
+- **Per-kind payload shapes** are the `fields` of `content/schemas/<kind>.schema.json`; those schemas are the validation source for required/optional fields.

@@ -44,8 +44,16 @@ class Export(unittest.TestCase):
             self.assertEqual(set(e), {"schema_version", "id", "kind", "region_id", "source_file", "source_line", "payload"})
         self.assertEqual(sum(m["counts"].values()), m["entity_count"])
         self.assertEqual(m["build_id"], m["manifest_sha256"])
-        body = {k: v for k, v in m.items() if k not in ("manifest_sha256", "build_id")}
-        self.assertEqual(hashlib.sha256(ex.canon_json(body).encode()).hexdigest(), m["manifest_sha256"])
+        with open(os.path.join(out, "manifest.json"), "rb") as fh:
+            mraw = fh.read()
+        self.assertEqual(hashlib.sha256(mraw).hexdigest(), m["build_id"], "build_id = sha256(raw manifest.json bytes)")
+        body = json.loads(mraw.decode("utf-8"))
+        self.assertNotIn("build_id", body)
+        self.assertNotIn("manifest_sha256", body)
+        self.assertEqual(body["entities_sha256"], m["entities_sha256"])
+        self.assertTrue(mraw.endswith(b"\n") and mraw.count(b"\n") == 1, "single-line canonical manifest + LF")
+        with open(os.path.join(out, "BUILD_ID"), "rb") as fh:
+            self.assertEqual(fh.read(), m["build_id"].encode("ascii") + b"\n")
         with open(os.path.join(out, "crossrefs.json"), "rb") as fh:
             self.assertEqual(hashlib.sha256(fh.read()).hexdigest(), m["crossrefs_sha256"])
 
@@ -53,7 +61,7 @@ class Export(unittest.TestCase):
         m1, o1 = self.run_export("a")
         m2, o2 = self.run_export("b")
         self.assertEqual(m1["build_id"], m2["build_id"])
-        for f in ("entities.jsonl", "manifest.json", "crossrefs.json"):
+        for f in ("entities.jsonl", "manifest.json", "crossrefs.json", "BUILD_ID"):
             with open(os.path.join(o1, f), "rb") as a, open(os.path.join(o2, f), "rb") as b:
                 self.assertEqual(a.read(), b.read(), f)
 

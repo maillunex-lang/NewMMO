@@ -3,7 +3,8 @@
 
 Runs lint first; any ERROR => nothing is written, exit 1 (publish blocked).
 Output dir (default build/content/export/):
-    manifest.json   - metadata + hashes (see docs/contracts/content-export.md)
+    manifest.json   - canonical one-line metadata body; its raw bytes define build_id
+    BUILD_ID        - 64 hex + LF = sha256(raw bytes of manifest.json)
     entities.jsonl  - one canonical JSON entity per line, sorted by (kind, id)
     crossrefs.json  - ID registry + references (copy of lint output)
 Deterministic: same canon => byte-identical files and the same build_id.
@@ -106,16 +107,19 @@ def export(content_dir, schemas_dir, allowlist, out_dir):
         "crossrefs_sha256": sha256_hex(xrefs_bytes),
         "lint": {"errors": 0, "warnings": rep.count("WARN")},
     }
-    manifest_sha = sha256_hex(canon_json(body).encode("utf-8"))
+    # build_id = SHA-256 of the exact bytes of manifest.json (no cross-language canonicalization needed by the loader)
+    manifest_bytes = (canon_json(body) + "\n").encode("utf-8")
+    manifest_sha = sha256_hex(manifest_bytes)
     manifest = dict(body, manifest_sha256=manifest_sha, build_id=manifest_sha)
     os.makedirs(out_dir, exist_ok=True)
     with open(os.path.join(out_dir, "entities.jsonl"), "wb") as fh:
         fh.write(entities_bytes)
     with open(os.path.join(out_dir, "crossrefs.json"), "wb") as fh:
         fh.write(xrefs_bytes)
-    with open(os.path.join(out_dir, "manifest.json"), "w", encoding="utf-8") as fh:
-        json.dump(manifest, fh, ensure_ascii=False, indent=2, sort_keys=True)
-        fh.write("\n")
+    with open(os.path.join(out_dir, "manifest.json"), "wb") as fh:
+        fh.write(manifest_bytes)
+    with open(os.path.join(out_dir, "BUILD_ID"), "w", encoding="ascii", newline="\n") as fh:
+        fh.write(manifest_sha + "\n")
     return manifest, rep
 
 
