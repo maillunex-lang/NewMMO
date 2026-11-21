@@ -1,0 +1,48 @@
+{
+  "_comment": "Data-driven definition of DNG-01-001 (canon 12_DUNGEONS.md §3, §4.1, §8). Director-owned; checked by tools/content/check_dungeon_registry.py. Spawn ids (…-E1) and object semantics are registry-level stable ids, not canon prose.",
+  "schema_version": 1,
+  "dungeon_id": "DNG-01-001",
+  "region_id": "REG-01",
+  "location_id": "LOC-01-006",
+  "entrance_poi_id": "POI-01-006",
+  "entry_level": 7,
+  "modes": ["NORMAL"],
+  "deferred_modes": ["STORY_SOLO", "VETERAN"],
+  "max_party": 1,
+  "miniboss_id": "ENM-01-201",
+  "boss_id": "ENM-01-301",
+  "first_clear_material_id": "MAT-01-006",
+  "checkpoint_room_ids": ["DNG-01-001-R01", "DNG-01-001-R05"],
+  "flags": {
+    "first_clear": "DF-DNG-01-001-FIRST_CLEAR",
+    "normal_clear": "DF-DNG-01-001-NORMAL_CLEAR"
+  },
+  "puzzle": {"room": "DNG-01-001-R03", "order": ["OBJ-DNG-01-001-B2", "OBJ-DNG-01-001-B1", "OBJ-DNG-01-001-B3"]},
+  "rooms": [
+    {"id": "DNG-01-001-R01", "kind": "entrance", "objects": ["OBJ-DNG-01-001-ENTRY"], "spawns": [], "clear": {"objects": ["OBJ-DNG-01-001-ENTRY"]}},
+    {"id": "DNG-01-001-R02", "kind": "fight", "objects": ["OBJ-DNG-01-001-A"],
+     "spawns": [
+       {"id": "DNG-01-001-R02-E1", "enemy_id": "ENM-01-001"},
+       {"id": "DNG-01-001-R02-E2", "enemy_id": "ENM-01-001"},
+       {"id": "DNG-01-001-R02-E3", "enemy_id": "ENM-01-002"}],
+     "clear": {"objects": ["OBJ-DNG-01-001-A"], "spawns_all": true}},
+    {"id": "DNG-01-001-R03", "kind": "puzzle", "objects": ["OBJ-DNG-01-001-B1", "OBJ-DNG-01-001-B2", "OBJ-DNG-01-001-B3"],
+     "optional_objects": ["CACHE-DNG-01-001-01"],
+     "spawns": [
+       {"id": "DNG-01-001-R03-E1", "enemy_id": "ENM-01-003", "optional": true},
+       {"id": "DNG-01-001-R03-E2", "enemy_id": "ENM-01-003", "optional": true}],
+     "clear": {"puzzle": true}},
+    {"id": "DNG-01-001-R04", "kind": "miniboss", "objects": [], "optional_objects": ["OBJ-DNG-01-001-MINI"],
+     "spawns": [{"id": "DNG-01-001-R04-MINI", "enemy_id": "ENM-01-201"}],
+     "clear": {"spawns_all": true}},
+    {"id": "DNG-01-001-R05", "kind": "rest", "objects": ["CP-DNG-01-001-02"], "optional_objects": ["LORE-DNG-01-001-01"], "spawns": [],
+     "clear": {"objects": ["CP-DNG-01-001-02"]}},
+    {"id": "DNG-01-001-R06", "kind": "boss", "objects": ["OBJ-DNG-01-001-FINAL-1", "OBJ-DNG-01-001-FINAL-2", "OBJ-DNG-01-001-FINAL-3"],
+     "spawns": [{"id": "DNG-01-001-R06-BOSS", "enemy_id": "ENM-01-301"}],
+     "clear": {"objects": ["OBJ-DNG-01-001-FINAL-1", "OBJ-DNG-01-001-FINAL-2", "OBJ-DNG-01-001-FINAL-3"], "spawns_all": true}},
+    {"id": "DNG-01-001-R07", "kind": "exit", "objects": ["EXIT-DNG-01-001"], "spawns": [], "clear": {}}
+  ],
+  "rewards": {"kind": "FINAL", "tables": ["LOOT-ENM-01-201", "LOOT-ENM-01-301"], "reward_object": "REWARD-DNG-01-001"},
+  "attempts": {"boss_solo": 3},
+  "idle_expiry_minutes": 10
+}

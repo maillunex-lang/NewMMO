@@ -56,6 +56,11 @@ type LootHandler interface {
 	Claim(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any) (any, error)
 }
 
+// DungeonHandler is optional EX-P09 dungeon engine (T-036). Nil → UNKNOWN_TYPE for dungeon.* messages.
+type DungeonHandler interface {
+	Handle(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any) (string, any, error)
+}
+
 type Server struct {
 	lifetime context.Context
 	cfg      Config
@@ -64,6 +69,7 @@ type Server struct {
 	dialogue DialogueHandler
 	inv      InventoryHandler
 	loot     LootHandler
+	dungeon  DungeonHandler
 	logger   *slog.Logger
 
 	mu         sync.Mutex
@@ -90,6 +96,8 @@ func (s *Server) SetDialogue(d DialogueHandler) { s.dialogue = d }
 func (s *Server) SetInventory(i InventoryHandler) { s.inv = i }
 
 func (s *Server) SetLoot(l LootHandler) { s.loot = l }
+
+func (s *Server) SetDungeon(d DungeonHandler) { s.dungeon = d }
 
 type admission struct {
 	attempts []time.Time

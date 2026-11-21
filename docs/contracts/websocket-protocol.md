@@ -1,6 +1,6 @@
 # Contract: WebSocket protocol v1 (D-003)
 
-**Owner:** director · **Version:** `protocol_version = 1`, contract rev **1.2** (EX-P04 + EX-P08 loot additions, all additive) · Owner approvals (2026-11-21): **`coder/websocket v1.8.15`**, **JSON text messages**.
+**Owner:** director · **Version:** `protocol_version = 1`, contract rev **1.3** (EX-P04 + EX-P08 loot + EX-P09 dungeon additions, all additive) · Owner approvals (2026-11-21): **`coder/websocket v1.8.15`**, **JSON text messages**.
 Basis: canon `14_CONTENT_INTEGRATION.md` §15 (event names and required fields are kept), research `docs/research/go-websocket.md`.
 Implementers (server lane: Go; client lane: Godot `WebSocketPeer`) build against this file; changes only via a director task. Machine-readable envelope: `websocket-envelope.schema.json`.
 
@@ -79,6 +79,11 @@ Canon events keep their names and required fields (§15.2); added fields are mar
 | `inventory.move.request` ➕ (EX-P08) | C→S | `from_container, from_slot, to_container, to_slot`, opt `quantity` | mutation; server-validated (`inventory-engine.md`); answered by `inventory.delta` or `command.error` |
 | `combat.loot.request` ➕ (EX-P08, rev 1.2) | C→S | `enemy_id` (only; no amounts, no extra keys) | mutation; **interim kill report** (`loot-engine.md` §1); answered by `combat.loot.result` (includes the bag `changes[]`; no separate `inventory.delta`) or `command.error` |
 | `combat.loot.result` ➕ | S→C | `enemy_id, loot_table_id, gold, items[{item_id,quantity}], gold_total, inventory_revision, changes[]` | server-rolled drop; idempotent replay returns the same result |
+| `dungeon.interact.request` ➕ (EX-P09, rev 1.3) | C→S | `instance_id, object_id` | mutation; `dungeon-engine.md` §4; answered by `dungeon.snapshot` |
+| `dungeon.encounter.report` ➕ | C→S | `instance_id, outcome, spawn_id?` | mutation; **interim kill report** (R-KILL-DNG) until server combat |
+| `dungeon.claim.request` ➕ / `dungeon.leave.request` ➕ | C→S | `instance_id` | mutations; answered by `dungeon.reward` / `dungeon.snapshot` |
+| `dungeon.snapshot` ➕ | S→C | `instance_id, dungeon_id, mode, status, room_id, checkpoint_room_id, event_seq, rooms{…}, attempts` | answer to enter/interact/report/leave |
+| `dungeon.reward` ➕ | S→C | `instance_id, gold, items[], first_clear, gold_total, inventory_revision, changes[]` | personal reward (single message incl. bag changes, like loot) |
 | `inventory.delta` | S→C | `inventory_revision, changes[]` | canon; never client-authored |
 | `command.error` ➕ | S→C | `request_id, code, message_key`, opt `retry_after_ms` | correlated error for any rejected C→S message |
 

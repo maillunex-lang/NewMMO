@@ -207,9 +207,13 @@
 ### EX-P09 — First dungeon `DNG-01-001`
 **Зависит от:** EX-P08 (базовый бой/лут), `12_DUNGEONS.md`  
 **OSS research:** Godot dungeon instance patterns — ждать ОК  
+**План:** T-036 серверное ядро → T-037 клиентские сцены → T-038 серверный бой (закрывает R-KILL/R-KILL-DNG) → T-039 экипировка/почта/pity/группы  
 **Приёмка:** 7 комнат, solo, checkpoint, idempotent reward; editable `.tscn`  
-**Тесты:** CT-006, CT-015  
-**Статус:** [ ]
+- [~] серверное ядро (T-036): комнаты/двери/головоломка/чекпоинты/награда/реконнект/expiry — ветка `agent/director/T-036`, CI pending; интерим R-KILL-DNG (убийства сообщает клиент)
+- [ ] клиентские сцены R01…R07 (T-037)
+- [ ] серверный бой вместо отчётов (T-038)
+**Тесты:** CT-006, CT-015, dungeon registry sync, PG-тесты движка  
+**Статус:** [~] T-036 в ревью
 
 ### EX-P10 — First public event `EVT-01-001`
 **Зависит от:** EX-P07+; `13_WORLD_EVENTS.md`  

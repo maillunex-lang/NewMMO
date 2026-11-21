@@ -380,6 +380,27 @@ func (s *Server) commands(p *peer, owner string, id, revision int64) {
 			if !p.enqueue("combat.loot.result", m.requestID, revision, result, 0) {
 				return
 			}
+		case isDungeonCommand(m.typ):
+			if s.dungeon == nil {
+				if !p.sendError(m.requestID, revision, "UNKNOWN_TYPE", 0, 0) {
+					return
+				}
+				continue
+			}
+			payload := rawPayload(m.payload)
+			ctx, cancel := context.WithTimeout(p.work, s.cfg.WriteTimeout)
+			replyType, result, err := s.dungeon.Handle(ctx, owner, id, m.typ, m.requestID, payload)
+			cancel()
+			if err != nil {
+				if !p.sendError(m.requestID, revision, questErrorCode(err), 0, 0) {
+					return
+				}
+				continue
+			}
+			revision = revisionFromResult(result, revision)
+			if !p.enqueue(replyType, m.requestID, revision, result, 0) {
+				return
+			}
 		default:
 			if !p.sendError(m.requestID, revision, "UNKNOWN_TYPE", 0, 0) {
 				return
@@ -508,4 +529,13 @@ func revisionFromResult(result any, fallback int64) int64 {
 		}
 		return fallback
 	}
+}
+
+func isDungeonCommand(typ string) bool {
+	switch typ {
+	case "dungeon.enter.request", "dungeon.interact.request", "dungeon.encounter.report",
+		"dungeon.claim.request", "dungeon.leave.request":
+		return true
+	}
+	return false
 }
