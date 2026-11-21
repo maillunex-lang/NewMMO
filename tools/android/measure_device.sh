@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Owner/device protocol for CT-020-style Android metrics (Godot 4.3 baseline).
+# Owner/device protocol for CT-020-style Android metrics (Godot 4.7.2 baseline).
 # Requires: adb, installed package com.lunex.newmmo, optional GODOT gfx monitor notes.
 # Does NOT invent numbers — prints raw dumpsys excerpts for three cold starts + one 5‑min session helper.
 set -euo pipefail
