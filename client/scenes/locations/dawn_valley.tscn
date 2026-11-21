@@ -1,45 +1,143 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=12 format=3]
 
-[ext_resource type="PackedScene" path="res://scenes/props/tree.tscn" id="1"]
-[ext_resource type="PackedScene" path="res://scenes/props/rock.tscn" id="2"]
-[ext_resource type="PackedScene" path="res://scenes/props/crystal.tscn" id="3"]
+[ext_resource type="Texture2D" path="res://assets/env/dawn_valley_ground.png" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/props/tree.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/props/rock.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/props/crystal.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/props/cottage.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/props/lantern.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/props/fence.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://scenes/npc/elder_mira.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://scenes/monsters/slime.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/monsters/wolf.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://scenes/monsters/bandit.tscn" id="11"]
 
 [node name="DawnValley" type="Node2D"]
+y_sort_enabled = true
 
 [node name="Ground" type="Node2D" parent="."]
 
-[node name="Grass" type="Polygon2D" parent="Ground"]
-polygon = PackedVector2Array(-1400, -900, 1400, -900, 1400, 900, -1400, 900)
-color = Color(0.16, 0.29, 0.21, 1)
+[node name="Terrain" type="Sprite2D" parent="Ground"]
+z_index = -1000
+texture = ExtResource("1")
+centered = false
 
 [node name="Paths" type="Node2D" parent="."]
 
-[node name="Path" type="Polygon2D" parent="Paths"]
-polygon = PackedVector2Array(-1000, 80, 1000, -120, 1000, -15, -1000, 170)
-color = Color(0.41, 0.34, 0.25, 1)
+[node name="PathNote" type="Node2D" parent="Paths"]
+position = Vector2(640, 760)
 
 [node name="Vegetation" type="Node2D" parent="."]
+y_sort_enabled = true
 
-[node name="Oak01" parent="Vegetation" instance=ExtResource("1")]
-position = Vector2(280, -120)
+[node name="Oak01" parent="Vegetation" instance=ExtResource("2")]
+position = Vector2(280, 420)
 
-[node name="Oak02" parent="Vegetation" instance=ExtResource("1")]
-position = Vector2(-310, 190)
+[node name="Oak02" parent="Vegetation" instance=ExtResource("2")]
+position = Vector2(190, 880)
+
+[node name="Oak03" parent="Vegetation" instance=ExtResource("2")]
+position = Vector2(860, 500)
+
+[node name="Oak04" parent="Vegetation" instance=ExtResource("2")]
+position = Vector2(1180, 640)
+
+[node name="Oak05" parent="Vegetation" instance=ExtResource("2")]
+position = Vector2(1420, 420)
+
+[node name="Oak06" parent="Vegetation" instance=ExtResource("2")]
+position = Vector2(1560, 900)
+
+[node name="Oak07" parent="Vegetation" instance=ExtResource("2")]
+position = Vector2(980, 980)
+
+[node name="Oak08" parent="Vegetation" instance=ExtResource("2")]
+position = Vector2(420, 1100)
+
+[node name="Oak09" parent="Vegetation" instance=ExtResource("2")]
+position = Vector2(1680, 620)
+
+[node name="Oak10" parent="Vegetation" instance=ExtResource("2")]
+position = Vector2(720, 360)
 
 [node name="Buildings" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Cottage01" parent="Buildings" instance=ExtResource("5")]
+position = Vector2(500, 640)
+
+[node name="Fence01" parent="Buildings" instance=ExtResource("7")]
+position = Vector2(420, 700)
+
+[node name="Fence02" parent="Buildings" instance=ExtResource("7")]
+position = Vector2(500, 720)
+
+[node name="Fence03" parent="Buildings" instance=ExtResource("7")]
+position = Vector2(580, 700)
 
 [node name="Decorations" type="Node2D" parent="."]
+y_sort_enabled = true
 
-[node name="Rock01" parent="Decorations" instance=ExtResource("2")]
-position = Vector2(-160, -120)
+[node name="Rock01" parent="Decorations" instance=ExtResource("3")]
+position = Vector2(340, 560)
 
-[node name="Crystal01" parent="Decorations" instance=ExtResource("3")]
-position = Vector2(420, 180)
+[node name="Rock02" parent="Decorations" instance=ExtResource("3")]
+position = Vector2(1100, 820)
+
+[node name="Rock03" parent="Decorations" instance=ExtResource("3")]
+position = Vector2(1500, 740)
+
+[node name="Crystal01" parent="Decorations" instance=ExtResource("4")]
+position = Vector2(760, 820)
+
+[node name="Crystal02" parent="Decorations" instance=ExtResource("4")]
+position = Vector2(1320, 520)
+
+[node name="Lantern01" parent="Decorations" instance=ExtResource("6")]
+position = Vector2(560, 680)
+
+[node name="Lantern02" parent="Decorations" instance=ExtResource("6")]
+position = Vector2(900, 760)
 
 [node name="NPCSpawns" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="ElderMira" parent="NPCSpawns" instance=ExtResource("8")]
+position = Vector2(560, 660)
 
 [node name="MonsterSpawns" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Slime1" parent="MonsterSpawns" instance=ExtResource("9")]
+position = Vector2(920, 780)
+
+[node name="Slime2" parent="MonsterSpawns" instance=ExtResource("9")]
+position = Vector2(1040, 740)
+
+[node name="Slime3" parent="MonsterSpawns" instance=ExtResource("9")]
+position = Vector2(980, 860)
+
+[node name="Slime4" parent="MonsterSpawns" instance=ExtResource("9")]
+position = Vector2(1140, 700)
+
+[node name="Wolf1" parent="MonsterSpawns" instance=ExtResource("10")]
+position = Vector2(1480, 480)
+
+[node name="Wolf2" parent="MonsterSpawns" instance=ExtResource("10")]
+position = Vector2(1620, 560)
+
+[node name="Bandit1" parent="MonsterSpawns" instance=ExtResource("11")]
+position = Vector2(1280, 980)
+
+[node name="Bandit2" parent="MonsterSpawns" instance=ExtResource("11")]
+position = Vector2(1400, 1040)
 
 [node name="Navigation" type="Node2D" parent="."]
 
 [node name="Effects" type="Node2D" parent="."]
+
+[node name="Manual" type="Node2D" parent="."]
+metadata/editor_layer = "manual"
+
+[node name="Generated" type="Node2D" parent="."]
+metadata/editor_layer = "generated"

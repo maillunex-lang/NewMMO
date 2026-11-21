@@ -1,12 +1,15 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/editor/placeable_prop.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/env/crystal.png" id="2"]
 
 [node name="Crystal" type="Node2D"]
 script = ExtResource("1")
 display_name = "Crystal"
 blocks_movement = false
+y_sort_enabled = true
 
-[node name="Shape" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(0, -60, 19, -32, 15, 8, -12, 15, -21, -24)
-color = Color(0.28, 0.84, 0.95, 0.85)
+[node name="Sprite" type="Sprite2D" parent="."]
+texture = ExtResource("2")
+offset = Vector2(0, -36)
+modulate = Color(0.85, 1, 1, 0.95)

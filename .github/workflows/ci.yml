@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+    branches: [main, "cursor/**"]
+  pull_request:
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22.x"
+      - name: Test
+        run: go test ./...
+      - name: Build
+        run: go build -o /tmp/newmmo-server .
+
+  client-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check required Stage 1 files
+        run: |
+          test -f client/project.godot
+          test -f client/scenes/world/main.tscn
+          test -f client/scenes/locations/dawn_valley.tscn
+          test -f client/assets/LICENSES.md
+          test -f docs/AUDIT.md
+          test -f docs/IMPLEMENTATION_PLAN.md

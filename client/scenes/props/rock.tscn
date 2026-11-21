@@ -1,12 +1,21 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/editor/placeable_prop.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/env/rock.png" id="2"]
 
-[node name="Rock" type="Node2D"]
+[sub_resource type="CircleShape2D" id="block"]
+radius = 16.0
+
+[node name="Rock" type="StaticBody2D"]
 script = ExtResource("1")
 display_name = "Rock"
 blocks_movement = true
+y_sort_enabled = true
 
-[node name="Shape" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-35, 8, -22, -17, 8, -30, 34, -6, 23, 15, -17, 18)
-color = Color(0.42, 0.48, 0.51, 1)
+[node name="Sprite" type="Sprite2D" parent="."]
+texture = ExtResource("2")
+offset = Vector2(0, -12)
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+position = Vector2(0, 4)
+shape = SubResource("block")

@@ -1,0 +1,54 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/npc_actor.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/actors/directional_animator.gd" id="2"]
+[ext_resource type="Texture2D" path="res://assets/npc/elder_mira_sheet.png" id="3"]
+
+[sub_resource type="CircleShape2D" id="body"]
+radius = 12.0
+
+[sub_resource type="CircleShape2D" id="hotspot"]
+radius = 28.0
+
+[node name="ElderMira" type="CharacterBody2D"]
+collision_layer = 1
+collision_mask = 0
+y_sort_enabled = true
+script = ExtResource("1")
+npc_id = "elder_mira"
+display_name = "Elder Mira"
+important_dialogue = true
+lines = PackedStringArray("Traveler of the Last Dawn… you feel it too, don’t you?", "The valley road is fouled by restless slimes. Three will do for a first trial.", "Return when the path is clearer. The Whispering Forest waits beyond.")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+offset = Vector2(0, -20)
+
+[node name="DirectionalAnimator" type="Node" parent="."]
+script = ExtResource("2")
+sprite_path = NodePath("../Sprite")
+sheet = ExtResource("3")
+frame_width = 64
+frame_height = 64
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+shape = SubResource("body")
+disabled = true
+
+[node name="InteractHotspot" type="Area2D" parent="."]
+collision_layer = 1
+collision_mask = 0
+monitoring = false
+monitorable = true
+
+[node name="Shape" type="CollisionShape2D" parent="InteractHotspot"]
+shape = SubResource("hotspot")
+
+[node name="Prompt" type="Label" parent="."]
+offset_left = -40.0
+offset_top = -56.0
+offset_right = 40.0
+offset_bottom = -36.0
+theme_override_colors/font_color = Color(0.95, 0.86, 0.55, 1)
+theme_override_font_sizes/font_size = 13
+text = "Talk"
+horizontal_alignment = 1

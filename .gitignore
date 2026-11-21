@@ -12,3 +12,5 @@ dist/
 .runtime/
 client/.godot/
 client/build/
+*.translation
+.DS_Store
