@@ -16,6 +16,7 @@ Prompts live in `docs/director/prompts/T-NNN.md`. Protocol: `DIRECTOR.md`.
 | ID | Lane | Title | Depends | Notes |
 |----|------|-------|---------|-------|
 | D-001 | director | Content export contract + DB contract + toolchain pins in `docs/contracts/` | EX-P02 ✔ | **DONE** — `content-export.md`, `db-content.md`, `toolchain-pins.md`; exporter `tools/content/export.py` (deterministic, blocked by lint errors); CI jobs `server-db` + export step |
+| D-003 | director | WebSocket protocol contract v1 (`docs/contracts/websocket-protocol.md` + envelope schema) | T-003 ✔, owner OK ✔ | **DONE** — canon §15.2 events/directions kept (tested), added session/state/error messages, idempotency, limits, close codes; pins updated (coder/websocket v1.8.15) |
 | T-009 | server | EX-P03: goose migrations + loader (pgx) → `server/internal/content` + `contentctl` CLI + isolated Compose `deploy/newmmo/` | D-001 ✔, T-006 ✔ | **ISSUED** (`prompts/T-009.md`). Phase 2 (tools approved). CI `server-db` runs it |
 | D-002 | director | POI id mapping contract (stub `POI-BOARD-01` … → canon `POI-01-*`, C-POI-001) | — | Needed by client EX-P06/07 |
 | T-001 | research | OSS research: PostgreSQL migrations + Go DB access → `docs/research/db-migrations.md` | — | **DONE** `3fb9aa6` (branch `be9a5bb`, lane_check clean). Director spot-check of upstream `go.mod` at tags confirmed the report's Go-version warning (see ROADMAP EX-P03). Owner OK received 2026-11-21 (Go ≥1.25, goose + pgx) |
@@ -45,3 +46,4 @@ First parallel batch (different lanes, no dependencies, disjoint files): **T-001
 | 2026-11-21 | Owner «делай» → EX-P03 started: D-001 contracts + exporter + CI `server-db`; T-009 issued to Codex |
 | 2026-11-21 | T-003 reviewed and merged; T-010 (contracts review) issued to ChatGPT; D-003 WS contract awaits owner OK on coder/websocket + JSON v1 |
 | 2026-11-21 | T-007 reviewed and merged; T-008 issued to Cursor |
+| 2026-11-21 | Owner approved coder/websocket v1.8.15 + JSON; D-003 contract published (EX-P04 prerequisite) |
