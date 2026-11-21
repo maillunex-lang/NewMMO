@@ -51,6 +51,9 @@ func set_direction_from_vector(v: Vector2) -> void:
 	var ang := fposmod(atan2(v.y, v.x), TAU)
 	_dir = int(round(ang / (TAU / 8.0))) % 8
 
+func set_direction_index(i: int) -> void:
+	_dir = clampi(i, 0, 7)
+
 func play_idle() -> void:
 	if _playing_attack or _sprite == null:
 		return

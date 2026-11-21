@@ -85,3 +85,9 @@ dungeon.hint.rest,Отдохните у привала.,Rest at the camp.
 dungeon.hint.boss,Свяжите три огня и победите Криптария.,Bind the three fires and defeat the Cryptarch.
 dungeon.hint.exit,Выход: заберите награду.,Exit: claim your reward.
 ui.credits,Авторы,Credits
+world.hint.you_died,Вы погибли. Возрождение через несколько секунд.,You died. Respawning in a few seconds.
+world.hint.respawned,Вы возродились.,You respawned.
+world.hint.out_of_range,Слишком далеко от цели.,Target is out of range.
+world.hint.no_resource,Не хватает ресурса.,Not enough resource.
+world.hint.no_target,Нет цели рядом.,No target nearby.
+world.hint.unsupported,Это умение пока недоступно.,This skill is not available yet.

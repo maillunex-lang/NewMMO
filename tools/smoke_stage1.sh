@@ -85,6 +85,9 @@ run_godot_capture "Map generator smoke (no quest dead ends)" "MAPGEN_SMOKE OK" -
 run_godot_capture "Map verify: Dawn Valley anchors reachable" "MAPGEN_VERIFY" -- \
   --headless --path "$ROOT/client" --script res://addons/lunex_gen/cli.gd -- verify res://scenes/locations/dawn_valley.tscn
 
+run_godot_capture "World client smoke" "WORLD_SMOKE_OK" -- \
+  --headless --path "$ROOT/client" --script res://scripts/dev/world_smoke.gd
+
 echo "== Server tests =="
 (cd "$ROOT/server" && go test ./...)
 

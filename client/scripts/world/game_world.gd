@@ -102,6 +102,9 @@ func _try_attach_online_session() -> void:
 	if str(net.content_build_id) != "":
 		build = str(net.content_build_id)
 	quest_manager.enable_online(net, build)
+	var wc := get_node_or_null("WorldController")
+	if wc != null and wc.has_method("bind_net"):
+		wc.bind_net(net)
 	var dc := get_node_or_null("DungeonController")
 	if dc != null and dc.has_method("bind_net"):
 		dc.bind_net(net)

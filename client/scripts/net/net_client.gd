@@ -16,6 +16,10 @@ signal dialogue_node_state(payload: Dictionary)
 signal inventory_delta(payload: Dictionary)
 signal loot_result(payload: Dictionary)
 signal dungeon_snapshot(payload: Dictionary)
+signal world_snapshot(payload: Dictionary)
+signal world_delta(payload: Dictionary)
+signal world_event(payload: Dictionary)
+signal world_cast_result(payload: Dictionary)
 signal dungeon_reward(payload: Dictionary)
 signal command_error(payload: Dictionary)
 signal needs_client_update(code: int, reason: String)
@@ -48,6 +52,10 @@ const KNOWN_S2C := {
 	"inventory.delta": true,
 	"combat.loot.result": true,
 	"dungeon.snapshot": true,
+	"world.snapshot": true,
+	"world.delta": true,
+	"world.event": true,
+	"world.cast.result": true,
 	"dungeon.reward": true,
 	"command.error": true,
 }
@@ -180,6 +188,23 @@ func request_dungeon_claim(instance_id: String) -> String:
 
 func request_dungeon_leave(instance_id: String) -> String:
 	return send_mutation("dungeon.leave.request", {"instance_id": instance_id})
+
+## T-038d: server-authoritative world (world-sim.md, combat-engine.md). Movement carries only a target + seq;
+## the speed is the server's. Casting is a mutation (request_id, resent after reconnect).
+func world_join(zone_id: String) -> void:
+	_send_c2s("world.join.request", {"zone_id": zone_id}, "")
+
+func world_move(seq: int, x: float, y: float) -> void:
+	_send_c2s("world.move.request", {"seq": seq, "x": x, "y": y}, "")
+
+func world_stop(seq: int) -> void:
+	_send_c2s("world.stop.request", {"seq": seq}, "")
+
+func request_world_cast(skill_id: String, target_id: int = 0) -> String:
+	var payload := {"skill_id": skill_id}
+	if target_id > 0:
+		payload["target_id"] = target_id
+	return send_mutation("world.cast.request", payload)
 
 func request_snapshot(scopes: Array = []) -> void:
 	var payload := {}
@@ -351,6 +376,15 @@ func _dispatch_typed(type_name: String, payload: Dictionary, request_id: String)
 		"inventory.delta":
 			_ack_pending(request_id)
 			inventory_delta.emit(payload)
+		"world.snapshot":
+			world_snapshot.emit(payload)
+		"world.delta":
+			world_delta.emit(payload)
+		"world.event":
+			world_event.emit(payload)
+		"world.cast.result":
+			_ack_pending(request_id)
+			world_cast_result.emit(payload)
 		"dungeon.snapshot":
 			_ack_pending(request_id)
 			dungeon_snapshot.emit(payload)

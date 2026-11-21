@@ -28,6 +28,7 @@ var _attack_cd := 0.0
 var _auto_busy := false
 var inventory: Dictionary = {}  # item_id -> amount
 var gold := 0
+var online_dead := false  # T-038d: server says this character is dead (movement frozen until respawn)
 
 func _ready() -> void:
 	hp = max_hp
@@ -58,6 +59,11 @@ func toggle_auto_combat() -> bool:
 
 func _physics_process(delta: float) -> void:
 	z_index = int(global_position.y)
+	if online_dead:
+		velocity = Vector2.ZERO
+		move_and_slide()
+		animator.play_idle()
+		return
 	_attack_cd = maxf(0.0, _attack_cd - delta)
 	var desired := Vector2.ZERO
 	if joystick_dir.length() > 0.15:
@@ -83,6 +89,10 @@ func _physics_process(delta: float) -> void:
 		_auto_combat_tick()
 
 func _auto_combat_tick() -> void:
+	var wc := get_tree().get_first_node_in_group("world_controller")
+	if wc != null and wc.is_active():
+		wc.auto_tick()  # online: the server decides, we only choose where to go and what to cast
+		return
 	if _auto_busy:
 		return
 	var target := _nearest_monster()
@@ -110,6 +120,10 @@ func _nearest_monster() -> Node2D:
 	return best
 
 func use_skill(slot: int) -> void:
+	var wc := get_tree().get_first_node_in_group("world_controller")
+	if wc != null and wc.is_active():
+		wc.cast_slot(slot)
+		return
 	if hp <= 0.0 or _attack_cd > 0.0 or animator.is_attacking():
 		return
 	var costs := [0.0, 8.0, 12.0, 10.0, 14.0, 18.0]

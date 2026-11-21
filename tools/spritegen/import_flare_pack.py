@@ -21,7 +21,7 @@ CELL = 256
 IDLE, RUN, ATTACK = [0], [0, 1, 2, 3], [4, 5, 4]  # col 4 attack, 5 special, 6 hit, 7 dead are single frames
 
 # name -> (layers over/instead of base, frame size px, crop box in the 256 cell)
-STD_CROP = (32, 32, 224, 224)
+STD_CROP = (60, 74, 196, 210)  # tight window around the 111x126 figure → ~1.4× larger than a loose crop
 ACTORS = {
     "characters/guardian_sheet.png": (["male_base", "male_heavy", "male_shield", "male_longsword"], 96, STD_CROP),
     "npc/elder_mira_sheet.png": (["magician"], 96, STD_CROP),
