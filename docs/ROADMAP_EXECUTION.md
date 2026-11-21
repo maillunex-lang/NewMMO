@@ -146,7 +146,7 @@
 **Зависит от:** EX-P05 (или параллельно тонкий UI после P04 с mock)  
 **Приёмка:** HUD/журнал/диалоги по Theme; landscape; без программной геометрии экранов  
 **Тесты:** ручной + headless smoke  
-**Статус:** [~] базовый HUD/диалог есть; нужна привязка к серверу
+**Статус:** [~] базовый HUD/диалог + safe-area (T-004); журнал квестов и `tr()` — T-007 (в работе); привязка к серверу — после P04/P05
 
 ### EX-P07 — Vertical slice REG-01 (играбельный контракт интеграции)
 **Зависит от:** EX-P04…P06  
@@ -226,6 +226,7 @@
 | 2026-11-21 | EX-P02 crossrefs + CT-003…009 | `59f5cbd` | unittest 32 OK; lint 0 ERROR | C-ITEMQ-001 найден (36 ITEM-Q без объявления) |
 | 2026-11-21 | C-ITEMQ-001 A (по решению владельца) | `8a61c6b` | unittest 32 OK | 36 `ITEM-Q-*` в `11` §12.1, имена — рабочие |
 | 2026-11-21 | Полная сверка связей: client-sync + docs-links + CI | см. `git log` | unittest 35 OK; client-sync 0 ERR; docs-links 0 | клиент == канон; 1 doc-путь починен (`AUDIT.md`) |
+| 2026-11-21 | T-004 client UI safe-area + scene choices (Cursor) | см. `git log` | smokes (executor): stage1/MQ01/boot OK; client-sync 0 err | в P06 сделано: safe-area, кнопки выбора в `.tscn`; журнал квестов и i18n → T-007 |
 | 2026-11-21 | T-005 Go server hardening (Codex) | `b026eab` | go vet + test -race OK; live smoke OK | stdlib only; replaced by T-006 follow-up (go 1.25 directive, WS-ready wrapper) |
 | 2026-11-21 | EX-DIR multi-agent protocol | см. `git log` | unittest 11 OK (lane_check) | задачи не выданы, ждём ответов владельца |
 
