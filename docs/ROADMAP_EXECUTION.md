@@ -176,7 +176,7 @@
 | 2026-11-21 | DONE-C/D process+research | `84ccea4`/`7f817f9` | — | procgen = D |
 | 2026-11-21 | DONE-E MQ-01-01…05 local | `11d48ca` | `MQ01_SMOKE_OK` | не сервер |
 | 2026-11-21 | Canon 01–14 present | `efe1c7b` | — | integration+events |
-| 2026-11-21 | EX-P00 baseline audit | *(this push)* | docs-only | local rewards + authority gaps documented |
+| 2026-11-21 | EX-P00 baseline audit | `7567a54` | docs-only | local rewards + authority gaps documented |
 
 ---
 
