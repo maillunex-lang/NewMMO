@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/game_world.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/locations/dawn_valley.tscn" id="2"]
@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/inventory.tscn" id="8"]
 [ext_resource type="Script" path="res://scripts/dungeon/dungeon_controller.gd" id="9"]
 [ext_resource type="PackedScene" path="res://scenes/ui/credits.tscn" id="10"]
+[ext_resource type="Script" path="res://scripts/world/world_controller.gd" id="11"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1")
@@ -21,6 +22,9 @@ position = Vector2(620, 720)
 
 [node name="QuestManager" type="Node" parent="."]
 script = ExtResource("6")
+
+[node name="WorldController" type="Node" parent="."]
+script = ExtResource("11")
 
 [node name="DungeonController" type="Node" parent="."]
 script = ExtResource("9")

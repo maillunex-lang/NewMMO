@@ -24,6 +24,7 @@ var _journal: Node = null
 var _inventory: Node = null
 
 func _ready() -> void:
+	add_to_group("hud")
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for i in range(skills.get_child_count()):
 		var btn := skills.get_child(i)

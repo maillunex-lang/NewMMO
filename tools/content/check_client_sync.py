@@ -149,6 +149,21 @@ def run(root, content_dir):
         for d in decl.values():
             if d["kind"] == "npc" and d["id"] not in names:
                 add("ERROR", "CS_NAME_MISSING", f"names.json: canon NPC {d['id']} missing")
+    # client skill table must mirror canon skills (id, name, level, target, cost, cooldown, effect kind)
+    spath = os.path.join(root, "client", "data", "skills.json")
+    if os.path.exists(spath):
+        client_sk = {x["id"]: x for lst in json.load(open(spath, encoding="utf-8"))["classes"].values() for x in lst}
+        canon_sk = {d["id"]: d for d in res["decls"] if d["kind"] == "skill"}
+        for sid, c in canon_sk.items():
+            x = client_sk.get(sid)
+            f = c["fields"]
+            if x is None:
+                add("ERROR", "CS_SKILL_MISSING", f"skills.json: {sid} missing")
+            elif (x["name"], x["level"], x["target"], x["cost"], x["cooldown_s"], x["effect_kind"]) != \
+                    (f["name"], f["level"], f["target"], f["cost"], f["cooldown_s"], f.get("effect_kind", "")):
+                add("ERROR", "CS_SKILL", f"skills.json: {sid} differs from canon")
+        for sid in client_sk.keys() - canon_sk.keys():
+            add("ERROR", "CS_SKILL_ID", f"skills.json: {sid} is not a canon skill")
     # CC-BY (attribution) sources listed in assets/LICENSES.md must be credited in client/data/credits.txt
     lic_path = os.path.join(root, "client", "assets", "LICENSES.md")
     cred_path = os.path.join(root, "client", "data", "credits.txt")

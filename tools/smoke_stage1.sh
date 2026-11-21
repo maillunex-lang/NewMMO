@@ -79,6 +79,9 @@ run_godot_capture "Online wiring smoke" "ONLINE_SMOKE_OK" -- \
 run_godot_capture "Dungeon client smoke" "DUNGEON_SMOKE_OK" -- \
   --headless --path "$ROOT/client" --script res://scripts/dev/dungeon_smoke.gd
 
+run_godot_capture "World client smoke" "WORLD_SMOKE_OK" -- \
+  --headless --path "$ROOT/client" --script res://scripts/dev/world_smoke.gd
+
 echo "== Server tests =="
 (cd "$ROOT/server" && go test ./...)
 

@@ -21,7 +21,7 @@ important_dialogue = true
 lines = PackedStringArray("Traveler of the Last Dawn… you feel it too, don’t you?", "The valley road is fouled by restless slimes. Three will do for a first trial.", "Return when the path is clearer. The Whispering Forest waits beyond.")
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
-offset = Vector2(0, -36)
+offset = Vector2(0, -41)
 
 [node name="DirectionalAnimator" type="Node" parent="."]
 script = ExtResource("2")
