@@ -181,7 +181,7 @@ func (s *Sim) stepCombat() {
 				continue
 			}
 			if e.Dead {
-				if s.tick >= e.respawnAt {
+				if !s.cfg.NoRespawn && s.tick >= e.respawnAt {
 					s.respawnPlayer(e)
 				}
 				continue
@@ -216,7 +216,7 @@ func (s *Sim) stepCombat() {
 			if !e.Dead {
 				s.stepEnemy(e)
 			}
-			if e.Dead && s.tick >= e.respawnAt {
+			if e.Dead && !s.cfg.NoRespawn && s.tick >= e.respawnAt {
 				e.Dead, e.HP, e.Pos = false, e.MaxHP, e.home
 				e.contrib = map[string]int{}
 				e.ai = aiState{}

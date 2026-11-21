@@ -12,7 +12,10 @@ import (
 	"github.com/maillunex-lang/NewMMO/server/internal/damage"
 )
 
-type Vec struct{ X, Y float64 }
+type Vec struct {
+	X float64 `json:"x"`
+	Y float64 `json:"y"`
+}
 
 type Rect struct{ MinX, MinY, MaxX, MaxY float64 }
 
@@ -33,6 +36,7 @@ type Config struct {
 	Bounds         Rect
 	InterestRadius float64
 	PlayerSpawn    Vec
+	NoRespawn      bool // dungeon recovery is handled by the room state machine
 }
 
 func (c Config) Dt() float64 { return 1 / float64(c.TickRate) }
