@@ -46,7 +46,7 @@ def main():
             y = r * (TH // 2) - TH // 2
             cx, cy = min(max(x + TW // 2, 0), W - 1), min(max(y + TH // 2, 0), H - 1)
             on_road = road[cy, cx]
-            src = dirt if on_road else (grass if rnd.random() < 0.7 else grass2)
+            src = dirt if on_road else (grass if rnd.random() < 0.92 else grass2)
             t = rnd.choice(src).resize((TW + 4, TH + 2), Image.LANCZOS)  # slight overlap closes seams
             img.paste(t, (x - 2, y - 1), t)
     # soft vignette (darker border like the previous ground)

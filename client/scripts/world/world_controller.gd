@@ -16,12 +16,12 @@ const CAST_REACH := 420.0
 const SUPPORTED := {"damage": ["enemy"], "shield": ["self"], "heal": ["ally", "self"]}
 # canon enemy id → [sheet, frame px, sprite offset y, hp bar y]
 const ENEMY_ART := {
-	"ENM-01-001": ["res://assets/monsters/bandit_sheet.png", 96, -36.0, -74.0],
-	"ENM-01-003": ["res://assets/monsters/wolf_sheet.png", 96, -36.0, -74.0],
-	"ENM-01-004": ["res://assets/monsters/slime_sheet.png", 96, -30.0, -46.0],
+	"ENM-01-001": ["res://assets/monsters/bandit_sheet.png", 96, -41.0, -100.0],
+	"ENM-01-003": ["res://assets/monsters/wolf_sheet.png", 96, -41.0, -100.0],
+	"ENM-01-004": ["res://assets/monsters/slime_sheet.png", 96, -34.0, -62.0],
 }
-const DEFAULT_ENEMY_ART := ["res://assets/monsters/goblin_sheet.png", 96, -36.0, -74.0]
-const PLAYER_ART := ["res://assets/characters/guardian_sheet.png", 96, -36.0, -74.0]
+const DEFAULT_ENEMY_ART := ["res://assets/monsters/goblin_sheet.png", 96, -41.0, -100.0]
+const PLAYER_ART := ["res://assets/characters/guardian_sheet.png", 96, -41.0, -100.0]
 
 signal joined(zone_id: String)
 
