@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/editor/placeable_prop.gd" id="1"]
+
+[node name="Tree" type="Node2D"]
+script = ExtResource("1")
+display_name = "Oak Tree"
+blocks_movement = true
+
+[node name="Trunk" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-7, -8, 7, -8, 9, 23, -9, 23)
+color = Color(0.38, 0.23, 0.12, 1)
+
+[node name="Crown" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, -82, 30, -56, 37, -24, 17, -5, -22, -5, -38, -28, -28, -60)
+color = Color(0.16, 0.44, 0.27, 1)

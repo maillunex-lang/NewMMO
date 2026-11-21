@@ -60,3 +60,6 @@ This file distinguishes approved requirements from provisional design. The full 
 
 ## Unresolved before production-scale launch
 Exact open-PvP crime and loot rules; VIP limits; anti-bot and economy sinks; zone population/load targets; combat tick and replication; asset art direction and sprite atlas budget; security, privacy and payment compliance.
+
+## World editor
+- WORLD-EDITOR-001 C: visually editable location scenes, reusable props and editor-side placement; server map data must be validated separately. See docs/WORLD_EDITOR.md.
