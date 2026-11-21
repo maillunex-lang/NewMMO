@@ -29,6 +29,9 @@ type Stack struct {
 	Slot      int    `json:"slot"`
 	ItemID    string `json:"item_id"`
 	Quantity  int    `json:"quantity"`
+	// InstanceID is set for unique equipment rows (quantity is always 1); details live in the
+	// equipment package (T-039a). Plain stacks omit it.
+	InstanceID string `json:"instance_id,omitempty"`
 }
 
 type Scope struct {
@@ -159,16 +162,19 @@ func (e *Engine) Move(ctx context.Context, accountID string, characterID int64, 
 		} else if replay {
 			return nil
 		}
-		var itemID string
+		var itemID, instanceID string
 		var have int
 		err := tx.QueryRow(ctx, `
-			SELECT item_id, quantity FROM public.character_inventory
-			WHERE character_id=$1 AND container=$2 AND slot=$3`, characterID, fromC, fromSlot).Scan(&itemID, &have)
+			SELECT item_id, quantity, coalesce(instance_id::text, '') FROM public.character_inventory
+			WHERE character_id=$1 AND container=$2 AND slot=$3`, characterID, fromC, fromSlot).Scan(&itemID, &have, &instanceID)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrNotFound
 		}
 		if err != nil {
 			return ErrInternal
+		}
+		if instanceID != "" {
+			return moveInstance(ctx, tx, e, characterID, invRev, env, payloadHash, fromC, fromSlot, toC, toSlot, itemID, instanceID, &out)
 		}
 		moveQty := have
 		if qty > 0 && qty < have {
@@ -246,7 +252,7 @@ func findStackOrSlot(ctx context.Context, tx pgx.Tx, characterID int64, containe
 	var slot, qty int
 	err := tx.QueryRow(ctx, `
 		SELECT slot, quantity FROM public.character_inventory
-		WHERE character_id=$1 AND container=$2 AND item_id=$3
+		WHERE character_id=$1 AND container=$2 AND item_id=$3 AND instance_id IS NULL
 		ORDER BY slot LIMIT 1`, characterID, container, itemID).Scan(&slot, &qty)
 	if err == nil {
 		if qty >= MATMaxStack {
@@ -281,7 +287,7 @@ func findStackOrSlot(ctx context.Context, tx pgx.Tx, characterID int64, containe
 
 func (e *Engine) loadStacks(ctx context.Context, tx pgx.Tx, characterID int64) ([]Stack, []Stack, error) {
 	rows, err := tx.Query(ctx, `
-		SELECT container, slot, item_id, quantity FROM public.character_inventory
+		SELECT container, slot, item_id, quantity, coalesce(instance_id::text, '') FROM public.character_inventory
 		WHERE character_id=$1 ORDER BY container, slot`, characterID)
 	if err != nil {
 		return nil, nil, ErrInternal
@@ -290,7 +296,7 @@ func (e *Engine) loadStacks(ctx context.Context, tx pgx.Tx, characterID int64) (
 	var bag, mats []Stack
 	for rows.Next() {
 		var s Stack
-		if err := rows.Scan(&s.Container, &s.Slot, &s.ItemID, &s.Quantity); err != nil {
+		if err := rows.Scan(&s.Container, &s.Slot, &s.ItemID, &s.Quantity, &s.InstanceID); err != nil {
 			return nil, nil, ErrInternal
 		}
 		if s.Container == "materials" {
@@ -433,4 +439,80 @@ func parseUUID(s string) (string, error) {
 		}
 	}
 	return strings.ToLower(s), nil
+}
+
+// moveInstance repositions a unique equipment row inside the bag. Gear never stacks, never swaps and never
+// enters the materials pocket: the destination must be an empty bag slot.
+func moveInstance(ctx context.Context, tx pgx.Tx, e *Engine, characterID, invRev int64, env Envelope, payloadHash,
+	fromC string, fromSlot int, toC string, toSlot int, itemID, instanceID string, out *Delta) error {
+	if fromC != "bag" || toC != "bag" || toSlot >= BagSlots {
+		return ErrStateConflict
+	}
+	var taken int
+	if err := tx.QueryRow(ctx, `SELECT count(*) FROM public.character_inventory
+		WHERE character_id=$1 AND container='bag' AND slot=$2`, characterID, toSlot).Scan(&taken); err != nil {
+		return ErrInternal
+	}
+	if taken > 0 && toSlot != fromSlot {
+		return ErrStateConflict
+	}
+	newRev := invRev + 1
+	if toSlot != fromSlot {
+		if _, err := tx.Exec(ctx, `UPDATE public.character_inventory SET slot=$1, inventory_revision=$2, updated_at=now()
+			WHERE character_id=$3 AND container='bag' AND slot=$4`, toSlot, newRev, characterID, fromSlot); err != nil {
+			return ErrInternal
+		}
+		if _, err := tx.Exec(ctx, `UPDATE public.characters SET inventory_revision=$1 WHERE character_id=$2`, newRev, characterID); err != nil {
+			return ErrInternal
+		}
+	} else {
+		newRev = invRev
+	}
+	*out = Delta{InventoryRevision: newRev, Changes: []Stack{
+		{Container: "bag", Slot: fromSlot, ItemID: itemID, Quantity: 0},
+		{Container: "bag", Slot: toSlot, ItemID: itemID, Quantity: 1, InstanceID: instanceID},
+	}}
+	return e.storeIdempotency(ctx, tx, characterID, env, payloadHash, *out)
+}
+
+// GrantInstanceTx puts one equipment instance into the first free bag slot (caller holds the character lock
+// and owns the transaction). The instance row must already exist. ErrStateConflict ⇒ bag full.
+func GrantInstanceTx(ctx context.Context, tx pgx.Tx, characterID, invRev int64, templateID, instanceID string) (Stack, int64, error) {
+	rows, err := tx.Query(ctx, `SELECT slot FROM public.character_inventory WHERE character_id=$1 AND container='bag'`, characterID)
+	if err != nil {
+		return Stack{}, invRev, ErrInternal
+	}
+	occupied := map[int]bool{}
+	for rows.Next() {
+		var sl int
+		if err := rows.Scan(&sl); err != nil {
+			rows.Close()
+			return Stack{}, invRev, ErrInternal
+		}
+		occupied[sl] = true
+	}
+	rows.Close()
+	if rows.Err() != nil {
+		return Stack{}, invRev, ErrInternal
+	}
+	slot := -1
+	for s := 0; s < BagSlots; s++ {
+		if !occupied[s] {
+			slot = s
+			break
+		}
+	}
+	if slot < 0 {
+		return Stack{}, invRev, ErrStateConflict
+	}
+	newRev := invRev + 1
+	if _, err := tx.Exec(ctx, `INSERT INTO public.character_inventory
+		(character_id, container, slot, item_id, quantity, inventory_revision, instance_id)
+		VALUES ($1,'bag',$2,$3,1,$4,$5)`, characterID, slot, templateID, newRev, instanceID); err != nil {
+		return Stack{}, invRev, ErrInternal
+	}
+	if _, err := tx.Exec(ctx, `UPDATE public.characters SET inventory_revision=$1 WHERE character_id=$2`, newRev, characterID); err != nil {
+		return Stack{}, invRev, ErrInternal
+	}
+	return Stack{Container: "bag", Slot: slot, ItemID: templateID, Quantity: 1, InstanceID: instanceID}, newRev, nil
 }

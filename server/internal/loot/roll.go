@@ -4,6 +4,8 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"math"
+
+	"github.com/maillunex-lang/NewMMO/server/internal/equipment"
 )
 
 // Roller supplies uniform integers; production uses crypto/rand, tests inject a fixed sequence.
@@ -32,10 +34,13 @@ func (CryptoRoller) Intn(n int64) int64 {
 	}
 }
 
-// Drop is one rolled stack.
+// Drop is one rolled stack. Equipment drops carry the unique instance (quantity 1).
 type Drop struct {
-	ItemID   string `json:"item_id"`
-	Quantity int    `json:"quantity"`
+	ItemID     string `json:"item_id"`
+	Quantity   int    `json:"quantity"`
+	InstanceID string `json:"instance_id,omitempty"`
+	Rarity     string `json:"rarity,omitempty"`
+	ItemLevel  int    `json:"item_level,omitempty"`
 }
 
 type Rolled struct {
@@ -58,7 +63,7 @@ func hit(r Roller, pct float64) bool {
 }
 
 // Roll applies canon 11 §9: guaranteed gold in [min,max]×regionCoef, then independent MAT-001, MAT-003
-// and special-item rolls. Equipment (3rd percentage) is deferred until equipment instances exist.
+// and special-item rolls. The equipment roll is separate (RollEquipment) because it needs the character class.
 func Roll(t Table, regionCoef float64, r Roller) Rolled {
 	if regionCoef <= 0 {
 		regionCoef = 1
@@ -80,4 +85,20 @@ func Roll(t Table, regionCoef float64, r Roller) Rolled {
 		out.Items = append(out.Items, Drop{ItemID: t.SpecialItem, Quantity: 1})
 	}
 	return out
+}
+
+// RollEquipment performs canon 11 §9's single personal equipment roll: with probability EquipPct a slot is
+// chosen uniformly among the 9 slots and a template of the character's OWN class from the table's region
+// (never another class' gear). ok=false ⇒ no drop (no hit, no catalog, or no template for that slot).
+func RollEquipment(t Table, classID string, cat *equipment.Catalog, r Roller) (equipment.Template, string, bool) {
+	if cat == nil || t.EquipRarity == "" || !equipment.ValidRarity(t.EquipRarity) || !hit(r, t.EquipPct) {
+		return equipment.Template{}, "", false
+	}
+	slot := equipment.Slots[r.Intn(int64(len(equipment.Slots)))]
+	cands := cat.Candidates(classID, t.RegionID, slot)
+	if len(cands) == 0 {
+		return equipment.Template{}, "", false
+	}
+	tpl, ok := cat.Get(cands[r.Intn(int64(len(cands)))])
+	return tpl, t.EquipRarity, ok
 }

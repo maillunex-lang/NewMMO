@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/maillunex-lang/NewMMO/server/internal/auth"
+	"github.com/maillunex-lang/NewMMO/server/internal/equipment"
 	"github.com/maillunex-lang/NewMMO/server/internal/loot"
 	"github.com/maillunex-lang/NewMMO/server/internal/quest"
 	"github.com/maillunex-lang/NewMMO/server/internal/ws"
@@ -25,7 +26,11 @@ func attachLootEngine(ctx context.Context, store *auth.Store, socket *ws.Server,
 	if err := cat.LoadFromDB(ctx, pool, buildID); err != nil {
 		return fmt.Errorf("load loot tables: %w", err)
 	}
-	socket.SetLoot(loot.Adapter{Engine: loot.NewEngine(pool, cat, loot.LoadConfig(os.Getenv))})
+	eqCat := equipment.NewCatalog()
+	if err := eqCat.LoadFromDB(ctx, pool, buildID); err != nil {
+		return fmt.Errorf("load equipment templates: %w", err)
+	}
+	socket.SetLoot(loot.Adapter{Engine: loot.NewEngine(pool, cat, loot.LoadConfig(os.Getenv)).WithEquipment(eqCat)})
 	logger.Info("loot engine ready", "build_id", buildID, "tables", cat.Len())
 	return nil
 }

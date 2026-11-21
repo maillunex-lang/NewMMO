@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/maillunex-lang/NewMMO/server/internal/equipment"
 	"github.com/maillunex-lang/NewMMO/server/internal/inventory"
 	"github.com/maillunex-lang/NewMMO/server/internal/quest"
 )
@@ -49,6 +50,7 @@ type Engine struct {
 	cfg    Config
 	roller Roller
 	now    func() time.Time
+	eq     *equipment.Catalog // nil ⇒ no equipment drops
 }
 
 func NewEngine(pool *pgxpool.Pool, cat *Catalog, cfg Config) *Engine {
@@ -56,8 +58,9 @@ func NewEngine(pool *pgxpool.Pool, cat *Catalog, cfg Config) *Engine {
 }
 
 // WithRoller / WithClock are for tests.
-func (e *Engine) WithRoller(r Roller) *Engine          { e.roller = r; return e }
-func (e *Engine) WithClock(f func() time.Time) *Engine { e.now = f; return e }
+func (e *Engine) WithRoller(r Roller) *Engine                { e.roller = r; return e }
+func (e *Engine) WithEquipment(c *equipment.Catalog) *Engine { e.eq = c; return e }
+func (e *Engine) WithClock(f func() time.Time) *Engine       { e.now = f; return e }
 
 type Result struct {
 	EnemyID           string            `json:"enemy_id"`
@@ -68,6 +71,8 @@ type Result struct {
 	InventoryRevision int64             `json:"inventory_revision"`
 	Revision          int64             `json:"revision"`
 	Changes           []inventory.Stack `json:"changes"`
+	// EquipmentLost is true when an equipment roll hit but the bag was full (the drop is not granted).
+	EquipmentLost bool `json:"equipment_lost,omitempty"`
 }
 
 // Claim rolls the drop for one reported kill, server-side, exactly once per request_id.
@@ -119,9 +124,10 @@ func (e *Engine) claim(ctx context.Context, accountID string, characterID int64,
 	defer tx.Rollback(ctx)
 
 	var gold, stateRev, invRev int64
+	var classID string
 	err = tx.QueryRow(ctx, `
-		SELECT gold, state_revision, inventory_revision FROM public.characters
-		WHERE account_id=$1 AND character_id=$2 FOR UPDATE`, accountID, characterID).Scan(&gold, &stateRev, &invRev)
+		SELECT gold, state_revision, inventory_revision, class_id FROM public.characters
+		WHERE account_id=$1 AND character_id=$2 FOR UPDATE`, accountID, characterID).Scan(&gold, &stateRev, &invRev, &classID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Result{}, ErrNotFound
 	}
@@ -170,6 +176,20 @@ func (e *Engine) claim(ctx context.Context, accountID string, characterID int64,
 		}
 		invRev = newRev
 		res.Changes = mergeChanges(res.Changes, changes)
+	}
+	if tpl, rarity, ok := RollEquipment(table, classID, e.eq, e.roller); ok {
+		drop, stack, newRev, granted, err := e.grantEquipment(ctx, tx, characterID, invRev, tpl, rarity, classID, requestID)
+		if err != nil {
+			return Result{}, ErrInternal
+		}
+		if granted {
+			invRev = newRev
+			rolled.Items = append(rolled.Items, drop)
+			res.Items = rolled.Items
+			res.Changes = mergeChanges(res.Changes, []inventory.Stack{stack})
+		} else {
+			res.EquipmentLost = true
+		}
 	}
 	gold += rolled.Gold
 	stateRev++
@@ -241,4 +261,53 @@ func parseUUID(s string) (string, error) {
 		}
 	}
 	return strings.ToLower(s), nil
+}
+
+// grantEquipment creates the unique instance and places it in the bag inside a savepoint, so a full bag
+// loses only the equipment drop (EquipmentLost) and never the gold/material part of the same kill.
+func (e *Engine) grantEquipment(ctx context.Context, tx pgx.Tx, characterID, invRev int64, tpl equipment.Template,
+	rarity, classID, requestID string) (Drop, inventory.Stack, int64, bool, error) {
+	sp, err := tx.Begin(ctx)
+	if err != nil {
+		return Drop{}, inventory.Stack{}, invRev, false, err
+	}
+	id, err := newUUID()
+	if err != nil {
+		_ = sp.Rollback(ctx)
+		return Drop{}, inventory.Stack{}, invRev, false, err
+	}
+	stats := equipment.Distribute(classID, equipment.StatBudget(tpl.Level, rarity, tpl.Slot))
+	statsJSON, _ := json.Marshal(stats)
+	if _, err := sp.Exec(ctx, `
+		INSERT INTO public.character_equipment_items
+			(instance_id, character_id, template_id, rarity, item_level, required_level, stats, source)
+		VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8)`,
+		id, characterID, tpl.ID, rarity, tpl.Level, equipment.RequiredLevel(tpl.Level), string(statsJSON), "loot:"+requestID); err != nil {
+		_ = sp.Rollback(ctx)
+		return Drop{}, inventory.Stack{}, invRev, false, err
+	}
+	stack, newRev, err := inventory.GrantInstanceTx(ctx, sp, characterID, invRev, tpl.ID, id)
+	if errors.Is(err, inventory.ErrStateConflict) {
+		_ = sp.Rollback(ctx) // bag full
+		return Drop{}, inventory.Stack{}, invRev, false, nil
+	}
+	if err != nil {
+		_ = sp.Rollback(ctx)
+		return Drop{}, inventory.Stack{}, invRev, false, err
+	}
+	if err := sp.Commit(ctx); err != nil {
+		return Drop{}, inventory.Stack{}, invRev, false, err
+	}
+	return Drop{ItemID: tpl.ID, Quantity: 1, InstanceID: id, Rarity: rarity, ItemLevel: tpl.Level}, stack, newRev, true, nil
+}
+
+func newUUID() (string, error) {
+	var b [16]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return "", err
+	}
+	b[6] = b[6]&0x0f | 0x40
+	b[8] = b[8]&0x3f | 0x80
+	h := hex.EncodeToString(b[:])
+	return h[:8] + "-" + h[8:12] + "-" + h[12:16] + "-" + h[16:20] + "-" + h[20:], nil
 }

@@ -20,6 +20,8 @@ type Table struct {
 	Mat3Pct     float64
 	SpecialItem string
 	SpecialPct  float64
+	EquipPct    float64 // canon 11 §9 equipment chance, 0..100 (one personal roll)
+	EquipRarity string  // rarity of that roll (UNCOMMON/RARE/EPIC…)
 }
 
 // Claimable reports whether an open-world kill report may be rolled for this table (EX-P08 interim).
@@ -92,6 +94,8 @@ func (c *Catalog) LoadFromDB(ctx context.Context, pool *pgxpool.Pool, buildID st
 			Mat3Pct     float64 `json:"mat3_pct"`
 			SpecialItem string  `json:"special_item"`
 			SpecialPct  float64 `json:"special_pct"`
+			EquipPct    float64 `json:"equip_pct"`
+			EquipRarity string  `json:"equip_rarity"`
 		}
 		if err := json.Unmarshal(payload, &f); err != nil {
 			return err
@@ -101,7 +105,7 @@ func (c *Catalog) LoadFromDB(ctx context.Context, pool *pgxpool.Pool, buildID st
 		}
 		byEnemy[f.Enemy] = Table{ID: id, EnemyID: f.Enemy, RegionID: region, Category: f.Category,
 			GoldMin: f.GoldMin, GoldMax: f.GoldMax, Mat1Pct: f.Mat1Pct, Mat3Pct: f.Mat3Pct,
-			SpecialItem: f.SpecialItem, SpecialPct: f.SpecialPct}
+			SpecialItem: f.SpecialItem, SpecialPct: f.SpecialPct, EquipPct: f.EquipPct, EquipRarity: f.EquipRarity}
 	}
 	if err := rows.Err(); err != nil {
 		return err

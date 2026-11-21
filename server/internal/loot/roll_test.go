@@ -1,6 +1,10 @@
 package loot
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/maillunex-lang/NewMMO/server/internal/equipment"
+)
 
 type seq struct {
 	vals []int64
@@ -69,5 +73,46 @@ func TestCryptoRollerRange(t *testing.T) {
 	}
 	if r.Intn(1) != 0 {
 		t.Fatal("Intn(1) must be 0")
+	}
+}
+
+func eqCatalog() *equipment.Catalog {
+	c := equipment.NewCatalog()
+	for _, s := range equipment.Slots {
+		c.Put(equipment.Template{ID: "EQ-01-01-" + s + "-01", ClassID: "CLS-01", Region: "REG-01", Slot: s, Level: 8})
+		c.Put(equipment.Template{ID: "EQ-02-01-" + s + "-01", ClassID: "CLS-02", Region: "REG-01", Slot: s, Level: 8})
+	}
+	return c
+}
+
+func TestRollEquipment(t *testing.T) {
+	tb := Table{RegionID: "REG-01", EquipPct: 1, EquipRarity: "UNCOMMON"}
+	cat := eqCatalog()
+	// 1% = 100 bp: roll 99 hits, 100 misses.
+	if _, _, ok := RollEquipment(tb, "CLS-01", cat, &seq{vals: []int64{100}}); ok {
+		t.Fatal("100 bp must miss a 1% roll")
+	}
+	// hit, slot index 3 (CH), template pick 0.
+	tpl, rarity, ok := RollEquipment(tb, "CLS-01", cat, &seq{vals: []int64{99, 3, 0}})
+	if !ok || tpl.ID != "EQ-01-01-CH-01" || rarity != "UNCOMMON" {
+		t.Fatalf("got %v %s %v", tpl, rarity, ok)
+	}
+	// Only the character's own class ever drops.
+	tpl, _, ok = RollEquipment(tb, "CLS-02", cat, &seq{vals: []int64{0, 0, 0}})
+	if !ok || tpl.ClassID != "CLS-02" {
+		t.Fatalf("class filter: %v", tpl)
+	}
+	// No catalog / unknown rarity / 0% never drop; a class with no templates drops nothing.
+	if _, _, ok := RollEquipment(tb, "CLS-01", nil, &seq{vals: []int64{0}}); ok {
+		t.Fatal("nil catalog")
+	}
+	if _, _, ok := RollEquipment(Table{RegionID: "REG-01", EquipPct: 100, EquipRarity: "BOGUS"}, "CLS-01", cat, &seq{vals: []int64{0}}); ok {
+		t.Fatal("bad rarity")
+	}
+	if _, _, ok := RollEquipment(Table{RegionID: "REG-01", EquipRarity: "RARE"}, "CLS-01", cat, &seq{vals: []int64{0}}); ok {
+		t.Fatal("0%")
+	}
+	if _, _, ok := RollEquipment(tb, "CLS-05", cat, &seq{vals: []int64{0}}); ok {
+		t.Fatal("class without templates")
 	}
 }

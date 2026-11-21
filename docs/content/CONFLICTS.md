@@ -82,6 +82,15 @@ Recorded by EX-P00 audit. **Do not silently pick a side in code.** Owner decides
 | Owner decision | Use two separate interactable crystals with existing art. Place safe zones inside the current R06 arena. |
 | Applied | The server highlights one of the two diagonal pairs of room quadrants for the canon 2.2 s. Both crystals can be destroyed once per encounter to interrupt the cast. The three ritual flames keep their existing progression role. |
 
+## C-EQUIP-001 — wear requirement and drop item level of equipment
+
+| Field | Value |
+|-------|--------|
+| Status | **OPEN, interim** (2026-11-21, T-039a) — not a canon change |
+| Problem | `11` §4 says `required_level<=item_level` with a gap of at most 3, and §6 gives one base level per region model (R1 = 8) while the loot tables (§9) do not say at which `item_level` a drop is rolled. Class stats of the base model (e.g. 8 for a level-1 player) would make a level-1 drop meaningless or too strong. |
+| Interim | Drops use the template's base level as `item_level`; `required_level = max(1, item_level − 3)` (R1 gear wearable from level 5). Affixes (`11` §7) are not rolled yet; stat budget (`11` §4 formulas, class split) is the only stat source. |
+| Owner decision needed | Per-drop `item_level` scaling inside a region (§6 "варианты уровней") and the real wear requirement. |
+
 ## Other open notes
 
 | ID | Note |

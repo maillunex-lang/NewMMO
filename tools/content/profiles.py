@@ -340,7 +340,9 @@ def p_items(b, f):
             sp = re.search(r"`(MAT-\d\d-\d{3})`\s*(\d+(?:\.\d+)?)\s*%", fl.pop("special_raw", ""))
             if sp:
                 fl["special_item"], fl["special_pct"] = sp.group(1), float(sp.group(2))
-            fl.pop("equip_raw", None)
+            eq = re.match(r"\s*(\d+(?:\.\d+)?)\s*%\s*(UNCOMMON|RARE|EPIC|LEGENDARY|MYTHIC|COMMON)\b", fl.pop("equip_raw", ""))
+            if eq:
+                fl["equip_pct"], fl["equip_rarity"] = float(eq.group(1)), eq.group(2)
         if d["kind"] == "equipment":
             d["fields"]["level"] = _int(d["fields"].get("level"))
     for blk in b:

@@ -14,7 +14,7 @@ This is a **bounded-exploit interim, not anti-cheat**: a modified client can far
 1. **Gold:** uniform integer in `[gold_min, gold_max]`, × region coefficient (config, default 1.0 — conflict **C-LOOT-001**), floored. Always granted (canon: guaranteed gold).
 2. `MAT-RR-001` with probability `mat1_pct`; `MAT-RR-003` with `mat3_pct` (independent rolls, 1 unit each).
 3. Special item (`special_item`, `special_pct`, e.g. elite `MAT-01-004` 8%) — independent roll.
-4. Equipment roll (3rd percentage) is **deferred** until equipment instances exist (inventory-engine §4); not rolled, not granted.
+4. Equipment roll (3rd percentage): **implemented in T-039a** — see `equipment-engine.md` §2 (own-class template, bag instance, `equipment_lost` when the bag is full).
 Per-player personal rolls (canon: no race for the first click) hold by construction: each character claims its own roll.
 
 ## 3. Transaction (single DB transaction, character row `FOR UPDATE`)

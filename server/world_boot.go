@@ -9,6 +9,7 @@ import (
 
 	"github.com/maillunex-lang/NewMMO/server/internal/auth"
 	"github.com/maillunex-lang/NewMMO/server/internal/combatdata"
+	"github.com/maillunex-lang/NewMMO/server/internal/equipment"
 	"github.com/maillunex-lang/NewMMO/server/internal/loot"
 	"github.com/maillunex-lang/NewMMO/server/internal/quest"
 	"github.com/maillunex-lang/NewMMO/server/internal/world"
@@ -40,7 +41,11 @@ func attachWorld(ctx context.Context, store *auth.Store, socket *ws.Server, logg
 	if err := lootCat.LoadFromDB(ctx, pool, buildID); err != nil {
 		return nil, fmt.Errorf("load loot tables: %w", err)
 	}
-	lootEngine := loot.NewEngine(pool, lootCat, loot.LoadConfig(os.Getenv))
+	eqCat := equipment.NewCatalog()
+	if err := eqCat.LoadFromDB(ctx, pool, buildID); err != nil {
+		return nil, fmt.Errorf("load equipment templates: %w", err)
+	}
+	lootEngine := loot.NewEngine(pool, lootCat, loot.LoadConfig(os.Getenv)).WithEquipment(eqCat)
 	runCtx, cancel := context.WithCancel(ctx)
 	// Server-observed kills grant loot (closes R-KILL for the open world): one personal roll per contributor.
 	killHook := func(k world.KillEvent) {

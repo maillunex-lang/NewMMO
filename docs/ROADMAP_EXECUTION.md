@@ -188,8 +188,9 @@
 - [x] `MAT-01-*` stacks; `ITEM-Q-*` via `character_quest_items` (QUEST_KEY)
 - [x] класс CLS-01…05 selectable (character create, T-018)
 - [x] combat loot (T-034) — merge `b63d903`: server-rolled drops + append-only ledger + client request/HUD feedback (interim R-KILL, C-LOOT-001); [ ] equip UI + equipment drops remain  
+- [x] T-039a (2026-11-21): серверный дроп экипировки по канону `11` §9 (личный ролл, предмет СВОЕГО класса региона, один из 9 слотов), уникальные экземпляры `character_equipment_items` (бюджет статов `11` §4 + разбивка по классу), размещение в сумке, `equipment_lost` при полной сумке; миграция `00013`, контракт `equipment-engine.md`, конфликт C-EQUIP-001 (интерим); PG-тесты локально и в CI `server-db`. **Не готово:** equip/unequip (T-039b), UI окна экипировки (T-039c), аффиксы/заточка, подключение статов к бою
 **Тесты:** CT-009, CT-017 + PG inventory + ONLINE_SMOKE inventory panel  
-**Статус:** [~] bag + server inventory + combat loot реализованы; экипировка и выпадение экипировки ещё не готовы
+**Статус:** [~] bag + server inventory + combat loot + серверный дроп экипировки реализованы; надевание, UI экипировки и влияние на бой ещё не готовы
 
 ### EX-W01 — Hybrid location generator (editable `.tscn` in Godot) — **v1 [x]** (T-032, in-house, CLI; editor dock + server obstacle consumption pending)
 **Зависит от:** DONE-D research ✔; Godot 4.7.2 ✔; World Studio ✔  
