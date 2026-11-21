@@ -50,9 +50,10 @@ func _run() -> void:
 		await process_frame
 		print("DONE ", step)
 	var snap: Dictionary = qm.debug_snapshot()
-	print("MQ01_SMOKE_OK ", snap)
 	if int(snap.get("xp", 0)) < 500:
-		push_error("xp too low")
+		push_error("xp too low: %s" % str(snap))
 		quit(5)
 		return
+	# Marker only after all assertions (including xp).
+	print("MQ01_SMOKE_OK ", snap)
 	quit(0)
