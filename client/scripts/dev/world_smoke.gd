@@ -74,8 +74,8 @@ func _run() -> void:
 	_assert(str(_find(out, "world.join.request").get("payload", {}).get("zone_id")) == "ZONE-01-DAWN-VALLEY", "zone id")
 
 	var player: Node = main.get_node("DawnValley/Player")
-	var px := player.global_position.x
-	var py := player.global_position.y
+	var px: float = player.global_position.x
+	var py: float = player.global_position.y
 	_rev = 1
 	ft.inject_text(_s2c("world.snapshot", {
 		"tick": 5, "tick_ms": 100, "you": 1, "zone_id": "ZONE-01-DAWN-VALLEY",
@@ -94,7 +94,7 @@ func _run() -> void:
 	_assert(get_nodes_in_group("server_enemies").size() == 1 and get_nodes_in_group("server_players").size() == 1, "puppets: 1 enemy, 1 other player")
 	var hud := get_nodes_in_group("hud")
 	_assert(hud.size() == 1, "HUD in group")
-	var skills_box := hud[0].get_node("SafeArea/Chrome/Skills")
+	var skills_box = hud[0].get_node("SafeArea/Chrome/Skills")
 	var b0 := skills_box.get_child(0) as Button
 	_assert(b0.text.begins_with("Удар бастиона") and not b0.disabled, "slot 1 = first supported Guard skill: %s" % b0.text)
 

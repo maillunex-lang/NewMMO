@@ -289,7 +289,7 @@ func cast_slot(slot: int) -> void:
 	var skill: Dictionary = _skills[slot]
 	var target_id := 0
 	if str(skill.get("target", "")) == "enemy":
-		var e := nearest_enemy()
+		var e = nearest_enemy()
 		if e == null:
 			_hint(tr("world.hint.no_target"))
 			return
@@ -299,7 +299,7 @@ func cast_slot(slot: int) -> void:
 
 func auto_tick() -> void:
 	var pl := _get_player()
-	var e := nearest_enemy(900.0)
+	var e = nearest_enemy(900.0)
 	if pl == null or e == null:
 		return
 	if pl.global_position.distance_to(e.global_position) > 100.0:
