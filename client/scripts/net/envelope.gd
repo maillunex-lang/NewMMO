@@ -17,6 +17,7 @@ const MUTATION_TYPES := {
 	"dialogue.choice.request": true,
 	"inventory.move.request": true,
 	"combat.loot.request": true,
+	"world.cast.request": true,
 	"dungeon.enter.request": true,
 	"dungeon.interact.request": true,
 	"dungeon.encounter.report": true,

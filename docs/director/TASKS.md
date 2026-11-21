@@ -51,6 +51,7 @@ Prompts live in `docs/director/prompts/T-NNN.md`. Protocol: `DIRECTOR.md`.
 | T-038d | client | Puppets from snapshots, prediction/interpolation, skill bar → `cast_skill`, telegraphs | T-038c | PROPOSED |
 | T-038e | server | Dungeon on the sim; retire R-KILL-DNG | T-038c, T-038d | PROPOSED |
 | T-038f | server+client | Measure CPU/RAM per zone, Android cost | T-038d | PROPOSED |
+| T-038d | client | World client: `WorldController` (join, puppets from snapshots/deltas, movement intent + prediction/reconciliation, HUD skills → `world.cast.request`, damage numbers, telegraphs, cooldown/resource state, death freeze), `data/skills.json` (+ canon sync check), `WORLD_SMOKE_OK` | T-038c ✔ | **IN REVIEW** — branch `agent/director/T-038d`; Godot only in CI; offline mode unchanged |
 | T-041 | server | Daily board engine (`docs/DAILY_LOOP.md` §8): templates, 03:00 UTC reset, deterministic rotation by day parity, progress from server-observed kills/interactions, ledger rewards, chest, weekly stamps | T-038c, T-020 ✔ | PROPOSED — design in `docs/DAILY_LOOP.md` (owner delegated parameters 2026-11-21) |
 | T-042 | client | Daily board + weekly book UI, tracker, optional event notifications | T-041 | PROPOSED |
 | T-043 | server | Event scheduler (4 windows/day per region, `EVT-*` instances, contribution, anti-AFK) — aligns with EX-P10 | T-041, EX-P10 | PROPOSED |

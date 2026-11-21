@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "classes": {
+    "CLS-01": [
+      {"id": "CLS-01-SK01", "name": "Удар бастиона", "level": 1, "target": "enemy", "cost": 0, "cooldown_s": 5.0, "effect_kind": "damage"},
+      {"id": "CLS-01-SK02", "name": "Железная клятва", "level": 3, "target": "self", "cost": 20, "cooldown_s": 18.0, "effect_kind": "shield"},
+      {"id": "CLS-01-SK03", "name": "Зов защитника", "level": 6, "target": "area", "cost": 15, "cooldown_s": 14.0, "effect_kind": "damage"},
+      {"id": "CLS-01-SK04", "name": "Разлом строя", "level": 10, "target": "cone", "cost": 20, "cooldown_s": 12.0, "effect_kind": "damage"},
+      {"id": "CLS-01-SK05", "name": "Оплот", "level": 15, "target": "self", "cost": 30, "cooldown_s": 30.0, "effect_kind": "mitigation"},
+      {"id": "CLS-01-SK06", "name": "Перехват", "level": 20, "target": "ally", "cost": 20, "cooldown_s": 18.0, "effect_kind": "intercept"},
+      {"id": "CLS-01-SK07", "name": "Каменный марш", "level": 25, "target": "area", "cost": 25, "cooldown_s": 22.0, "effect_kind": "damage"},
+      {"id": "CLS-01-SK08", "name": "Последний рубеж", "level": 30, "target": "self", "cost": 35, "cooldown_s": 60.0, "effect_kind": "shield"},
+      {"id": "CLS-01-SK09", "name": "Клеймо угрозы", "level": 35, "target": "enemy", "cost": 15, "cooldown_s": 12.0, "effect_kind": "damage"},
+      {"id": "CLS-01-SK10", "name": "Непоколебимость", "level": 40, "target": "self", "cost": 30, "cooldown_s": 45.0, "effect_kind": "cleanse"},
+      {"id": "CLS-01-SK11", "name": "Стена рассвета", "level": 50, "target": "line", "cost": 40, "cooldown_s": 55.0, "effect_kind": "barrier"},
+      {"id": "CLS-01-SK12", "name": "Сердце крепости", "level": 60, "target": "area", "cost": 50, "cooldown_s": 90.0, "effect_kind": "shield"}
+    ],
+    "CLS-02": [
+      {"id": "CLS-02-SK01", "name": "Рубящий натиск", "level": 1, "target": "enemy", "cost": 0, "cooldown_s": 4.0, "effect_kind": "damage"},
+      {"id": "CLS-02-SK02", "name": "Кровавый темп", "level": 3, "target": "self", "cost": 15, "cooldown_s": 18.0, "effect_kind": "haste"},
+      {"id": "CLS-02-SK03", "name": "Прыжок клинка", "level": 6, "target": "point", "cost": 20, "cooldown_s": 16.0, "effect_kind": "damage"},
+      {"id": "CLS-02-SK04", "name": "Двойной разрез", "level": 10, "target": "enemy", "cost": 20, "cooldown_s": 10.0, "effect_kind": "damage"},
+      {"id": "CLS-02-SK05", "name": "Боевой рёв", "level": 15, "target": "area", "cost": 25, "cooldown_s": 24.0, "effect_kind": "damage"},
+      {"id": "CLS-02-SK06", "name": "Ответный удар", "level": 20, "target": "self", "cost": 20, "cooldown_s": 20.0, "effect_kind": "damage"},
+      {"id": "CLS-02-SK07", "name": "Палач", "level": 25, "target": "enemy", "cost": 35, "cooldown_s": 16.0, "effect_kind": "damage"},
+      {"id": "CLS-02-SK08", "name": "Вихрь стали", "level": 30, "target": "area", "cost": 40, "cooldown_s": 28.0, "effect_kind": "damage"},
+      {"id": "CLS-02-SK09", "name": "Неистовство", "level": 35, "target": "self", "cost": 30, "cooldown_s": 45.0, "effect_kind": "haste"},
+      {"id": "CLS-02-SK10", "name": "Разрыв цепей", "level": 40, "target": "self", "cost": 25, "cooldown_s": 45.0, "effect_kind": "cleanse"},
+      {"id": "CLS-02-SK11", "name": "Крушитель рядов", "level": 50, "target": "line", "cost": 45, "cooldown_s": 45.0, "effect_kind": "damage"},
+      {"id": "CLS-02-SK12", "name": "Предел ярости", "level": 60, "target": "self", "cost": 60, "cooldown_s": 90.0, "effect_kind": "buff"}
+    ],
+    "CLS-03": [
+      {"id": "CLS-03-SK01", "name": "Искра Узора", "level": 1, "target": "enemy", "cost": 20, "cooldown_s": 3.0, "effect_kind": "damage"},
+      {"id": "CLS-03-SK02", "name": "Огненная печать", "level": 3, "target": "ground", "cost": 35, "cooldown_s": 12.0, "effect_kind": "damage"},
+      {"id": "CLS-03-SK03", "name": "Ледяная нить", "level": 6, "target": "enemy", "cost": 25, "cooldown_s": 14.0, "effect_kind": "damage"},
+      {"id": "CLS-03-SK04", "name": "Арканный скачок", "level": 10, "target": "point", "cost": 30, "cooldown_s": 18.0, "effect_kind": "teleport"},
+      {"id": "CLS-03-SK05", "name": "Цепная молния", "level": 15, "target": "enemy", "cost": 45, "cooldown_s": 16.0, "effect_kind": "damage"},
+      {"id": "CLS-03-SK06", "name": "Щит формулы", "level": 20, "target": "self", "cost": 35, "cooldown_s": 25.0, "effect_kind": "shield"},
+      {"id": "CLS-03-SK07", "name": "Срыв плетения", "level": 25, "target": "enemy", "cost": 35, "cooldown_s": 24.0, "effect_kind": "damage"},
+      {"id": "CLS-03-SK08", "name": "Метеорный знак", "level": 30, "target": "ground", "cost": 60, "cooldown_s": 30.0, "effect_kind": "damage"},
+      {"id": "CLS-03-SK09", "name": "Холодный круг", "level": 35, "target": "area", "cost": 45, "cooldown_s": 28.0, "effect_kind": "damage"},
+      {"id": "CLS-03-SK10", "name": "Перепись маны", "level": 40, "target": "self", "cost": 0, "cooldown_s": 45.0, "effect_kind": "mana"},
+      {"id": "CLS-03-SK11", "name": "Шторм узора", "level": 50, "target": "area", "cost": 80, "cooldown_s": 55.0, "effect_kind": "damage"},
+      {"id": "CLS-03-SK12", "name": "Двойное небо", "level": 60, "target": "ground", "cost": 100, "cooldown_s": 90.0, "effect_kind": "damage"}
+    ],
+    "CLS-04": [
+      {"id": "CLS-04-SK01", "name": "Точный выстрел", "level": 1, "target": "enemy", "cost": 0, "cooldown_s": 4.0, "effect_kind": "damage"},
+      {"id": "CLS-04-SK02", "name": "Метка добычи", "level": 3, "target": "enemy", "cost": 15, "cooldown_s": 16.0, "effect_kind": "mark"},
+      {"id": "CLS-04-SK03", "name": "Отскок", "level": 6, "target": "point", "cost": 20, "cooldown_s": 16.0, "effect_kind": "movement"},
+      {"id": "CLS-04-SK04", "name": "Тройной залп", "level": 10, "target": "enemy", "cost": 25, "cooldown_s": 12.0, "effect_kind": "damage"},
+      {"id": "CLS-04-SK05", "name": "Капкан Узора", "level": 15, "target": "ground", "cost": 25, "cooldown_s": 22.0, "effect_kind": "damage"},
+      {"id": "CLS-04-SK06", "name": "Скрытый шаг", "level": 20, "target": "self", "cost": 30, "cooldown_s": 35.0, "effect_kind": "stealth"},
+      {"id": "CLS-04-SK07", "name": "Пробивная стрела", "level": 25, "target": "line", "cost": 35, "cooldown_s": 18.0, "effect_kind": "damage"},
+      {"id": "CLS-04-SK08", "name": "Дозорный сокол", "level": 30, "target": "point", "cost": 30, "cooldown_s": 35.0, "effect_kind": "reveal"},
+      {"id": "CLS-04-SK09", "name": "Уязвимая точка", "level": 35, "target": "enemy", "cost": 30, "cooldown_s": 22.0, "effect_kind": "damage"},
+      {"id": "CLS-04-SK10", "name": "Путь охотника", "level": 40, "target": "self", "cost": 25, "cooldown_s": 40.0, "effect_kind": "haste"},
+      {"id": "CLS-04-SK11", "name": "Залп горизонта", "level": 50, "target": "cone", "cost": 50, "cooldown_s": 50.0, "effect_kind": "damage"},
+      {"id": "CLS-04-SK12", "name": "Безупречный прицел", "level": 60, "target": "self", "cost": 65, "cooldown_s": 90.0, "effect_kind": "buff"}
+    ],
+    "CLS-05": [
+      {"id": "CLS-05-SK01", "name": "Искра милости", "level": 1, "target": "enemy", "cost": 0, "cooldown_s": 4.0, "effect_kind": "damage"},
+      {"id": "CLS-05-SK02", "name": "Прикосновение рассвета", "level": 3, "target": "ally", "cost": 20, "cooldown_s": 6.0, "effect_kind": "heal"},
+      {"id": "CLS-05-SK03", "name": "Знак защиты", "level": 6, "target": "ally", "cost": 25, "cooldown_s": 16.0, "effect_kind": "shield"},
+      {"id": "CLS-05-SK04", "name": "Очищение", "level": 10, "target": "ally", "cost": 25, "cooldown_s": 18.0, "effect_kind": "cleanse"},
+      {"id": "CLS-05-SK05", "name": "Световой круг", "level": 15, "target": "ground", "cost": 35, "cooldown_s": 18.0, "effect_kind": "heal"},
+      {"id": "CLS-05-SK06", "name": "Суд Узора", "level": 20, "target": "enemy", "cost": 25, "cooldown_s": 12.0, "effect_kind": "damage"},
+      {"id": "CLS-05-SK07", "name": "Нить возвращения", "level": 25, "target": "ally", "cost": 40, "cooldown_s": 28.0, "effect_kind": "heal"},
+      {"id": "CLS-05-SK08", "name": "Благословение пути", "level": 30, "target": "area", "cost": 35, "cooldown_s": 35.0, "effect_kind": "buff"},
+      {"id": "CLS-05-SK09", "name": "Луч равновесия", "level": 35, "target": "line", "cost": 40, "cooldown_s": 22.0, "effect_kind": "damage"},
+      {"id": "CLS-05-SK10", "name": "Сохранённый миг", "level": 40, "target": "ally", "cost": 45, "cooldown_s": 50.0, "effect_kind": "heal"},
+      {"id": "CLS-05-SK11", "name": "Хор огней", "level": 50, "target": "area", "cost": 65, "cooldown_s": 60.0, "effect_kind": "heal"},
+      {"id": "CLS-05-SK12", "name": "Завет жизни", "level": 60, "target": "area", "cost": 100, "cooldown_s": 90.0, "effect_kind": "heal"}
+    ]
+  }
+}
