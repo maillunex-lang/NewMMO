@@ -5,6 +5,8 @@ Prompts live in `docs/director/prompts/T-NNN.md`. Protocol: `DIRECTOR.md`.
 
 ## Owner decisions (2026-11-21)
 
+**Latest delegation:** Cursor is the sole autonomous director for approved roadmap work. Cursor owns task issuance, acceptance, CI verification, PR merge, and roadmap updates. Prior ChatGPT/Claude director references are historical. Owner approval remains required for canon, new dependencies, major architecture, deployment, destructive changes. Next unblocked task: T-020 (PROPOSED, not yet issued).
+
 1. All three executors can push to this repo. Godot and Go toolchains are available.
 2. Lane split delegated to director → as in `lanes.json` (Cursor=client, Codex=server, ChatGPT=research).
 3. Git mode delegated to director → **branch-per-task `agent/<lane>/T-NNN`; only the director opens PRs and merges to `main`** (AGENTS.md updated).
