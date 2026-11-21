@@ -1,0 +1,7 @@
+Isometric Hero and Creatures
+URL:      https://opengameart.org/content/isometric-hero-and-creatures
+Licence:  CC-BY 3.0 (as shown on the page) — https://creativecommons.org/licenses/by/3.0/
+Credit:   OpenGameArt user "Ti Mi" (uploader named on the page); the page lists "Clint Bellanger" among its participants — confirm the original author before release.
+Retrieved: 2026-11-21 (characters.zip, sha256 47a257c66edf66ce78130cfc4ddc21f497cee49163d0f3ccc69a635aceac8305)
+Used for:  hero, NPC and monster sprite sheets repacked by tools/spritegen/import_flare_pack.py (cropped, scaled, recomposed; changes made).
+Attribution is REQUIRED: show this credit in the game credits screen / store listing.
