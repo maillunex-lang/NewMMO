@@ -19,7 +19,7 @@ func _ready() -> void:
 	collision_layer = 1
 	collision_mask = 0
 	if label:
-		label.text = display_name
+		label.text = tr(display_name)
 		label.visible = false  # shown only when the player is close (no permanent map clutter)
 	add_to_group("interactables")
 

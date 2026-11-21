@@ -10,3 +10,7 @@ The owner approved the in-process Go approach at 10 Hz in T-038. This slice buil
 | Godot high-level multiplayer | Built into Godot 4.x, with Android network support. Its wire protocol would require a Godot server or replacing the existing Go WebSocket contract. [Official docs](https://docs.godotengine.org/en/stable/tutorials/networking/high_level_multiplayer.html). |
 
 Checked the [Hysen Labs directory](https://hysenlabs.com/projects) for discovery and the [Godot Asset Library multiplayer listing](https://godotengine.org/asset-library/asset?filter=multiplayer) for client integrations. Reuse the existing simulator, room state machine and Godot client. No dependency or asset adoption is needed.
+
+## Phase 2
+
+The owner approved distinct crystals and safe-zone placement in the existing arena. Reuse the Godot interactable and its existing crystal texture. Reuse the authoritative Go tick for movement, warning duration, hit testing and summons. Pair opposite quadrants so any point has a vertical path to cover of at most 280 px, or 16 ticks at the current 180 px/s. The two reinforcements reuse the arena dungeon's REG-01 bandit. No additional art or networking framework is needed.

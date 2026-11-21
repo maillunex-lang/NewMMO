@@ -44,21 +44,22 @@ func (c Config) Dt() float64 { return 1 / float64(c.TickRate) }
 type EntityID uint32
 
 type Entity struct {
-	ID      EntityID
-	Kind    Kind
-	Ref     string // player: character id; enemy: canon enemy id
-	Spawn   string // enemy spawn id
-	Name    string
-	Level   int
-	Pos     Vec
-	Facing  int // 0..7 in the game's row order (0=E,1=SE,2=S,3=SW,4=W,5=NW,6=N,7=NE)
-	Moving  bool
-	HP      int
-	MaxHP   int
-	Dead    bool
-	target  *Vec
-	lastSeq uint64
-	changed uint64 // tick of the last visible change
+	temporary bool // summoned inside the encounter; carries no progression or loot
+	ID        EntityID
+	Kind      Kind
+	Ref       string // player: character id; enemy: canon enemy id
+	Spawn     string // enemy spawn id
+	Name      string
+	Level     int
+	Pos       Vec
+	Facing    int // 0..7 in the game's row order (0=E,1=SE,2=S,3=SW,4=W,5=NW,6=N,7=NE)
+	Moving    bool
+	HP        int
+	MaxHP     int
+	Dead      bool
+	target    *Vec
+	lastSeq   uint64
+	changed   uint64 // tick of the last visible change
 
 	// combat (combat.go)
 	classID     string
@@ -111,6 +112,7 @@ type Sim struct {
 	combat   *Combat
 	rng      *rand.Rand
 	events   []Event // combat events produced since the last DrainEvents
+	witness  *witnessFight
 	kills    []Kill
 }
 

@@ -174,8 +174,11 @@ func request_loot(enemy_id: String) -> String:
 func request_dungeon_enter(dungeon_id: String, mode: String = "NORMAL") -> String:
 	return send_mutation("dungeon.enter.request", {"dungeon_id": dungeon_id, "mode": mode})
 
-func request_dungeon_interact(instance_id: String, object_id: String) -> String:
-	return send_mutation("dungeon.interact.request", {"instance_id": instance_id, "object_id": object_id})
+func request_dungeon_interact(instance_id: String, object_id: String, encounter: String = "") -> String:
+	var payload := {"instance_id": instance_id, "object_id": object_id}
+	if encounter != "":
+		payload["encounter_id"] = encounter
+	return send_mutation("dungeon.interact.request", payload)
 
 func request_dungeon_claim(instance_id: String) -> String:
 	return send_mutation("dungeon.claim.request", {"instance_id": instance_id})

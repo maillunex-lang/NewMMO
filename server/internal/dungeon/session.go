@@ -64,6 +64,19 @@ func (s *Session) Handle(ctx context.Context, typ, requestID string, payload map
 	if err := s.flushCombat(ctx); err != nil {
 		return "", nil, err
 	}
+	if stream, scoped := payload["encounter_id"]; typ == "dungeon.interact.request" && scoped {
+		if s.zone == nil || stream != s.encounter || payload["instance_id"] != s.snapshot.InstanceID {
+			return "", nil, ErrStateConflict
+		}
+		id, ok := payload["object_id"].(string)
+		if !ok || id == "" || len(payload) != 3 {
+			return "", nil, ErrBadRequest
+		}
+		if err := s.zone.BreakWitnessCrystal(s.ref, s, id); err != nil {
+			return "", nil, err
+		}
+		return "dungeon.snapshot", s.snapshot, nil
+	}
 	replyType, result, err := s.engine.Handle(ctx, s.accountID, s.characterID, typ, requestID, payload)
 	if err != nil {
 		return "", nil, err
@@ -161,8 +174,14 @@ func (s *Session) applySnapshot(ctx context.Context, snapshot Snapshot, reset bo
 		}
 		return s.push(typ, payload)
 	}
+	critical := func(typ string, revision int64, payload any) bool {
+		if event, ok := payload.(map[string]any); ok && typ == "world.event" {
+			event["encounter_id"] = encounter
+		}
+		return s.critical(typ, revision, payload)
+	}
 	_, initial, err := handler.Handle(ctx, s.accountID, s.characterID, "world.join.request", "",
-		map[string]any{"zone_id": room.ID}, s, push, s.critical)
+		map[string]any{"zone_id": room.ID}, s, push, critical)
 	if err != nil {
 		return Snapshot{}, err
 	}

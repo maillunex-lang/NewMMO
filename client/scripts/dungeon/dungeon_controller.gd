@@ -27,6 +27,10 @@ var _home_pos := Vector2.ZERO
 var _home_limits := Rect2i()
 var _world_root: Node = null
 var _last_room := ""
+var _encounter := ""
+var _crystals: Dictionary = {}
+var _broken_crystals: Dictionary = {}
+var _witness_active := false
 var _claiming := false
 
 func _ready() -> void:
@@ -55,7 +59,8 @@ func interact(object_id: String) -> void:
 	if object_id.begins_with("EXIT-"):
 		claim()
 		return
-	_net.request_dungeon_interact(str(_snapshot.get("instance_id", "")), object_id)
+	var stream := _encounter if _crystals.has(object_id) else ""
+	_net.request_dungeon_interact(str(_snapshot.get("instance_id", "")), object_id, stream)
 
 func claim() -> void:
 	if _snapshot.is_empty() or _net == null or _claiming:
@@ -91,6 +96,8 @@ func bind_net(net: RefCounted) -> void:
 		_net.dungeon_snapshot.connect(_on_snapshot)
 	if not _net.dungeon_reward.is_connected(_on_reward):
 		_net.dungeon_reward.connect(_on_reward)
+	if not _net.world_event.is_connected(_on_world_event):
+		_net.world_event.connect(_on_world_event)
 	if not _net.session_ready.is_connected(_resume):
 		_net.session_ready.connect(_resume)
 	if _net.has_signal("command_error") and not _net.command_error.is_connected(_on_error):
@@ -115,9 +122,46 @@ func _on_snapshot(snap: Dictionary) -> void:
 		_enter_scene(snap)
 	_apply(snap)
 	if _scene != null and snap.has("combat"):
+		_encounter = str(snap["combat"].get("encounter_id", ""))
+		_bind_crystals()
 		var world := get_tree().get_first_node_in_group("world_controller")
 		if world != null:
 			world.enter_dungeon_combat(snap["combat"])
+
+func _bind_crystals() -> void:
+	_crystals.clear()
+	_broken_crystals.clear()
+	_witness_active = false
+	var room := _scene.get_node_or_null("Rooms/%s/Objects" % _last_room.get_slice("-", 3))
+	if room != null:
+		for object in room.get_children():
+			if object.has_meta("witness_crystal"):
+				_crystals[str(object.get("dungeon_object_id"))] = object
+	_update_crystals()
+
+func _on_world_event(payload: Dictionary) -> void:
+	if _encounter == "" or str(payload.get("encounter_id", "")) != _encounter:
+		return
+	for event in payload.get("events", []):
+		match str(event.get("type", "")):
+			"witness_telegraph":
+				_witness_active = true
+				_hint(tr("dungeon.witness.cover"))
+				_update_crystals()
+			"witness_crystal":
+				_broken_crystals[str(event.get("object_id", ""))] = true
+				_update_crystals()
+			"witness_end":
+				_witness_active = false
+				_update_crystals()
+
+func _update_crystals() -> void:
+	for id in _crystals:
+		var crystal: Area2D = _crystals[id]
+		var broken: bool = _broken_crystals.has(id)
+		crystal.visible = not broken
+		crystal.modulate.a = 1.0 if _witness_active else 0.45
+		crystal.set_deferred("monitorable", not broken and _witness_active)
 
 func _on_reward(reward: Dictionary) -> void:
 	if reward.get("instance_id") != _snapshot.get("instance_id"):
@@ -175,6 +219,9 @@ func _enter_scene(snap: Dictionary) -> void:
 	dungeon_entered.emit(str(snap.get("dungeon_id", "")))
 
 func _exit_scene(reason: String) -> void:
+	_encounter = ""
+	_crystals.clear()
+	_broken_crystals.clear()
 	_snapshot = {}
 	_last_room = ""
 	if _scene == null:
@@ -217,6 +264,8 @@ func _apply(snap: Dictionary) -> void:
 		node.process_mode = Node.PROCESS_MODE_INHERIT if active else Node.PROCESS_MODE_DISABLED
 		var rv: Dictionary = rooms[room_id]
 		for o in node.get_node("Objects").get_children():
+			if o.has_meta("witness_crystal"):
+				continue
 			var oid := str(o.get("dungeon_object_id"))
 			var done: bool = bool(rv.get("objects", {}).get(oid, false))
 			o.modulate = Color(1, 1, 1, 0.35) if done else Color(1, 1, 1, 1)

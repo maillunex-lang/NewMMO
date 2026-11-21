@@ -220,7 +220,7 @@ func (s *Sim) stepEnemy(e *Entity) {
 		}
 		e.Moving = false
 		e.Facing = facing(t.Pos.X-e.Pos.X, t.Pos.Y-e.Pos.Y, e.Facing)
-		if e.def.B.HasCoef && s.tick >= a.nextB {
+		if e.def.B.HasCoef && !s.inWitnessPhase(e) && s.tick >= a.nextB {
 			s.startSignature(e, t)
 			return
 		}

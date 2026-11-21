@@ -32,6 +32,7 @@ var _net: RefCounted = null
 var _active := false
 var _encounter := ""
 var _waiting_snapshot := false
+var _witness_marker: Node2D = null
 var _you := 0
 var _entities: Dictionary = {}      # entity id -> ServerPuppet
 var _player: Node2D = null
@@ -95,6 +96,7 @@ func enter_dungeon_combat(snapshot: Dictionary) -> void:
 	_reset_stream(snapshot)
 
 func exit_dungeon_combat() -> void:
+	_clear_witness_marker()
 	_encounter = ""
 	_waiting_snapshot = true
 	for id in _entities.keys():
@@ -107,6 +109,7 @@ func _on_snapshot(p: Dictionary) -> void:
 		_reset_stream(p)
 
 func _reset_stream(p: Dictionary) -> void:
+	_clear_witness_marker()
 	_you = int(p.get("you", 0))
 	_last_target = Vector2.INF
 	_sent_move = false
@@ -207,12 +210,28 @@ func _on_event(p: Dictionary) -> void:
 			"respawn":
 				if target == _you:
 					_hint(tr("world.hint.respawned"))
+			"witness_telegraph":
+				_clear_witness_marker()
+				_witness_marker = TELEGRAPH.new()
+				_witness_marker.setup_safe_areas(e.get("safe_areas", []), float(e.get("amount", 2200)) / 1000.0)
+				var pl := _get_player()
+				if pl != null:
+					pl.get_parent().add_child(_witness_marker)
+				else:
+					get_parent().add_child(_witness_marker)
+			"witness_end":
+				_clear_witness_marker()
 			"telegraph":
 				var tg = TELEGRAPH.new()
 				tg.setup(float(e.get("radius", 64)), float(e.get("amount", 800)) / 1000.0)
 				var parent := _get_player().get_parent() if _get_player() != null else get_parent()
 				parent.add_child(tg)
 				tg.global_position = Vector2(float(e.get("aim_x", 0)), float(e.get("aim_y", 0)))
+
+func _clear_witness_marker() -> void:
+	if is_instance_valid(_witness_marker):
+		_witness_marker.queue_free()
+	_witness_marker = null
 
 func _on_cast_result(_p: Dictionary) -> void:
 	pass  # damage/heal numbers come from world.event; cooldowns from the self state in world.delta

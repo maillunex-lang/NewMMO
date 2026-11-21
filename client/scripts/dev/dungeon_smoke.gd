@@ -126,14 +126,42 @@ func _run() -> void:
 	_assert(_last_out(ft).is_empty(), "no client death report")
 	_assert(int(player.gold) == 0, "dungeon gold waits for claim")
 
-	# Completed + reward → back to the overworld with the server gold.
+	# Phase 2 highlights cover and routes crystal interaction to the live stream.
 	_rev = 2
+	var arena := "DNG-01-001-R06"
+	ft.inject_text(_s2c("dungeon.snapshot", _snap(arena, "BOSS_ACTIVE")))
+	net.poll(0.016)
+	await process_frame
+	var crystal_id := "OBJ-DNG-01-001-CRYSTAL-1"
+	var crystal: Area2D = scene.get_node("Rooms/R06/Objects/" + crystal_id)
+	_assert(not crystal.monitorable, "crystal dormant before cast")
+	var areas := [
+		{"min_x": 0, "min_y": 0, "max_x": 380, "max_y": 280},
+		{"min_x": 380, "min_y": 280, "max_x": 760, "max_y": 560},
+	]
+	ft.inject_text(_s2c("world.event", {"encounter_id": arena, "events": [{"type": "witness_telegraph", "amount": 2200, "safe_areas": areas}]}))
+	net.poll(0.016)
+	await process_frame
+	_assert(crystal.monitorable and get_nodes_in_group("telegraphs").size() == 1, "cover and crystal active")
+	crystal.on_interact(player)
+	out = _last_out(ft)
+	_assert(out.get("payload", {}).get("encounter_id") == arena, "crystal uses private stream")
+	ft.inject_text(_s2c("world.event", {"encounter_id": arena, "events": [
+		{"type": "witness_crystal", "object_id": crystal_id}, {"type": "witness_end"},
+	]}))
+	net.poll(0.016)
+	await process_frame
+	_assert(not crystal.visible and not crystal.monitorable, "broken crystal hidden")
+	_assert(get_nodes_in_group("telegraphs").is_empty(), "interrupted telegraph removed")
+
+	# Completed + reward → back to the overworld with the server gold.
+	_rev = 3
 	ft.inject_text(_s2c("dungeon.snapshot", _snap("DNG-01-001-R07", "COMPLETED")))
 	net.poll(0.016)
 	dc.claim()
 	out = _last_out(ft)
 	_assert(str(out.get("type")) == "dungeon.claim.request", "claim type")
-	_rev = 3
+	_rev = 4
 	ft.inject_text(_s2c("dungeon.reward", {
 		"instance_id": "11111111-1111-4111-8111-111111111111", "gold": 49, "gold_total": 49,
 		"items": [{"item_id": "MAT-01-006", "quantity": 1}], "first_clear": true,

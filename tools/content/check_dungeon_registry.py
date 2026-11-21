@@ -74,12 +74,19 @@ def check_scene(root, d, name, err):
         for o in r.get("objects", []) + r.get("optional_objects", []):
             if objs.get(o) != f"Rooms/{rn}/Objects":
                 err("DR_SCENE", f"{name}: object {o} missing/misplaced in scene room {rn}")
+        for crystal in r.get("witness", {}).get("crystals", []):
+            cid = crystal["id"]
+            block = nodes.get((f"{room_path}/Objects", cid))
+            if (block is None or objs.get(cid) != f"{room_path}/Objects"
+                    or "metadata/witness_crystal = true" not in block or position(block) != crystal["position"]):
+                err("DR_SCENE", f"{name}: witness crystal {cid} differs from registry")
         for s in r.get("spawns", []):
             if s["id"] not in spawns:
                 err("DR_SCENE", f"{name}: spawn {s['id']} missing in scene")
             elif spawns[s["id"]] != (f"{room_path}/Spawns", s["enemy_id"], s.get("position")):
                 err("DR_SCENE", f"{name}: spawn {s['id']} room, enemy or position differs from registry")
     all_obj = {o for r in d["rooms"] for o in r.get("objects", []) + r.get("optional_objects", [])}
+    all_obj.update(c["id"] for r in d["rooms"] for c in r.get("witness", {}).get("crystals", []))
     all_sp = {s["id"] for r in d["rooms"] for s in r.get("spawns", [])}
     for o in set(objs) - all_obj:
         err("DR_SCENE", f"{name}: scene object {o} not in registry")
@@ -138,6 +145,10 @@ def run(root, content_dir):
                 if o in objs:
                     err("DR_OBJ", f"{name}: object {o} in {objs[o]} and {r['id']}")
                 objs[o] = r["id"]
+        for r in rooms:
+            witness = r.get("witness")
+            if witness and witness.get("add_enemy") not in loot_by_enemy:
+                err("DR_ENEMY", f"{name}: room {r['id']} reinforcement is not a canon enemy")
         mini, boss = d.get("miniboss_id"), d.get("boss_id")
         spawn_enemies = {s["enemy_id"] for r in rooms for s in r.get("spawns", [])}
         for e in (mini, boss):
