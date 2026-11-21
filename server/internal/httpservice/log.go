@@ -1,9 +1,11 @@
 package httpservice
 
 import (
+	"bufio"
 	"crypto/rand"
 	"encoding/hex"
 	"log/slog"
+	"net"
 	"net/http"
 	"time"
 )
@@ -49,6 +51,29 @@ func (w *statusWriter) Write(body []byte) (int, error) {
 		w.status = http.StatusOK
 	}
 	return w.ResponseWriter.Write(body)
+}
+
+func (w *statusWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	conn, rw, err := http.NewResponseController(w.ResponseWriter).Hijack()
+	if err == nil {
+		// The handler writes an upgrade response directly to the connection.
+		w.status = http.StatusSwitchingProtocols
+	}
+	return conn, rw, err
+}
+
+func (w *statusWriter) Flush() {
+	_ = w.FlushError()
+}
+
+func (w *statusWriter) FlushError() error {
+	if err := http.NewResponseController(w.ResponseWriter).Flush(); err != nil {
+		return err
+	}
+	if w.status == 0 {
+		w.status = http.StatusOK
+	}
+	return nil
 }
 
 func (w *statusWriter) Unwrap() http.ResponseWriter {
