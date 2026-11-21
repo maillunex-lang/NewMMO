@@ -82,3 +82,4 @@ First parallel batch (different lanes, no dependencies, disjoint files): **T-001
 | 2026-11-21 | Owner: «делай EX-P04» → contracts D-004/D-002 published (auth-session, db-gameplay, quest-engine, interaction registry); T-018 (Codex) and T-022 (Cursor) issued; T-019…T-021, T-023 queued |
 | 2026-11-21 | Owner pacing decision (regions one by one, ~1 month to L60, rested XP allowed) → `docs/PACING.md`; quest-engine contract gets region-open gating + `REGION_CLOSED` + `rested_xp` field |
 | 2026-11-21 | T-017 pilot reviewed: lint 0 ERROR / 33 WARN (cross-quest duplicates); sent back (rework-1); canon unchanged |
+| 2026-11-21 | govulncheck CI step failed legitimately: 9 reachable stdlib vulns on Go 1.25.14 (fixed only in 1.26.9+) → server moved to Go 1.26.11 (go.mod + CI 1.26.x); clean; executors on open branches must rebase (amendment prompt) |

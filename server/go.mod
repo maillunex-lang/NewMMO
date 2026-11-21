@@ -1,6 +1,8 @@
 module github.com/maillunex-lang/NewMMO/server
 
-go 1.25.0
+go 1.26.0
+
+toolchain go1.26.11
 
 require github.com/jackc/pgx/v5 v5.13.0
 
