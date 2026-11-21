@@ -51,14 +51,26 @@ jobs:
         image: postgres:17
         env:
           POSTGRES_USER: newmmo_ci
-          POSTGRES_PASSWORD: newmmo_ci
+          POSTGRES_PASSWORD: newmmo_ci_admin
           POSTGRES_DB: newmmo_ci
         ports: ["5432:5432"]
         options: >-
           --health-cmd "pg_isready -U newmmo_ci -d newmmo_ci"
           --health-interval 5s --health-timeout 5s --health-retries 12
     env:
-      NEWMMO_TEST_DATABASE_URL: postgres://newmmo_ci:newmmo_ci@127.0.0.1:5432/newmmo_ci?sslmode=disable
+      # CI-only throwaway credentials for the service container above (no real secrets).
+      PGHOST: 127.0.0.1
+      PGPORT: "5432"
+      PGPASSWORD: newmmo_ci_admin
+      POSTGRES_USER: newmmo_ci
+      POSTGRES_DB: newmmo_ci
+      NEWMMO_MIGRATOR_PASSWORD: ci_migrator_pw
+      NEWMMO_PUBLISHER_PASSWORD: ci_publisher_pw
+      NEWMMO_APP_PASSWORD: ci_app_pw
+      NEWMMO_TEST_MIGRATE_DATABASE_URL: postgres://newmmo_migrator:ci_migrator_pw@127.0.0.1:5432/newmmo_ci?sslmode=disable
+      NEWMMO_TEST_DATABASE_URL: postgres://newmmo_content_publisher:ci_publisher_pw@127.0.0.1:5432/newmmo_ci?sslmode=disable
+      NEWMMO_TEST_APP_DATABASE_URL: postgres://newmmo_app:ci_app_pw@127.0.0.1:5432/newmmo_ci?sslmode=disable
+      NEWMMO_CONTENT_EXPORT_DIR: ${{ github.workspace }}/build/content/export
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -73,18 +85,23 @@ jobs:
         run: |
           GOTOOLCHAIN=auto go install github.com/pressly/goose/v3/cmd/goose@v3.30.0
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
-      - name: Migrations up -> down -> up
-        run: |
-          if [ ! -d server/migrations ]; then echo "no server/migrations yet; skip"; exit 0; fi
-          goose -dir server/migrations postgres "$NEWMMO_TEST_DATABASE_URL" up
-          goose -dir server/migrations postgres "$NEWMMO_TEST_DATABASE_URL" reset
-          goose -dir server/migrations postgres "$NEWMMO_TEST_DATABASE_URL" up
-      - name: Go vet + tests with database
-        working-directory: server
+      - name: Create roles (once, as DB admin)
+        run: bash deploy/newmmo/init/10-content-roles.sh
+      - name: Migrations up -> reset -> up (single goose process, as newmmo_migrator)
         env:
-          NEWMMO_CONTENT_EXPORT_DIR: ${{ github.workspace }}/build/content/export
+          GOOSE_DRIVER: postgres
+          GOOSE_DBSTRING: ${{ env.NEWMMO_TEST_MIGRATE_DATABASE_URL }}
+        run: |
+          goose -dir server/migrations up
+          goose -dir server/migrations reset
+          goose -dir server/migrations up
+          goose -dir server/migrations status
+      - name: Go vet + tests with database (no skips expected in content package)
+        working-directory: server
         run: |
           go vet ./...
+          go test ./... -race -count=1 -v ./internal/content 2>&1 | tee /tmp/content-test.log
+          ! grep -E "^(--- SKIP|\s+--- SKIP)" /tmp/content-test.log
           go test ./... -race -count=1
           go mod verify
 
