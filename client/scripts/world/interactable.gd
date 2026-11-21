@@ -16,7 +16,19 @@ func _ready() -> void:
 	collision_mask = 0
 	if label:
 		label.text = display_name
+		label.visible = false  # shown only when the player is close (no permanent map clutter)
 	add_to_group("interactables")
+
+const LABEL_SHOW_RADIUS := 150.0
+var _label_timer := 0.0
+
+func _process(delta: float) -> void:
+	_label_timer -= delta
+	if _label_timer > 0.0 or label == null:
+		return
+	_label_timer = 0.15
+	var nodes := get_tree().get_nodes_in_group("player")
+	label.visible = not nodes.is_empty() and global_position.distance_to((nodes[0] as Node2D).global_position) < LABEL_SHOW_RADIUS
 
 func on_interact(player: Node) -> void:
 	var quests := get_tree().get_first_node_in_group("quest_manager")

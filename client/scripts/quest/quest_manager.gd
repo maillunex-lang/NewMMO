@@ -138,20 +138,20 @@ func get_tracker_text() -> String:
 	if q.is_empty():
 		return tr("ui.no_active_quest")
 	var lines: PackedStringArray = PackedStringArray()
-	lines.append("%s · %s" % [q.get("id", ""), q.get("title", "")])
+	lines.append(str(q.get("title", "")))
 	match _status:
 		"available":
-			lines.append("Поговорить с %s" % str(q.get("contact", "")))
+			lines.append(tr("ui.talk_to") % npc_display_name(str(q.get("contact", ""))))
 		"active", "objectives_complete":
-			lines.append(str(q.get("journal", "")))
+			lines.append(humanize(str(q.get("journal", ""))))
 			for obj in q.get("objectives", []):
 				var oid: String = str(obj.get("id", ""))
 				var need: int = int(obj.get("count", 1))
 				var have: int = int(_progress.get(oid, 0))
 				var mark := "✓" if have >= need else "·"
-				lines.append("%s %s (%d/%d)" % [mark, obj.get("text", oid), mini(have, need), need])
+				lines.append("%s %s (%d/%d)" % [mark, humanize(str(obj.get("text", oid))), mini(have, need), need])
 			if _status == "objectives_complete":
-				lines.append("Сдать задание: %s" % str(q.get("contact", "")))
+				lines.append(tr("ui.turn_in_to") % npc_display_name(str(q.get("contact", ""))))
 		"completed":
 			lines.append("Завершено")
 		_:
@@ -213,20 +213,40 @@ func get_journal_completed() -> Array:
 			out.append({"id": qid, "title": str(q.get("title", ""))})
 	return out
 
+var _npc_names: Dictionary = {}
+
+func _load_names() -> void:
+	if not _npc_names.is_empty():
+		return
+	var f := FileAccess.open("res://data/names.json", FileAccess.READ)
+	if f == null:
+		return
+	var parsed: Variant = JSON.parse_string(f.get_as_text())
+	if typeof(parsed) == TYPE_DICTIONARY:
+		_npc_names = (parsed as Dictionary).get("npc", {})
+
+## Canon NPC name for UI (client/data/names.json mirrors 04_CHARACTERS; checked by check_client_sync).
 func npc_display_name(npc_id: String) -> String:
-	match npc_id:
-		"NPC-802":
-			return "Фейра Нисс"
-		"NPC-102":
-			return "Ильра Венн"
-		_:
-			return npc_id
+	_load_names()
+	return str(_npc_names.get(npc_id, npc_id))
+
+## Replace NPC-NNN codes inside free text with canon names (player-facing text never shows raw ids).
+func humanize(text: String) -> String:
+	_load_names()
+	var out := text
+	for id in _npc_names.keys():
+		out = out.replace(str(id), str(_npc_names[id]))
+	return out
 
 func on_npc_talk(npc_id: String, player: Node) -> void:
 	var q := _quest_by_id(_active_id)
-	if q.is_empty():
-		return
 	var contact := str(q.get("contact", ""))
+	# Not this NPC's business right now: say so instead of staying silent.
+	var has_business := not q.is_empty() and (npc_id == contact or _status == "active")
+	if not has_business:
+		if player and player.has_method("show_hint"):
+			player.show_hint(tr("ui.hint_npc_no_business") % npc_display_name(npc_id))
+		return
 	if _online and _net != null and (npc_id == contact or _status == "active"):
 		if _status == "active":
 			_try_event("npc_interact", npc_id, player)

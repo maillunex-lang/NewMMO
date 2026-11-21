@@ -3,6 +3,7 @@ extends CharacterBody2D
 
 signal died
 signal loot_gained(item_id: String, amount: int)
+signal hint(text: String)
 signal hp_changed(hp: float, max_hp: float)
 signal mp_changed(mp: float, max_mp: float)
 
@@ -172,6 +173,10 @@ func add_gold(amount: int) -> void:
 	gold += amount
 	loot_gained.emit("gold", amount)
 
+## Short player-facing message (HUD toast); used when an interaction has no effect.
+func show_hint(text: String) -> void:
+	hint.emit(text)
+
 func try_interact() -> void:
 	for a in interact_area.get_overlapping_areas():
 		if a.has_method("on_interact"):
@@ -185,3 +190,4 @@ func try_interact() -> void:
 		if b.has_method("on_interact"):
 			b.on_interact(self)
 			return
+	show_hint(tr("ui.hint_nothing_here"))

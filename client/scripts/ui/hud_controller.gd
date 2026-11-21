@@ -87,6 +87,8 @@ func _bind_world() -> void:
 			_player.mp_changed.connect(_on_mp)
 		if _player.has_signal("loot_gained"):
 			_player.loot_gained.connect(_on_loot)
+		if _player.has_signal("hint"):
+			_player.hint.connect(_flash)
 		_on_hp(_player.hp, _player.max_hp)
 		_on_mp(_player.mp, _player.max_mp)
 		name_label.text = player_name_placeholder

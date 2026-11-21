@@ -135,6 +135,20 @@ def run(root, content_dir):
                         add("ERROR", "CS_REG_MISSING", f"{o['id']}: no registry entry")
                     elif (r["event"], r["target_id"], r["count"]) != (o["event"], o["target"], o.get("count", 1)):
                         add("ERROR", "CS_REG_DRIFT", f"{o['id']}: registry {r['event']}/{r['target_id']}/{r['count']} != client {o['event']}/{o['target']}/{o.get('count', 1)}")
+    # player-facing names table must mirror canon NPC names
+    npath = os.path.join(root, "client", "data", "names.json")
+    if os.path.exists(npath):
+        with open(npath, encoding="utf-8") as fh:
+            names = json.load(fh).get("npc", {})
+        for nid, nm in names.items():
+            c = decl.get(nid)
+            if not c or c["kind"] != "npc":
+                add("ERROR", "CS_NAME_ID", f"names.json: {nid} is not a canon NPC")
+            elif c["fields"].get("name") != nm:
+                add("ERROR", "CS_NAME", f"names.json: {nid} '{nm}' != canon '{c['fields'].get('name')}'")
+        for d in decl.values():
+            if d["kind"] == "npc" and d["id"] not in names:
+                add("ERROR", "CS_NAME_MISSING", f"names.json: canon NPC {d['id']} missing")
     # canonical IDs mentioned in client code/scenes
     for path in glob.glob(os.path.join(root, "client", "**", "*"), recursive=True):
         if not path.endswith((".gd", ".tscn", ".tres", ".cfg")) or os.sep + ".godot" + os.sep in path:

@@ -90,12 +90,12 @@ func refresh() -> void:
 		active_journal.text = ""
 		reward_text.text = ""
 	else:
-		active_title.text = "%s · %s" % [str(active.get("id", "")), str(active.get("title", ""))]
+		active_title.text = str(active.get("title", ""))
 		active_status.text = _status_label(str(active.get("status", "")))
-		active_journal.text = str(active.get("journal", ""))
+		active_journal.text = _humanize(str(active.get("journal", "")))
 		for obj in active.get("objectives", []):
 			var line := tr("ui.objective_fmt") % [
-				str(obj.get("text", "")),
+				_humanize(str(obj.get("text", ""))),
 				int(obj.get("have", 0)),
 				int(obj.get("need", 1)),
 			]
@@ -103,7 +103,12 @@ func refresh() -> void:
 		reward_text.text = _format_reward(active.get("reward", {}))
 	if _source.has_method("get_journal_completed"):
 		for item in _source.get_journal_completed():
-			completed_list.add_item("%s · %s" % [str(item.get("id", "")), str(item.get("title", ""))])
+			completed_list.add_item(str(item.get("title", "")))
+
+func _humanize(text: String) -> String:
+	if _source != null and _source.has_method("humanize"):
+		return _source.humanize(text)
+	return text
 
 func _status_label(status: String) -> String:
 	match status:

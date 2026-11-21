@@ -66,3 +66,7 @@ error.not_found,Не найдено,Not found
 error.internal,Внутренняя ошибка,Internal error
 error.transport,Сеть недоступна,Network unavailable
 error.conflict,Конфликт,Conflict
+ui.talk_to,Поговорить с %s,Talk to %s
+ui.turn_in_to,Сдать задание: %s,Turn in to: %s
+ui.hint_npc_no_business,%s сейчас не до разговоров.,%s has nothing for you right now.
+ui.hint_nothing_here,Рядом никого нет.,Nobody is nearby.
