@@ -79,6 +79,11 @@ func run(logger *slog.Logger) error {
 	if err := attachDungeonEngine(ctx, store, socket, logger); err != nil {
 		logger.Warn("dungeon engine unavailable at startup", "error", err.Error())
 	}
+	if stopWorld, err := attachWorld(ctx, store, socket, logger); err != nil {
+		logger.Warn("world simulation unavailable at startup", "error", err.Error())
+	} else {
+		defer stopWorld()
+	}
 	socketLifetime, stopSocket := context.WithCancel(ctx)
 	socketDone := make(chan struct{})
 	go func() {

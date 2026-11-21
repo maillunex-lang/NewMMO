@@ -61,6 +61,15 @@ type DungeonHandler interface {
 	Handle(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any) (string, any, error)
 }
 
+// WorldHandler is the optional server-authoritative zone simulation (T-038b). Nil → UNKNOWN_TYPE for world.*.
+// `owner` identifies the session so a newer session of the same character is not removed by an old disconnect;
+// `push` delivers asynchronous world.delta messages (droppable under backpressure).
+type WorldHandler interface {
+	Handle(ctx context.Context, accountID string, characterID int64, typ string, payload map[string]any,
+		owner any, push func(typ string, payload any) bool) (string, any, error)
+	Disconnect(characterID int64, owner any)
+}
+
 type Server struct {
 	lifetime context.Context
 	cfg      Config
@@ -70,6 +79,7 @@ type Server struct {
 	inv      InventoryHandler
 	loot     LootHandler
 	dungeon  DungeonHandler
+	world    WorldHandler
 	logger   *slog.Logger
 
 	mu         sync.Mutex
@@ -98,6 +108,8 @@ func (s *Server) SetInventory(i InventoryHandler) { s.inv = i }
 func (s *Server) SetLoot(l LootHandler) { s.loot = l }
 
 func (s *Server) SetDungeon(d DungeonHandler) { s.dungeon = d }
+
+func (s *Server) SetWorld(w WorldHandler) { s.world = w }
 
 type admission struct {
 	attempts []time.Time
@@ -338,7 +350,11 @@ func (s *Server) detach(p *peer) {
 	if s.characters[p.character] == p {
 		delete(s.characters, p.character)
 	}
+	character := p.character
 	s.mu.Unlock()
+	if s.world != nil && character != 0 {
+		s.world.Disconnect(character, p)
+	}
 }
 
 // Shutdown stops admissions, closes all peers and bounds the overall drain.
