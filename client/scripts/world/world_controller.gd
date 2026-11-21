@@ -16,6 +16,9 @@ const CAST_REACH := 420.0
 const SUPPORTED := {"damage": ["enemy"], "shield": ["self"], "heal": ["ally", "self"]}
 # canon enemy id → [sheet, frame px, sprite offset y, hp bar y]
 const ENEMY_ART := {
+	"ENM-01-002": ["res://assets/monsters/goblin_sheet.png", 96, -41.0, -100.0],
+	"ENM-01-201": ["res://assets/monsters/skeleton_sheet.png", 112, -35.0, -80.0],
+	"ENM-01-301": ["res://assets/monsters/ogre_sheet.png", 144, -52.0, -130.0],
 	"ENM-01-001": ["res://assets/monsters/bandit_sheet.png", 96, -41.0, -100.0],
 	"ENM-01-003": ["res://assets/monsters/wolf_sheet.png", 96, -41.0, -100.0],
 	"ENM-01-004": ["res://assets/monsters/slime_sheet.png", 96, -34.0, -62.0],
@@ -27,6 +30,8 @@ signal joined(zone_id: String)
 
 var _net: RefCounted = null
 var _active := false
+var _encounter := ""
+var _waiting_snapshot := false
 var _you := 0
 var _entities: Dictionary = {}      # entity id -> ServerPuppet
 var _player: Node2D = null
@@ -67,7 +72,9 @@ func bind_net(net: RefCounted) -> void:
 		_join()
 
 func _on_session_ready(_payload: Dictionary) -> void:
-	_join()
+	_waiting_snapshot = true
+	if _encounter == "":
+		_join()
 
 func _join() -> void:
 	var session := get_tree().get_first_node_in_group("online_session")
@@ -83,22 +90,47 @@ func _get_player() -> Node2D:
 		_player = nodes[0] as Node2D if not nodes.is_empty() else null
 	return _player
 
-func _on_snapshot(p: Dictionary) -> void:
-	_you = int(p.get("you", 0))
+func enter_dungeon_combat(snapshot: Dictionary) -> void:
+	_encounter = str(snapshot.get("encounter_id", ""))
+	_reset_stream(snapshot)
+
+func exit_dungeon_combat() -> void:
+	_encounter = ""
+	_waiting_snapshot = true
 	for id in _entities.keys():
 		_remove_puppet(id)
-	# The server owns enemies now: the stage-1 local monsters make way for the server's.
-	for n in get_tree().get_nodes_in_group("monsters"):
-		n.queue_free()
+	if _net != null:
+		_join()
+
+func _on_snapshot(p: Dictionary) -> void:
+	if _encounter == "":
+		_reset_stream(p)
+
+func _reset_stream(p: Dictionary) -> void:
+	_you = int(p.get("you", 0))
+	_last_target = Vector2.INF
+	_sent_move = false
+	_self_state.clear()
+	for id in _entities.keys():
+		_remove_puppet(id)
+	for group in ["monsters", "telegraphs", "damage_numbers"]:
+		for n in get_tree().get_nodes_in_group(group):
+			n.queue_free()
 	for v in p.get("entities", []):
+		if int(v.get("id", 0)) == _you:
+			var player := _get_player()
+			if player != null:
+				player.global_position = Vector2(float(v["x"]), float(v["y"]))
+				player.tap_active = false
 		_apply_view(v)
 	_active = true
+	_waiting_snapshot = false
 	set_process(true)
 	_rebuild_skills()
 	joined.emit(str(p.get("zone_id", ZONE_ID)))
 
 func _on_delta(p: Dictionary) -> void:
-	if not _active:
+	if not _active or _waiting_snapshot or str(p.get("encounter_id", "")) != _encounter:
 		return
 	for v in p.get("upsert", []):
 		_apply_view(v)
@@ -157,6 +189,8 @@ func _apply_self(s: Dictionary) -> void:
 	_refresh_buttons()
 
 func _on_event(p: Dictionary) -> void:
+	if _waiting_snapshot or str(p.get("encounter_id", "")) != _encounter:
+		return
 	for e in p.get("events", []):
 		var t := str(e.get("type", ""))
 		var target := int(e.get("target", 0))
@@ -199,6 +233,8 @@ func _on_error(p: Dictionary) -> void:
 # ----- movement intent -----------------------------------------------------------
 
 func _process(delta: float) -> void:
+	if _waiting_snapshot:
+		return
 	_send_t += delta
 	_refresh_cooldown_labels()
 	if _send_t >= SEND_INTERVAL:
@@ -217,12 +253,12 @@ func _send_move() -> void:
 	if target != Vector2.INF:
 		if _last_target == Vector2.INF or target.distance_to(_last_target) > 8.0:
 			_seq += 1
-			_net.world_move(_seq, target.x, target.y)
+			_net.world_move(_seq, target.x, target.y, _encounter)
 			_last_target = target
 			_sent_move = true
 	elif _sent_move:
 		_seq += 1
-		_net.world_stop(_seq)
+		_net.world_stop(_seq, _encounter)
 		_sent_move = false
 		_last_target = Vector2.INF
 
@@ -281,7 +317,7 @@ func nearest_enemy(max_dist: float = CAST_REACH):
 	return best
 
 func cast_slot(slot: int) -> void:
-	if not _active or _net == null or slot < 0 or slot >= _skills.size():
+	if not _active or _waiting_snapshot or _net == null or slot < 0 or slot >= _skills.size():
 		return
 	var pl := _get_player()
 	if pl == null or bool(pl.get("online_dead")):
@@ -294,7 +330,7 @@ func cast_slot(slot: int) -> void:
 			_hint(tr("world.hint.no_target"))
 			return
 		target_id = int(e.get("entity_id"))
-	_net.request_world_cast(str(skill.get("id", "")), target_id)
+	_net.request_world_cast(str(skill.get("id", "")), target_id, _encounter)
 	pl.animator.play_attack()  # visual only; the result is the server's
 
 func auto_tick() -> void:

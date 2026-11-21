@@ -1,7 +1,5 @@
 extends SceneTree
-## Headless T-037: dungeon controller + scene with a FakeTransport server. Marker DUNGEON_SMOKE_OK.
-## Flow: enter → snapshot (R01) → interact request → snapshot (R02) spawns → kill report →
-## player defeat report → reward → player back in the overworld.
+## Headless dungeon controller + server combat stream with FakeTransport.
 
 const FakeTransport = preload("res://scripts/net/fake_transport.gd")
 const NetClient = preload("res://scripts/net/net_client.gd")
@@ -26,16 +24,21 @@ func _s2c(type_name: String, payload: Dictionary, request_id: String = "") -> St
 		msg["request_id"] = request_id
 	return JSON.stringify(msg)
 
-func _snap(room: String, status: String, spawns_r02: Dictionary = {}) -> Dictionary:
+func _snap(room: String, status: String) -> Dictionary:
 	var rooms := {}
 	for i in range(1, 8):
 		var rid := "DNG-01-001-R0%d" % i
 		rooms[rid] = {"state": "IN_PROGRESS" if rid == room else "LOCKED", "objects": {}, "spawns": {}}
-	rooms["DNG-01-001-R02"]["spawns"] = spawns_r02
+	var combat := {"you": 1, "encounter_id": room, "entities": [
+		{"id": 1, "kind": "player", "x": 90, "y": 460, "hp": 200, "max_hp": 200},
+	]}
+	if room == "DNG-01-001-R02":
+		for i in range(2, 5):
+			combat["entities"].append({"id": i, "kind": "enemy", "ref": "ENM-01-001", "x": 420, "y": 260, "hp": 40, "max_hp": 40})
 	return {
 		"instance_id": "11111111-1111-4111-8111-111111111111", "dungeon_id": "DNG-01-001", "mode": "NORMAL",
-		"status": status, "room_id": room, "checkpoint_room_id": "DNG-01-001-R01", "event_seq": 1,
-		"rooms": rooms, "attempts": 0, "revision": _rev,
+		"status": status, "room_id": room, "checkpoint_room_id": "DNG-01-001-R01", "event_seq": _rev + 1,
+		"rooms": rooms, "attempts": 0, "revision": _rev, "combat": combat,
 	}
 
 func _last_out(ft: RefCounted) -> Dictionary:
@@ -70,6 +73,9 @@ func _run() -> void:
 		quit(1)
 		return
 	dc.bind_net(net)
+	var wc: Node = main.get_node("WorldController")
+	wc.bind_net(net)
+	ft.pop_outbound()
 	var player: Node = main.get_node("DawnValley/Player")
 	var home_parent: Node = player.get_parent()
 
@@ -105,31 +111,20 @@ func _run() -> void:
 	net.poll(0.016)
 	for i in range(3):
 		await process_frame
-	var spawned: Array = []
-	for m in get_nodes_in_group("monsters"):
-		if str(m.get("dungeon_spawn_id")) != "":
-			spawned.append(str(m.get("dungeon_spawn_id")))
-	spawned.sort()
-	_assert(spawned == ["DNG-01-001-R02-E1", "DNG-01-001-R02-E2", "DNG-01-001-R02-E3"], "R02 spawns: %s" % str(spawned))
+	var spawned: Dictionary = wc.get_entities()
+	_assert(spawned.size() == 3 and spawned.has(2), "R02 has three server puppets")
+	if spawned.has(2):
+		_assert(spawned[2].get_parent() == scene.get_node("Playground"), "puppet is in the dungeon")
 
-	# Killing one reports its spawn id (no local loot).
-	var victim: Node = null
-	for m in get_nodes_in_group("monsters"):
-		if str(m.get("dungeon_spawn_id")) == "DNG-01-001-R02-E1":
-			victim = m
-	_assert(victim != null, "victim found")
-	if victim != null:
-		victim._die(player)
-		out = _last_out(ft)
-		_assert(str(out.get("type")) == "dungeon.encounter.report", "report type")
-		_assert(str(out.get("payload", {}).get("outcome")) == "enemy_defeated", "report outcome")
-		_assert(str(out.get("payload", {}).get("spawn_id")) == "DNG-01-001-R02-E1", "report spawn id")
-		_assert(int(player.gold) == 0, "no local gold from dungeon enemy")
-
-	# Player defeat is reported, not decided.
-	player.apply_damage(100000.0, null)
-	out = _last_out(ft)
-	_assert(str(out.get("payload", {}).get("outcome")) == "player_defeated", "defeat report")
+	# A delayed update from the previous room must not move the player.
+	ft.inject_text(_s2c("world.delta", {"encounter_id": "DNG-01-001-R01", "upsert": [{"id": 1, "x": 700, "y": 300}]}))
+	# A server death hides the puppet and never generates a client report.
+	ft.inject_text(_s2c("world.delta", {"encounter_id": "DNG-01-001-R02", "upsert": [{"id": 2, "dead": true, "hp": 0}]}))
+	net.poll(0.016)
+	_assert(player.global_position == Vector2(90, 460), "ignored previous room movement")
+	_assert(spawned.has(2) and not spawned[2].is_alive(), "server death applied")
+	_assert(_last_out(ft).is_empty(), "no client death report")
+	_assert(int(player.gold) == 0, "dungeon gold waits for claim")
 
 	# Completed + reward → back to the overworld with the server gold.
 	_rev = 2
@@ -150,6 +145,7 @@ func _run() -> void:
 	_assert(not dc.is_inside(), "left dungeon after reward")
 	_assert(player.get_parent() == home_parent and home_parent.visible, "player back in the overworld")
 	_assert(int(player.gold) == 49, "server gold applied")
+	_assert(str(_last_out(ft).get("type")) == "world.join.request", "rejoin overworld simulation")
 
 	if _failed:
 		quit(1)

@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/maillunex-lang/NewMMO/server/internal/auth"
+	"github.com/maillunex-lang/NewMMO/server/internal/combatdata"
 	"github.com/maillunex-lang/NewMMO/server/internal/dungeon"
 	"github.com/maillunex-lang/NewMMO/server/internal/loot"
 	"github.com/maillunex-lang/NewMMO/server/internal/quest"
@@ -35,7 +36,20 @@ func attachDungeonEngine(ctx context.Context, store *auth.Store, socket *ws.Serv
 	if err := engine.ValidateAgainstContent(); err != nil {
 		return fmt.Errorf("dungeon definitions vs content: %w", err)
 	}
-	socket.SetDungeon(engine)
+	catalog, err := combatdata.LoadFromDB(ctx, pool, buildID)
+	if err != nil {
+		return fmt.Errorf("load dungeon combat data: %w", err)
+	}
+	if err := catalog.Validate(); err != nil {
+		return fmt.Errorf("dungeon combat data: %w", err)
+	}
+	if err := defs.ValidateCombat(catalog); err != nil {
+		return fmt.Errorf("dungeon rooms vs combat data: %w", err)
+	}
+	socket.SetDungeon(func(ctx context.Context, accountID string, id int64,
+		push func(string, any) bool, critical func(string, int64, any) bool) ws.DungeonSession {
+		return engine.NewSession(ctx, catalog, worldPlayerLoader(store), accountID, id, push, critical, logger)
+	})
 	logger.Info("dungeon engine ready", "build_id", buildID, "dungeons", len(defs.IDs()))
 	return nil
 }

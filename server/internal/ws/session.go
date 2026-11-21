@@ -208,6 +208,10 @@ func (b *bucket) delayMS() int64 {
 }
 
 func (s *Server) commands(p *peer, owner string, id, revision int64) {
+	var dungeon DungeonSession
+	if s.dungeon != nil {
+		dungeon = s.dungeon(p.work, owner, id, p.pushDroppable, p.pushCritical)
+	}
 	commands := newBucket(s.cfg.Rate, s.cfg.Burst)
 	mutations := newBucket(s.cfg.MutationRate, s.cfg.MutationRate)
 	violations := 0
@@ -381,15 +385,25 @@ func (s *Server) commands(p *peer, owner string, id, revision int64) {
 				return
 			}
 		case isWorldCommand(m.typ):
-			if s.world == nil {
+			ctx, cancel := context.WithTimeout(p.work, s.cfg.WriteTimeout)
+			payload := rawPayload(m.payload)
+			var replyType string
+			var result any
+			var handled bool
+			var err error
+			if dungeon != nil {
+				replyType, result, handled, err = dungeon.HandleWorld(ctx, m.typ, m.requestID, payload)
+			}
+			if !handled && s.world != nil {
+				replyType, result, err = s.world.Handle(ctx, owner, id, m.typ, m.requestID, payload, p, p.pushDroppable, p.pushCritical)
+			}
+			cancel()
+			if !handled && s.world == nil {
 				if !p.sendError(m.requestID, revision, "UNKNOWN_TYPE", 0, 0) {
 					return
 				}
 				continue
 			}
-			ctx, cancel := context.WithTimeout(p.work, s.cfg.WriteTimeout)
-			replyType, result, err := s.world.Handle(ctx, owner, id, m.typ, m.requestID, rawPayload(m.payload), p, p.pushDroppable, p.pushCritical)
-			cancel()
 			if err != nil {
 				if !p.sendError(m.requestID, revision, questErrorCode(err), 0, 0) {
 					return
@@ -402,7 +416,7 @@ func (s *Server) commands(p *peer, owner string, id, revision int64) {
 				}
 			}
 		case isDungeonCommand(m.typ):
-			if s.dungeon == nil {
+			if dungeon == nil {
 				if !p.sendError(m.requestID, revision, "UNKNOWN_TYPE", 0, 0) {
 					return
 				}
@@ -410,13 +424,16 @@ func (s *Server) commands(p *peer, owner string, id, revision int64) {
 			}
 			payload := rawPayload(m.payload)
 			ctx, cancel := context.WithTimeout(p.work, s.cfg.WriteTimeout)
-			replyType, result, err := s.dungeon.Handle(ctx, owner, id, m.typ, m.requestID, payload)
+			replyType, result, err := dungeon.Handle(ctx, m.typ, m.requestID, payload)
 			cancel()
 			if err != nil {
 				if !p.sendError(m.requestID, revision, questErrorCode(err), 0, 0) {
 					return
 				}
 				continue
+			}
+			if m.typ == "dungeon.enter.request" && s.world != nil {
+				s.world.Disconnect(id, p)
 			}
 			revision = revisionFromResult(result, revision)
 			if !p.enqueue(replyType, m.requestID, revision, result, 0) {
@@ -555,7 +572,7 @@ func revisionFromResult(result any, fallback int64) int64 {
 
 func isDungeonCommand(typ string) bool {
 	switch typ {
-	case "dungeon.enter.request", "dungeon.interact.request", "dungeon.encounter.report",
+	case "dungeon.enter.request", "dungeon.interact.request",
 		"dungeon.claim.request", "dungeon.leave.request":
 		return true
 	}

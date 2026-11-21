@@ -296,6 +296,25 @@ func (z *Zone) Tick() {
 	}
 }
 
+type EncounterOutcome struct {
+	Kills          []Kill
+	PlayerDefeated bool
+}
+
+// TickEncounter advances a private room and returns combat outcomes to the
+// dungeon state machine. Private rooms never call the open-world loot hook.
+func (z *Zone) TickEncounter(ref string) EncounterOutcome {
+	z.mu.Lock()
+	defer z.mu.Unlock()
+	z.tickLocked()
+	outcome := EncounterOutcome{Kills: z.sim.DrainKills()}
+	if session := z.sessions[ref]; session != nil {
+		player, ok := z.sim.Entity(session.entity)
+		outcome.PlayerDefeated = ok && player.Dead
+	}
+	return outcome
+}
+
 func (z *Zone) collectKillsLocked() []KillEvent {
 	var out []KillEvent
 	for _, k := range z.sim.DrainKills() {

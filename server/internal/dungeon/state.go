@@ -181,7 +181,7 @@ func (m *Machine) Interact(def Definition, objectID string) ([]Event, error) {
 	return append(evs, m.advance(def)...), nil
 }
 
-// EnemyDefeated records a reported kill of a spawn that exists in the current room (R-KILL-DNG interim).
+// EnemyDefeated records a server-observed kill for a spawn in the current room.
 func (m *Machine) EnemyDefeated(def Definition, spawnID string) ([]Event, error) {
 	if err := m.live(); err != nil {
 		return nil, err

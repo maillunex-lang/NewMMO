@@ -73,6 +73,10 @@ func TestWorldJoinMoveDeltaAndDisconnect(t *testing.T) {
 	login(t, c, store.ticket(t, 77), "0.1.0", fixtureBuild)
 	expectInitial(t, c, "77", "ok")
 
+	// The retired outcome report is rejected before it can reach dungeon progression.
+	send(t, c, "dungeon.encounter.report", requestID, map[string]any{"outcome": "enemy_defeated"})
+	assertCode(t, c, "UNKNOWN_TYPE")
+
 	// Moving before joining is a state conflict, not a crash.
 	send(t, c, "world.move.request", "", map[string]any{"seq": 1, "x": 10, "y": 10})
 	assertCode(t, c, "STATE_CONFLICT")

@@ -68,14 +68,17 @@ func attachWorld(ctx context.Context, store *auth.Store, socket *ws.Server, logg
 		zones = append(zones, z)
 		go z.Run(runCtx)
 	}
-	loader := func(ctx context.Context, accountID string, characterID int64) (world.PlayerInfo, error) {
+	socket.SetWorld(world.NewHandler(zones, worldPlayerLoader(store)))
+	logger.Info("world simulation ready", "build_id", buildID, "zones", len(zones))
+	return cancel, nil
+}
+
+func worldPlayerLoader(store *auth.Store) world.PlayerLoader {
+	return func(ctx context.Context, accountID string, characterID int64) (world.PlayerInfo, error) {
 		st, err := store.LoadWSState(ctx, accountID, characterID)
 		if err != nil {
 			return world.PlayerInfo{}, err
 		}
 		return world.PlayerInfo{Name: st.Name, ClassID: st.ClassID, Level: st.Level}, nil
 	}
-	socket.SetWorld(world.NewHandler(zones, loader))
-	logger.Info("world simulation ready", "build_id", buildID, "zones", len(zones))
-	return cancel, nil
 }

@@ -16,15 +16,7 @@ func TestRoomSimulationKeepsDefeatsInsideTheInstance(t *testing.T) {
 	def, _ := registry.Get("DNG-01-001")
 	room := def.Rooms[1]
 	spawn := room.Spawns[0]
-	catalog := &combatdata.Catalog{
-		Enemies: map[string]combatdata.Enemy{
-			"ENM-01-001": {Name: "Bandit", Level: 1, Category: "обычный"},
-			"ENM-01-002": {Name: "Goblin", Level: 1, Category: "обычный"},
-		},
-		Skills: map[string][]combatdata.Skill{
-			"CLS-03": {{ID: "CLS-03-SK01", ClassID: "CLS-03", Level: 1, Target: "enemy", EffectKind: "damage", Coef: 100, Scale: "AP"}},
-		},
-	}
+	catalog := roomTestCatalog()
 	join := func(z *world.Zone, character string) world.Snapshot {
 		t.Helper()
 		snapshot, err := z.Join(character, character, world.PlayerInfo{ClassID: "CLS-03", Level: 7},
@@ -89,5 +81,18 @@ func TestRoomSimulationKeepsDefeatsInsideTheInstance(t *testing.T) {
 	}
 	if got := resumed.Entities[0]; got.X != room.Spawns[1].Position.X {
 		t.Fatalf("restored wrong spawn: %+v", got)
+	}
+}
+
+func roomTestCatalog() *combatdata.Catalog {
+	return &combatdata.Catalog{
+		Enemies: map[string]combatdata.Enemy{
+			"ENM-01-001": {Name: "Bandit", Level: 1, Category: "обычный"},
+			"ENM-01-002": {Name: "Goblin", Level: 1, Category: "обычный"},
+			"ENM-01-003": {Name: "Wolf", Level: 1, Category: "обычный"},
+		},
+		Skills: map[string][]combatdata.Skill{
+			"CLS-03": {{ID: "CLS-03-SK01", ClassID: "CLS-03", Level: 1, Target: "enemy", EffectKind: "damage", Coef: 100, Scale: "AP"}},
+		},
 	}
 }

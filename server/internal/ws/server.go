@@ -56,10 +56,14 @@ type LootHandler interface {
 	Claim(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any) (any, error)
 }
 
-// DungeonHandler is optional EX-P09 dungeon engine (T-036). Nil → UNKNOWN_TYPE for dungeon.* messages.
-type DungeonHandler interface {
-	Handle(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any) (string, any, error)
+// DungeonSession is the private encounter stream for an authenticated peer.
+type DungeonSession interface {
+	Handle(ctx context.Context, typ, requestID string, payload map[string]any) (string, any, error)
+	HandleWorld(ctx context.Context, typ, requestID string, payload map[string]any) (string, any, bool, error)
 }
+
+type DungeonHandler func(ctx context.Context, accountID string, characterID int64,
+	push func(string, any) bool, critical func(string, int64, any) bool) DungeonSession
 
 // WorldHandler is the optional server-authoritative zone simulation (T-038b). Nil → UNKNOWN_TYPE for world.*.
 // `owner` identifies the session so a newer session of the same character is not removed by an old disconnect;

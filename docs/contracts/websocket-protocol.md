@@ -1,6 +1,6 @@
 # Contract: WebSocket protocol v1 (D-003)
 
-**Owner:** director · **Version:** `protocol_version = 1`, contract rev **1.5** (EX-P04 + EX-P08 loot + EX-P09 dungeon + world simulation additions, all additive) · Owner approvals (2026-11-21): **`coder/websocket v1.8.15`**, **JSON text messages**.
+**Owner:** director · **Version:** `protocol_version = 1`, contract rev **1.6** (EX-P09 private dungeon combat and retirement of the interim encounter report) · Owner approvals (2026-11-21): **`coder/websocket v1.8.15`**, **JSON text messages**.
 Basis: canon `14_CONTENT_INTEGRATION.md` §15 (event names and required fields are kept), research `docs/research/go-websocket.md`.
 Implementers (server lane: Go; client lane: Godot `WebSocketPeer`) build against this file; changes only via a director task. Machine-readable envelope: `websocket-envelope.schema.json`.
 
@@ -80,9 +80,8 @@ Canon events keep their names and required fields (§15.2); added fields are mar
 | `combat.loot.request` ➕ (EX-P08, rev 1.2) | C→S | `enemy_id` (only; no amounts, no extra keys) | mutation; **interim kill report** (`loot-engine.md` §1); answered by `combat.loot.result` (includes the bag `changes[]`; no separate `inventory.delta`) or `command.error` |
 | `combat.loot.result` ➕ | S→C | `enemy_id, loot_table_id, gold, items[{item_id,quantity}], gold_total, inventory_revision, changes[]` | server-rolled drop; idempotent replay returns the same result |
 | `dungeon.interact.request` ➕ (EX-P09, rev 1.3) | C→S | `instance_id, object_id` | mutation; `dungeon-engine.md` §4; answered by `dungeon.snapshot` |
-| `dungeon.encounter.report` ➕ | C→S | `instance_id, outcome, spawn_id?` | mutation; **interim kill report** (R-KILL-DNG) until server combat |
 | `dungeon.claim.request` ➕ / `dungeon.leave.request` ➕ | C→S | `instance_id` | mutations; answered by `dungeon.reward` / `dungeon.snapshot` |
-| `dungeon.snapshot` ➕ | S→C | `instance_id, dungeon_id, mode, status, room_id, checkpoint_room_id, event_seq, rooms{…}, attempts` | answer to enter/interact/report/leave |
+| `dungeon.snapshot` ➕ | S→C | `instance_id, dungeon_id, mode, status, room_id, checkpoint_room_id, event_seq, rooms{…}, attempts, combat?` | answer to enter/interact/leave or critical push after a server combat outcome |
 | `dungeon.reward` ➕ | S→C | `instance_id, gold, items[], first_clear, gold_total, inventory_revision, changes[]` | personal reward (single message incl. bag changes, like loot) |
 | `world.join.request` ➕ (EX-P09/T-038b, rev 1.4) | C→S | `zone_id` | joins the server simulation of a zone; answered by `world.snapshot`; not a mutation (no `request_id` needed) |
 | `world.move.request` ➕ | C→S | `seq` (≥1, strictly increasing), `x`, `y` | movement **target**; no speed field exists (extra keys ⇒ `BAD_REQUEST`); no direct reply — see `world.delta.ack_seq` |
@@ -94,7 +93,9 @@ Canon events keep their names and required fields (§15.2); added fields are mar
 | `inventory.delta` | S→C | `inventory_revision, changes[]` | canon; never client-authored |
 | `command.error` ➕ | S→C | `request_id, code, message_key`, opt `retry_after_ms` | correlated error for any rejected C→S message |
 
-**Reserved, not defined in v1** (separate contracts when EX-P08/P09 start): `movement.input`, `world.snapshot`, `world.delta`, `combat.ability.request`, `combat.result`, chat. Servers must reject unknown C→S types with `command.error UNKNOWN_TYPE` (no disconnect) and clients must ignore unknown S→C types (log only).
+Inside a dungeon, `dungeon.snapshot.combat` carries a full world snapshot with an opaque `encounter_id`. The current ID is required on room movement, stop and cast requests, and included in room deltas and events. Old IDs are rejected with `STATE_CONFLICT`. Room transitions and checkpoint resets start fresh streams. The old `dungeon.encounter.report` is rejected as `UNKNOWN_TYPE`.
+
+**Reserved, not defined in v1** (separate contracts when EX-P08/P09 start): `movement.input`, `combat.ability.request`, `combat.result`, chat. Servers must reject unknown C→S types with `command.error UNKNOWN_TYPE` (no disconnect) and clients must ignore unknown S→C types (log only).
 
 ### Error codes (`command.error.code`)
 `BAD_REQUEST`, `UNAUTHENTICATED`, `UNKNOWN_TYPE`, `PROTOCOL_UNSUPPORTED`, `RATE_LIMITED` (+`retry_after_ms`), `NOT_FOUND`, `STATE_CONFLICT` (e.g. quest not READY), `PREREQUISITE_NOT_MET`, `OUT_OF_RANGE` (proximity), `CONTENT_MISMATCH`, `IDEMPOTENCY_CONFLICT`, `REGION_CLOSED` (rev 1.1), combat (rev 1.5): `ON_COOLDOWN`, `GCD`, `NOT_ENOUGH_RESOURCE`, `SKILL_LOCKED`, `UNSUPPORTED_SKILL`, `DEAD`, `INVALID_TARGET`, `INTERNAL`. `message_key` is a localization key (`error.<code>`), never free text.
