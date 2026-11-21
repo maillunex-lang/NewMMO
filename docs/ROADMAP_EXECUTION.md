@@ -147,7 +147,7 @@
 **Зависит от:** EX-P05 (или параллельно тонкий UI после P04 с mock)  
 **Приёмка:** HUD/журнал/диалоги по Theme; landscape; без программной геометрии экранов  
 **Тесты:** ручной + headless smoke  
-**Статус:** [~] базовый HUD/диалог + safe-area (T-004); журнал квестов и `tr()` — T-007 (в работе); привязка к серверу — после P04/P05
+**Статус:** [~] HUD/диалог + safe-area (T-004), журнал квестов + `tr()` (T-007) готовы на локальном stub; осталось: привязка к серверу (после P04/P05), переключатель локали, Godot 4.7.2 (по гейту)
 
 ### EX-P07 — Vertical slice REG-01 (играбельный контракт интеграции)
 **Зависит от:** EX-P04…P06  
@@ -227,6 +227,7 @@
 | 2026-11-21 | EX-P02 crossrefs + CT-003…009 | `59f5cbd` | unittest 32 OK; lint 0 ERROR | C-ITEMQ-001 найден (36 ITEM-Q без объявления) |
 | 2026-11-21 | C-ITEMQ-001 A (по решению владельца) | `8a61c6b` | unittest 32 OK | 36 `ITEM-Q-*` в `11` §12.1, имена — рабочие |
 | 2026-11-21 | Полная сверка связей: client-sync + docs-links + CI | см. `git log` | unittest 35 OK; client-sync 0 ERR; docs-links 0 | клиент == канон; 1 doc-путь починен (`AUDIT.md`) |
+| 2026-11-21 | T-007 quest journal + tr() strings (Cursor) | см. `git log` | smokes (executor) identical; client-sync 0 err; static node-path check | EX-P06: журнал за read-only адаптером (готов к замене серверным источником); `ui.csv` |
 | 2026-11-21 | T-006 Go 1.25 directive + WS-ready wrapper (Codex) | см. `git log` | director re-run on Go 1.25.0: vet + test -race OK | R-GO закрыт на уровне `server/go.mod`; CI уже 1.25.x |
 | 2026-11-21 | T-002 Godot 4.7.2 gate research (ChatGPT) | см. `git log` | docs-only; director spot-check of smoke/export claims | 4.7.2 вышел 2026-08-18; рекомендация: держать 4.3 до B-APK + базы на 6 ГБ; найдены пробелы смоука/экспорта → T-008 |
 | 2026-11-21 | T-004 client UI safe-area + scene choices (Cursor) | см. `git log` | smokes (executor): stage1/MQ01/boot OK; client-sync 0 err | в P06 сделано: safe-area, кнопки выбора в `.tscn`; журнал квестов и i18n → T-007 |
