@@ -220,15 +220,15 @@ func (e *Engine) Interact(ctx context.Context, accountID string, characterID int
 		}
 
 		var matched *active
+		var matchedDef QuestDef
 		var obj ObjectiveDef
 		var have int
 		for i := range actives {
 			a := &actives[i]
-			def, ok := e.cat.Quest(a.questID)
-			if !ok {
+			def, err := e.cat.QuestForBuild(ctx, e.pool, a.build, a.questID)
+			if err != nil {
 				continue
 			}
-			// Prefer pinned build definition when available; catalog is active build.
 			cur, ok := currentObjective(def, a.progress)
 			if !ok {
 				continue
@@ -240,6 +240,7 @@ func (e *Engine) Interact(ctx context.Context, accountID string, characterID int
 				return ErrInvalidTarget
 			}
 			matched = a
+			matchedDef = def
 			obj = cur
 			have = progressHave(a.progress, cur.ID)
 		}
@@ -272,7 +273,7 @@ func (e *Engine) Interact(ctx context.Context, accountID string, characterID int
 		}
 		matched.progress[obj.ID] = map[string]int{"have": have}
 		progJSON, _ := json.Marshal(matched.progress)
-		ready := allObjectivesComplete(matched.questID, matched.progress, e.cat)
+		ready := allObjectivesCompleteDef(matchedDef, matched.progress)
 		newState := "ACTIVE"
 		if ready {
 			newState = "READY_TO_TURN_IN"
@@ -329,12 +330,10 @@ func (e *Engine) TurnIn(ctx context.Context, accountID string, characterID int64
 		if state != "READY_TO_TURN_IN" {
 			return ErrStateConflict
 		}
-		def, ok := e.cat.Quest(questID)
-		if !ok {
-			// Prefer definition from pinned build when catalog moved; for EX-P04 catalog is active.
-			return ErrContentMismatch
+		def, err := e.cat.QuestForBuild(ctx, e.pool, pinnedBuild, questID)
+		if err != nil {
+			return err
 		}
-		_ = pinnedBuild
 
 		var claimID string
 		err = tx.QueryRow(ctx, `
@@ -345,13 +344,18 @@ func (e *Engine) TurnIn(ctx context.Context, accountID string, characterID int64
 			RETURNING claim_id::text`,
 			characterID, questID, "REWARD-"+questID, pinnedBuild).Scan(&claimID)
 		if errors.Is(err, pgx.ErrNoRows) {
-			// Already claimed — return stored idempotency or reconstruct from claim.
-			var existing string
+			// Already claimed — fail closed if quest row was not completed (S-06).
+			var existing, claimState string
 			if err := tx.QueryRow(ctx, `
-				SELECT claim_id::text FROM public.reward_claims
-				WHERE character_id = $1 AND source_kind = 'quest' AND source_instance_id = $2`,
-				characterID, questID).Scan(&existing); err != nil {
+				SELECT c.claim_id::text, q.state FROM public.reward_claims c
+				JOIN public.character_quest_states q
+					ON q.character_id = c.character_id AND q.quest_id = c.source_instance_id
+				WHERE c.character_id = $1 AND c.source_kind = 'quest' AND c.source_instance_id = $2`,
+				characterID, questID).Scan(&existing, &claimState); err != nil {
 				return ErrInternal
+			}
+			if claimState != "COMPLETED" {
+				return ErrStateConflict
 			}
 			out, err = e.loadRewardResult(ctx, tx, characterID, questID, existing, char)
 			return err
@@ -725,11 +729,7 @@ func progressHave(progress map[string]map[string]int, objectiveID string) int {
 	return 0
 }
 
-func allObjectivesComplete(questID string, progress map[string]map[string]int, cat *Catalog) bool {
-	def, ok := cat.Quest(questID)
-	if !ok {
-		return false
-	}
+func allObjectivesCompleteDef(def QuestDef, progress map[string]map[string]int) bool {
 	for _, obj := range def.Objectives {
 		need := obj.Need
 		if need < 1 {
