@@ -6,7 +6,7 @@
 **Главный канон-оркестратор:** `docs/content/14_CONTENT_INTEGRATION.md`  
 **Канон контента:** `docs/content/01_WORLD.md` … `14_CONTENT_INTEGRATION.md`  
 **Процесс:** `AGENTS.md`, `.cursor/rules/open-source-research.mdc`  
-**Обновлено:** 2026-11-21 · tip `main` — EX-P00 [x]; EX-P01 [x]; EX-P02 next (ждёт «делай»); EX-CONTENT-01 plan awaiting approval
+**Обновлено:** 2026-11-21 · tip `main` — EX-P00 [x]; EX-P01 [x]; EX-P02 [x]; EX-P03 next (ждёт «делай»); EX-CONTENT-01 plan awaiting approval
 
 ---
 
@@ -79,7 +79,7 @@
 **OSS research:** [x] `docs/research/content-validation.md` (stdlib-only рекомендация; **ничего не установлено**)  
 **Статус:** [x] `ea7f7e9` (2026-11-21) — Python stdlib, 0 зависимостей; 24 JSON Schema в `content/schemas/`; 16 unittest (CT-001/CT-002) OK; `lint.py` на каноне: 0 ERROR / 16 WARN → PUBLISHABLE (при allowlist C-SET-001)
 **Не входит (→ EX-P02):** полное разрешение crossrefs, `crossrefs.json`, CT-003…009 (графы квестов, лут, диалоговые переходы)
-**Найдено каноном:** C-SET-001 (15 ID `SET-*` совпадают у поселений 03 и сетов 11) — OPEN в `CONFLICTS.md`, allowlist до 2026-12-31
+**Найдено каноном:** C-SET-001 (15 ID `SET-*`) — позже RESOLVED в EX-P02
 
 ### EX-CONTENT-01 — Dialogue expansion (not new quests)
 **Зависит от:** EX-P01 (lint) + owner approval of plan  
@@ -93,9 +93,15 @@
 ### EX-P02 — ID registry, crossrefs, manifest
 **Зависит от:** EX-P01  
 **Артефакты:** `crossrefs.json`, `content.manifest.json`, `validation-report.json`  
-**Приёмка:** объявления vs ссылки; объёмы 6/8/32/5/96/120/120/12/18; CONFLICTS при расхождениях  
+**Приёмка:**
+- [x] объявления vs ссылки (4889 сущностей; ссылки на hard-namespace резолвятся) — `crossrefs.json`
+- [x] объёмы 6/8/32/5/96/120/120/12/18 — golden counts в `lint.py`
+- [x] CONFLICTS при расхождениях — C-SET-001 RESOLVED, C-ITEMQ-001 OPEN
+- [x] manifest: `content.manifest.json` (sha256 файлов, content_hash, sha256 `crossrefs.json`)
 **Тесты:** CT-002…CT-009 (static)  
-**Статус:** [ ]
+**Статус:** [x] `59f5cbd` (2026-11-21) — 32 unittest OK; `lint.py`: 0 ERROR / 37 WARN (36 = C-ITEMQ-001 allowlist, 1 = `DLG-SCN-01-01`)
+**Сделано сверх реестра:** C-SET-001 A применён (`715558c`): 18 поселений `SET-RR-NN`→`STL-RR-NN` в `03`, строки реестра в `03`/`14`; наборы брони не тронуты; allowlist C-SET-001 удалён
+**Частично (честно):** CT-009 — проверены связи loot↔enemy и вероятности 0..100, но не суммы весов/«бесконечная валюта» (нужны данные баланса, EX-P08); CT-006/007 — только ссылки, не граф комнат/расписания (EX-P09/P10)
 
 ### EX-P03 — PostgreSQL migrations + content loader
 **Зависит от:** EX-P02; backup/dry-run policy  
@@ -197,6 +203,8 @@
 | 2026-11-21 | EX-CONTENT-01 plan (draft) | `ad45425` | — | ждёт утверждения владельца |
 | 2026-11-21 | EX-P01 research only | `663ecc5` | — | content-validation.md; no deps installed |
 | 2026-11-21 | EX-P01 parsers + schema + CI | `ea7f7e9` | unittest 16 OK; lint 0 ERROR | stdlib only; C-SET-001 найден, не правился канон |
+| 2026-11-21 | EX-P02 C-SET-001 STL rename | `715558c` | unittest 18 OK | одноразовая правка `03` по approve владельца |
+| 2026-11-21 | EX-P02 crossrefs + CT-003…009 | `59f5cbd` | unittest 32 OK; lint 0 ERROR | C-ITEMQ-001 найден (36 ITEM-Q без объявления) |
 
 ---
 
@@ -215,9 +223,9 @@
 
 ## 6. Следующий этап (предложение)
 
-**EX-P00 и EX-P01 закрыты.** По очереди владельца:
+**EX-P00, EX-P01, EX-P02 закрыты.** По очереди владельца:
 
-1. **EX-P02** — ID registry, crossrefs, manifest (после «делай»). Перед ним желательно решение владельца по **C-SET-001**.
-2. **EX-CONTENT-01** — только после утверждения `docs/CONTENT_EXPANSION_PLAN.md` (пилот MQ-01-01…05 / SQ-01-001…005).
+1. **EX-P03** — PostgreSQL migrations + content loader. Сначала OSS research (goose / golang-migrate / sqlc…) → `docs/research/` → **ждать OK** до установки. Перед ним желательно решение по **C-ITEMQ-001** (влияет на схему предметов); allowlist истекает 2027-01-31.
+2. **EX-CONTENT-01** — только после утверждения `docs/CONTENT_EXPANSION_PLAN.md`.
 
-Не начинать полный объём 240 диалогов и не трогать P02+ без команды **«делай»**.
+Не начинать P03+ без команды **«делай»**.
