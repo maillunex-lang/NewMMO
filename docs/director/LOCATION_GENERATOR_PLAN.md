@@ -30,7 +30,7 @@ Stage-1 Dawn Valley is placeholder art + hand placement. We need a **hybrid** to
 
 | Phase | Deliverable | Owner gate? |
 |-------|-------------|-------------|
-| **W1** | Director contract `docs/contracts/location-generator.md` — layers, seed schema, Manual rules, regen API | No |
+| **W1** | Flesh out draft `docs/contracts/location-generator.md` — layers, seed schema, Manual rules, regen API | No |
 | **W2** | Tool choice confirmed (in-house vs WFC vs Gaea on 4.7.2) + short spike report | **Yes** if new dependency |
 | **W3** | Editor generate → `Generated/*` for one LOC (Dawn Valley / LOC-01-001 scale) | No (if in-house); Yes if dep |
 | **W4** | Regen-safe Manual test + World Studio polish pass documented for owner PC | No |
