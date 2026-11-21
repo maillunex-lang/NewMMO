@@ -69,3 +69,15 @@ This benchmark instantiates `NewZone` with the test combat catalog and 50 config
 | 50 | 2,084 | 1,373,323 |
 
 Director self-review: all world tests and `go vet ./internal/world` pass. These numbers isolate in-process push serialization, **not real WebSocket throughput**. Scaling in the worst-case all-visible pattern warrants follow-up on interest culling and actual combat traffic. T-038f stays PARTIAL until real transport and device tests.
+
+## Real WebSocket load (loopback), 2026-11-21 — `server/internal/ws/load_test.go`
+
+Opt-in: `cd server && NEWMMO_LOAD=1 go test ./internal/ws -run TestWSLoad -v -count=1` (`NEWMMO_LOAD_SECONDS`, default 5). Production `ws.Server` + `world.Handler` + `Zone.Run` over real TCP loopback; each client does `session.auth` → `world.join.request` → a new movement target at 4 Hz. Run in a 4-vCPU cloud container (not the VPS), Go 1.24.7; the process CPU figure includes **all simulated clients**, so it is an upper bound for the server.
+
+| Players | deltas/s/client | KiB/s per client | KiB/s total | process CPU | GC cycles/5 s |
+|---:|---:|---:|---:|---:|---:|
+| 1 | 9.8 | 3.6 | 3.6 | 1% | 0 |
+| 10 | 9.8 | 13.9 | 138 | 2% | 2 |
+| 50 | 9.8 | 59.4 | 2,969 | 14% | 42 |
+
+**Findings:** the 10 Hz tick holds with 50 connected sockets, no write errors, no dropped sessions. Bandwidth per client grows ~linearly with visible players (worst case: all 50 mutually in interest radius, all moving): ~59 KiB/s ≈ 475 kbit/s downlink per phone — acceptable on Wi-Fi/LTE but a battery/data concern; remedies to evaluate (not yet done): smaller interest radius, delta quantization, 5 Hz for far entities. Fixture limits: passive enemies, no abilities in flight, no PostgreSQL, no TLS, no latency. No capacity claim; T-038f stays PARTIAL (mixed combat traffic and Android remain).
