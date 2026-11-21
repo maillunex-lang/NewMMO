@@ -9,6 +9,7 @@ extends Control
 @onready var interact_btn: Button = $SafeArea/Chrome/Interact
 @onready var journal_btn: Button = $SafeArea/Chrome/JournalBtn
 @onready var locale_btn: OptionButton = $SafeArea/Chrome/LocaleBtn
+@onready var bag_btn: Button = $SafeArea/Chrome/BagBtn
 @onready var joystick: Control = $SafeArea/Chrome/Joystick
 @onready var skills: HBoxContainer = $SafeArea/Chrome/Skills
 
@@ -19,6 +20,7 @@ const LocaleSettings = preload("res://scripts/ui/locale_settings.gd")
 var _player: Node = null
 var _quest: Node = null
 var _journal: Node = null
+var _inventory: Node = null
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -33,6 +35,8 @@ func _ready() -> void:
 		interact_btn.pressed.connect(_on_interact)
 	if journal_btn:
 		journal_btn.pressed.connect(_on_journal)
+	if bag_btn:
+		bag_btn.pressed.connect(_on_bag)
 	if locale_btn:
 		_setup_locale_btn()
 	if joystick and joystick.has_signal("direction_changed"):
@@ -52,6 +56,8 @@ func _apply_chrome_labels() -> void:
 		interact_btn.text = tr("ui.talk")
 	if journal_btn:
 		journal_btn.text = tr("ui.journal")
+	if bag_btn:
+		bag_btn.text = tr("ui.inventory")
 
 func _setup_locale_btn() -> void:
 	var current := LocaleSettings.load_locale()
@@ -134,3 +140,9 @@ func _on_journal() -> void:
 		_journal = get_tree().get_first_node_in_group("quest_journal")
 	if _journal and _journal.has_method("toggle"):
 		_journal.toggle()
+
+func _on_bag() -> void:
+	if _inventory == null:
+		_inventory = get_tree().get_first_node_in_group("inventory_ui")
+	if _inventory and _inventory.has_method("toggle"):
+		_inventory.toggle()

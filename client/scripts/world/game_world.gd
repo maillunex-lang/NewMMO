@@ -4,6 +4,7 @@ extends Node2D
 @onready var player: CharacterBody2D = $DawnValley/Player
 @onready var dialogue: Control = $CanvasLayer/Dialogue
 @onready var quest_journal: Control = $CanvasLayer/QuestJournal
+@onready var inventory_ui: Control = $CanvasLayer/Inventory
 @onready var quest_manager: Node = $QuestManager
 @onready var camera: Camera2D = $DawnValley/Player/Camera2D
 
@@ -37,6 +38,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if dialogue and dialogue.visible:
 		return
 	if quest_journal and quest_journal.visible:
+		return
+	if inventory_ui and inventory_ui.visible:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
@@ -99,3 +102,5 @@ func _try_attach_online_session() -> void:
 	if str(net.content_build_id) != "":
 		build = str(net.content_build_id)
 	quest_manager.enable_online(net, build)
+	if inventory_ui and inventory_ui.has_method("bind_net"):
+		inventory_ui.bind_net(net)
