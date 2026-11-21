@@ -67,6 +67,9 @@ func run(logger *slog.Logger) error {
 	if err := attachQuestEngine(ctx, store, socket, logger); err != nil {
 		logger.Warn("quest engine unavailable at startup", "error", err.Error())
 	}
+	if err := attachDialogueEngine(ctx, store, socket, logger); err != nil {
+		logger.Warn("dialogue engine unavailable at startup", "error", err.Error())
+	}
 	socketLifetime, stopSocket := context.WithCancel(ctx)
 	socketDone := make(chan struct{})
 	go func() {

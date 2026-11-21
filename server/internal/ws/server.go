@@ -39,11 +39,18 @@ type QuestHandler interface {
 	SnapshotQuests(ctx context.Context, accountID string, characterID int64) (any, error)
 }
 
+// DialogueHandler is optional EX-P05 dialogue engine (T-024). Nil → UNKNOWN_TYPE for dialogue messages.
+type DialogueHandler interface {
+	Open(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any) (any, error)
+	Choice(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any) (any, error)
+}
+
 type Server struct {
 	lifetime context.Context
 	cfg      Config
 	store    Store
 	quests   QuestHandler
+	dialogue DialogueHandler
 	logger   *slog.Logger
 
 	mu         sync.Mutex
@@ -64,6 +71,8 @@ func New(lifetime context.Context, cfg Config, store Store, logger *slog.Logger)
 }
 
 func (s *Server) SetQuests(q QuestHandler) { s.quests = q }
+
+func (s *Server) SetDialogue(d DialogueHandler) { s.dialogue = d }
 
 type admission struct {
 	attempts []time.Time

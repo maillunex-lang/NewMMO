@@ -308,6 +308,36 @@ func (s *Server) commands(p *peer, owner string, id, revision int64) {
 			if !p.enqueue(reply, m.requestID, revision, result, 0) {
 				return
 			}
+		case m.typ == "dialogue.open.request" || m.typ == "dialogue.choice.request":
+			if s.dialogue == nil {
+				if !p.sendError(m.requestID, revision, "UNKNOWN_TYPE", 0, 0) {
+					return
+				}
+				continue
+			}
+			payload := rawPayload(m.payload)
+			ctx, cancel := context.WithTimeout(p.work, s.cfg.WriteTimeout)
+			var (
+				result any
+				err    error
+			)
+			switch m.typ {
+			case "dialogue.open.request":
+				result, err = s.dialogue.Open(ctx, owner, id, m.typ, m.requestID, payload)
+			case "dialogue.choice.request":
+				result, err = s.dialogue.Choice(ctx, owner, id, m.typ, m.requestID, payload)
+			}
+			cancel()
+			if err != nil {
+				if !p.sendError(m.requestID, revision, questErrorCode(err), 0, 0) {
+					return
+				}
+				continue
+			}
+			revision = revisionFromResult(result, revision)
+			if !p.enqueue("dialogue.node.state", m.requestID, revision, result, 0) {
+				return
+			}
 		default:
 			if !p.sendError(m.requestID, revision, "UNKNOWN_TYPE", 0, 0) {
 				return
