@@ -380,6 +380,27 @@ func (s *Server) commands(p *peer, owner string, id, revision int64) {
 			if !p.enqueue("combat.loot.result", m.requestID, revision, result, 0) {
 				return
 			}
+		case isWorldCommand(m.typ):
+			if s.world == nil {
+				if !p.sendError(m.requestID, revision, "UNKNOWN_TYPE", 0, 0) {
+					return
+				}
+				continue
+			}
+			ctx, cancel := context.WithTimeout(p.work, s.cfg.WriteTimeout)
+			replyType, result, err := s.world.Handle(ctx, owner, id, m.typ, rawPayload(m.payload), p, p.pushDroppable)
+			cancel()
+			if err != nil {
+				if !p.sendError(m.requestID, revision, questErrorCode(err), 0, 0) {
+					return
+				}
+				continue
+			}
+			if replyType != "" {
+				if !p.enqueue(replyType, m.requestID, revision, result, 0) {
+					return
+				}
+			}
 		case isDungeonCommand(m.typ):
 			if s.dungeon == nil {
 				if !p.sendError(m.requestID, revision, "UNKNOWN_TYPE", 0, 0) {
@@ -538,4 +559,32 @@ func isDungeonCommand(typ string) bool {
 		return true
 	}
 	return false
+}
+
+func isWorldCommand(typ string) bool {
+	switch typ {
+	case "world.join.request", "world.move.request", "world.stop.request", "world.leave.request":
+		return true
+	}
+	return false
+}
+
+// pushDroppable queues a replaceable server push (world.delta). Under backpressure the message is dropped
+// instead of closing the session: the next delta supersedes it. Returns false only when the peer is gone.
+func (p *peer) pushDroppable(typ string, payload any) bool {
+	data := p.encode(typ, "", 0, payload)
+	if data == nil {
+		return false
+	}
+	select {
+	case <-p.closing:
+		return false
+	default:
+	}
+	select {
+	case p.queue <- packet{data, 0}:
+	default:
+		// Queue full: keep the session, drop this delta. Persistent overload is closed by the write timeout.
+	}
+	return true
 }
