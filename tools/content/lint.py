@@ -30,7 +30,8 @@ ORCHESTRATOR = "14_CONTENT_INTEGRATION.md"
 # Golden volumes (14 §3 / §17.1 step 5): kind -> expected declaration count.
 GOLDEN = {"faction": 8, "region": 6, "location": 48, "npc": 32, "class": 5, "enemy": 96,
           "quest_main": 120, "quest_side": 120, "dungeon": 12, "event": 18,
-          "chapter": 6, "ending": 3, "equipment": 270, "item_set": 30, "material": 36, "loot_table": 96}
+          "chapter": 6, "ending": 3, "equipment": 270, "item_set": 30, "material": 36, "loot_table": 96,
+          "skill": 60, "ability": 258}
 
 # Namespaces whose mentions are checked against declarations (WARN, full crossrefs = EX-P02).
 REF_NAMESPACES = {

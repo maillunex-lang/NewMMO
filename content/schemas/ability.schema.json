@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "newmmo/content/ability.schema.json",
+  "title": "Enemy ability",
+  "type": "object",
+  "required": [
+    "kind",
+    "id",
+    "file",
+    "line",
+    "fields"
+  ],
+  "properties": {
+    "kind": {
+      "const": "ability"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^AB-ENM-0[1-6]-\\d{3}-[A-D]$"
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fields": {
+      "type": "object",
+      "required": [
+        "enemy",
+        "slot",
+        "text"
+      ],
+      "properties": {
+        "enemy": {
+          "type": "string",
+          "pattern": "^ENM-0[1-6]-\\d{3}$"
+        },
+        "slot": {
+          "enum": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ]
+        },
+        "coefficient": {
+          "type": "number",
+          "minimum": 0
+        },
+        "scale": {
+          "enum": [
+            "AP",
+            "SP",
+            "AP|SP"
+          ]
+        },
+        "cooldown_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "telegraph_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

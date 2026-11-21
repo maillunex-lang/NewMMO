@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "newmmo/content/skill.schema.json",
+  "title": "Class skill",
+  "type": "object",
+  "required": [
+    "kind",
+    "id",
+    "file",
+    "line",
+    "fields"
+  ],
+  "properties": {
+    "kind": {
+      "const": "skill"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^CLS-0[1-5]-SK(0[1-9]|1[0-2])$"
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fields": {
+      "type": "object",
+      "required": [
+        "name",
+        "level",
+        "target",
+        "cost",
+        "cooldown_s",
+        "effect_raw",
+        "class_id"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "level": {
+          "enum": [
+            1,
+            3,
+            6,
+            10,
+            15,
+            20,
+            25,
+            30,
+            35,
+            40,
+            50,
+            60
+          ]
+        },
+        "target": {
+          "enum": [
+            "enemy",
+            "self",
+            "ally",
+            "area",
+            "cone",
+            "line",
+            "point",
+            "ground"
+          ]
+        },
+        "cost": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "cooldown_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "effect_raw": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effect_kind": {
+          "type": "string"
+        },
+        "coefficient": {
+          "type": "number",
+          "minimum": 0
+        },
+        "scale": {
+          "type": "string"
+        },
+        "class_id": {
+          "type": "string",
+          "pattern": "^CLS-0[1-5]$"
+        },
+        "rule": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

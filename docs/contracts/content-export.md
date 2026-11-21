@@ -45,8 +45,8 @@ The file is the canonical body: keys sorted, separators `(",",":")`, UTF-8, non-
 - `payload` is the parsed typed record for that kind (shapes = `content/schemas/<kind>.schema.json` `fields`); the loader stores it as `jsonb` **unchanged** and does not interpret gameplay.
 - Typed relations live in the payload (e.g. quest `prereqs`, `npcs`, `locations`, `reward.evidence`; objective `quest_id`; enemy `spawn_refs`; dungeon `entrance/miniboss/boss`; event `world_boss`; loot table `enemy`). Use them; do not regex IDs out of text.
 
-### Kinds in build 1 (4958 entities)
-`chapter 6 · class 5 · dialogue_line 3122 · dialogue_template 1 · dungeon 12 · ending 3 · enemy 96 · equipment 270 · event 18 · faction 8 · item 8 · item_set 30 · location 48 · loot_table 96 · material 36 · npc 32 · objective 720 · poi 72 · quest_item 36 · quest_main 120 · quest_side 120 · recipe 36 · region 6 · scene 6 · settlement 18`.
+### Kinds in the current build (counts below; the exact total lives in `manifest.json`)
+`ability 258 · chapter 6 · class 5 · dialogue_line 3155 · dialogue_template 1 · dungeon 12 · ending 3 · enemy 96 · equipment 270 · event 18 · faction 8 · item 8 · item_set 30 · location 48 · loot_table 96 · material 36 · npc 32 · objective 720 · poi 72 · quest_item 36 · quest_main 120 · quest_side 120 · recipe 36 · region 6 · scene 6 · settlement 18 · skill 60`.
 (`*_ref` catalog mirrors are not exported. Settlements use `STL-RR-NN`; armor sets `SET-CC-RR` — C-SET-001.)
 
 ## 4. Loader obligations (verification before a build can be staged)
@@ -64,3 +64,9 @@ Any failure ⇒ reject with a structured error code (`db-content.md` §3), best-
 - **Global ID namespace (T-010 R-06):** entity ids are unique across **all kinds** within a build. Enforced at the producer (lint duplicate scan across every declaration + objectives; export is blocked on violation) and by the DB key `(build_id, entity_id)`. A future kind that needs a clashing id must be renamed in canon first.
 - **Canon §14 fields (T-010 R-07):** `id`, `kind`, `schema_version`, `source_file`, `source_line`, `region_id` are top-level (§3). `content_version` ≡ `build_id` (envelope of the build). `enabled`: every v1 entity is enabled (disabling is not modelled; will be added with a `schema_version` bump). `dependencies[]` ≡ typed payload relations (`prereqs`, `npcs`, `locations`, `reward.evidence`, `spawn_refs`, `entrance/miniboss/boss`, `world_boss`, `enemy`, `quest_id`). `title_key`: canon text is not localized-key based except dialogues (`dialogue.<id>` keys derive from the `DIA.*` id). Canon's sample `kind=main_quest` is illustrative; the export kind is `quest_main`.
 - **Per-kind payload shapes** are the `fields` of `content/schemas/<kind>.schema.json`; those schemas are the validation source for required/optional fields.
+
+## Combat data kinds (T-038a, additive)
+- `skill` (60 = 5 classes × 12): `class_id, name, level (1,3,6,10,15,20,25,30,35,40,50,60), target, cost, cooldown_s, effect_raw, effect_kind (damage|heal|shield|mitigation|intercept|cleanse|haste|buff|barrier|teleport|mana|mark|movement|stealth|reveal), coefficient?, scale? (AP|SP|MaxHP), rule` — source `05_CLASSES.md` §4 tables. `heal:1.10*SP` is `heal`, never `damage`.
+- `ability` (258): `enemy, slot (A basic attack, B signature, C/D elite & boss mechanics), coefficient?, scale? (AP|SP|AP|SP), cooldown_s? (slot A = attack interval), telegraph_s?, text` — source `06_ENEMIES.md` §5 cards. Summons/phase rules stay in `text` for hand-written boss scripts.
+- Checks (`CT_COMBAT_*` in `tools/content/crossrefs.py`): every enemy has A and B with coefficient and cooldown; ability enemies declared; each class has the 12 skills at the canonical unlock levels.
+- Formulas: `server/internal/damage` (golden tests); loader: `server/internal/combatdata` (reads `entities.jsonl`).
