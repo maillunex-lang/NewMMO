@@ -44,6 +44,28 @@ func _run() -> void:
 		player.move_to_world(player.global_position + Vector2(40, 0))
 	for _i in range(30):
 		await process_frame
+	if not failed:
+		var adjacent: Node2D = main.get_node("DawnValley/MonsterSpawns/Slime2")
+		for monster in get_nodes_in_group("monsters"):
+			monster.set_physics_process(false)
+			monster.global_position = player.global_position + Vector2(300, 0)
+		player.set_physics_process(false)
+		slime.global_position = player.global_position - Vector2(24, 0)
+		adjacent.global_position = player.global_position + Vector2(50, 0)
+		var nearest_hp: float = slime.hp
+		var adjacent_hp: float = adjacent.hp
+		await player.use_skill(0)
+		if slime.hp >= nearest_hp or adjacent.hp != adjacent_hp:
+			push_error("Manual attack must only damage the closest enemy")
+			failed = true
+		slime.global_position = player.global_position + Vector2(300, 0)
+		adjacent.global_position = player.global_position + Vector2(300, 0)
+		player._attack_cd = 0.0
+		var start_mp: float = player.mp
+		await player.use_skill(1)
+		if player.mp != start_mp or player._attack_cd != 0.0:
+			push_error("Empty manual attack must not spend resource or start cooldown")
+			failed = true
 	if failed:
 		quit(2)
 	else:

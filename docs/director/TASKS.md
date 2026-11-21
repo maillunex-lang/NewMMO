@@ -59,6 +59,7 @@ Prompts live in `docs/director/prompts/T-NNN.md`. Protocol: `DIRECTOR.md`.
 | T-043 | server | Event scheduler (4 windows/day per region, `EVT-*` instances, contribution, anti-AFK) — aligns with EX-P10 | T-041, EX-P10 | PROPOSED |
 | T-044 | content | Daily/event texts (new narrative, owner «делай» needed), RU/EN | owner | PROPOSED |
 | T-045 | server+tools | Retention telemetry (D1/D7, daily completion funnel) + parameter panel | T-041 | PROPOSED |
+| T-046 | director (client+server) | Manual attacks select and face the nearest living enemy inside the server-provided reach. Offline demo uses the selected skill's local reach. See `prompts/T-046.md`. | T-038d ✔ | **DONE 2026-11-21** — Godot smoke covers offline and online manual targeting. WebSocket tests verify the advertised reach |
 | T-039 | server+client | EX-P09 4/4: equipment drops + class RARE first-clear reward, reward mail, pity, `STORY_SOLO`, party/queue | T-038, equip UI | PROPOSED |
 | T-031 | research | EX-W01: re-verify Gaea/WFC/in-house on Godot 4.7.2; recommend one | D-005 | **DONE** — in-house chosen, no deps |
 | T-032 | client | EX-W01: Lunex Generate editor dock → `Generated/*` only | T-031 ✔, owner OK if deps | **DONE** — `client/addons/lunex_gen` (CLI; editor dock deferred), no-quest-dead-end verify+repair, CI smoke |
