@@ -1,0 +1,23 @@
+# T-009 — Загрузка и переключение сборки контента
+
+Проверено 2026-11-21. D-001 задаёт формат бандла, схему и транзакции, а T-001 и toolchain-pins фиксируют goose v3.30.0, pgx v5.13.0 и PostgreSQL 17. В каталоге Hysen Labs проверены карточки pgx, pgxmock и Testcontainers. Метаданные сверены с GitHub. [Каталог](https://hysenlabs.com/projects) · [pgx](https://hysenlabs.com/projects/jackc-pgx) · [pgxmock](https://hysenlabs.com/projects/pashagolub-pgxmock) · [Testcontainers](https://hysenlabs.com/projects/testcontainers-testcontainers-go)
+
+| Подход | Оценка для T-009 |
+|---|---|
+| Проверка stdlib, одна транзакция `pgxpool` и `CopyFrom` | Выбран. pgx MIT, последний push 2026-11-16. Проверить снимок до запросов к БД, передать payload как `json.RawMessage` в кодек jsonb, пересчитать строки и виды в SQL и записать аудит в той же транзакции. Для ошибки нужен отдельный аудит после отката. [pgx v5.13.0](https://pkg.go.dev/github.com/jackc/pgx/v5@v5.13.0) · [pgxpool](https://pkg.go.dev/github.com/jackc/pgx/v5@v5.13.0/pgxpool) · [PostgreSQL JSON](https://www.postgresql.org/docs/17/datatype-json.html) |
+| Пакетные INSERT или отдельная временная таблица и перенос | Теми же одобренными pgx и PostgreSQL, без новых модулей. Подход уместен при SQL-преобразованиях или объединении данных. Проверенный идентифицируемый снимок записывается напрямую, поэтому дополнительный проход здесь лишний. [PostgreSQL COPY](https://www.postgresql.org/docs/17/sql-copy.html) · [pgx на GitHub](https://github.com/jackc/pgx) |
+| Версии строк и указатель в БД либо внешняя публикация с переключением в CDN | Выбран указатель в БД. В rev 1.1 миграция заранее создаёт строку указателя. `FOR UPDATE` сериализует и первую, и следующие операции. Публикация и откат сравнивают указатель с ожидаемым значением. Откат использует тот же указатель. Внешний указатель потребовал бы согласования между системами и не давал бы общей транзакции с аудитом. [Блокировки](https://www.postgresql.org/docs/17/explicit-locking.html) · [Read Committed](https://www.postgresql.org/docs/17/transaction-iso.html) |
+| Изолированный PostgreSQL из Compose/CI либо Go-библиотека для тестового окружения | Выбран настоящий PostgreSQL 17 по URL из окружения. Testcontainers Go (MIT, push 2026-11-21) удобен для управления контейнером из теста, но расширяет граф модулей и требует Docker от тестового процесса. Мок pgx не проверит блокировки, триггеры, goose и COPY. [Testcontainers на GitHub](https://github.com/testcontainers/testcontainers-go) · [pgxmock на GitHub](https://github.com/pashagolub/pgxmock) · [goose](https://github.com/pressly/goose/tree/v3.30.0) |
+
+Директиву Go и версии инструментов берём из toolchain-pins. Единственная прямая зависимость сервера — pgx. Goose запускается отдельно от игрового процесса. CLI `verify` остаётся офлайн, а `stage` записывает `reject` для отклонённого бандла, когда БД доступна. Rev 1.1 определяет пустой `expected_current` как отсутствие активной сборки.
+
+
+## Блокер rev 1.1 (R-04, R-05)
+
+`line_sha256` — хеш исходной строки JSONL без LF. В БД есть сам хеш и распарсенные поля, включая `payload jsonb`. Формула `ingest_digest = sha256(concat(line_sha256 …))` даёт одинаковый результат до и после UPDATE одного `payload`, если оставить `line_sha256`, ключи и счётчики прежними. Проба с изменением `payload.name` с `original` на `tampered` дала одинаковый SHA-256. Защита только на UPDATE не покрывает удаление и повторную вставку со старым хешем. Пересчитать исходный хеш по нормализованному `jsonb` в общем случае невозможно: например, PostgreSQL раскрывает экспоненту в числе `1e+20`. [DB-контракт](../contracts/db-content.md) · [PostgreSQL 17 JSON types](https://www.postgresql.org/docs/17/datatype-json.html)
+
+Решение требуется в замороженном контракте. Один вариант — хранить точные байты строки, пересчитывать их хеш при проверке и сравнивать разобранные поля с сохранённой строкой БД. Другой вариант — определить отдельный отпечаток нормализованной строки БД, охватывающий все поля сущности, и использовать его при проверке Stage/Publish. В обоих случаях хеш исходного JSONL остаётся транспортной проверкой бандла.
+
+Бенчмарк COPY и пакетного INSERT не выполнен. Результат выбора в таблице — проектная оценка.
+
+На `origin/main` после обновления до rev 1.1 проверка `tools/content/check_docs_links.py` также выдаёт три `DOC_BROKEN_PATH` на имя артефакта манифеста в `docs/contracts/content-export.md`, строки 11, 19 и 54. Правка контракта или линтера относится к директору. Экспорт rev 1.1 отдельно подтверждён: 4 925 строк сущностей, один LF-терминированный manifest, BUILD_ID совпадает с SHA-256 сырых байтов.

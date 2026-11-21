@@ -1,0 +1,32 @@
+name: newmmo-dev
+
+services:
+  postgres:
+    build:
+      context: ./init
+      dockerfile_inline: |
+        FROM postgres:17@sha256:b60e90042aa6b8dbecd58e224b3e36114dbf8ad754465264c2476ad58a86e45c
+        COPY --chmod=0755 10-content-roles.sh /docker-entrypoint-initdb.d/
+    environment:
+      POSTGRES_DB: newmmo
+      POSTGRES_USER: newmmo_admin
+      POSTGRES_PASSWORD: ${NEWMMO_ADMIN_PASSWORD:?set NEWMMO_ADMIN_PASSWORD in .env}
+      NEWMMO_MIGRATOR_PASSWORD: ${NEWMMO_MIGRATOR_PASSWORD:?set NEWMMO_MIGRATOR_PASSWORD in .env}
+      NEWMMO_APP_PASSWORD: ${NEWMMO_APP_PASSWORD:?set NEWMMO_APP_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:${NEWMMO_POSTGRES_PORT:-15432}:5432"
+    networks:
+      - database
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "newmmo_admin", "-d", "newmmo"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+networks:
+  database:
+
+volumes:
+  database:
