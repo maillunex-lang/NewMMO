@@ -17,6 +17,7 @@ Prompts live in `docs/director/prompts/T-NNN.md`. Protocol: `DIRECTOR.md`.
 |----|------|-------|---------|-------|
 | D-001 | director | Content export contract + DB contract + toolchain pins in `docs/contracts/` | EX-P02 ✔ | **DONE** — `content-export.md`, `db-content.md`, `toolchain-pins.md`; exporter `tools/content/export.py` (deterministic, blocked by lint errors); CI jobs `server-db` + export step |
 | D-003 | director | WebSocket protocol contract v1 (`docs/contracts/websocket-protocol.md` + envelope schema) | T-003 ✔, owner OK ✔ | **DONE** — canon §15.2 events/directions kept (tested), added session/state/error messages, idempotency, limits, close codes; pins updated (coder/websocket v1.8.15) |
+| T-012 | client | Android debug APK baseline on Godot 4.3 (toolchain install approved by owner), `tools/android/**` scripts, device metrics or honest protocol | T-008 ✔ | **ISSUED** (`prompts/T-012.md`) — closes B-APK partially; 4.7.2 comparison later |
 | T-009 | server | EX-P03: goose migrations + loader (pgx) → `server/internal/content` + `contentctl` CLI + isolated Compose `deploy/newmmo/` | D-001 ✔, T-006 ✔ | **ISSUED** (`prompts/T-009.md`). Phase 2 (tools approved). CI `server-db` runs it |
 | D-002 | director | POI id mapping contract (stub `POI-BOARD-01` … → canon `POI-01-*`, C-POI-001) | — | Needed by client EX-P06/07 |
 | T-001 | research | OSS research: PostgreSQL migrations + Go DB access → `docs/research/db-migrations.md` | — | **DONE** `3fb9aa6` (branch `be9a5bb`, lane_check clean). Director spot-check of upstream `go.mod` at tags confirmed the report's Go-version warning (see ROADMAP EX-P03). Owner OK received 2026-11-21 (Go ≥1.25, goose + pgx) |
@@ -52,3 +53,4 @@ First parallel batch (different lanes, no dependencies, disjoint files): **T-001
 | 2026-11-21 | Codex reported T-009 blocker (R-04: line_sha256 digest bypass) → contract decision: SQL-computed `ingest_digest`, no `line_sha256`; docs-links generated names fixed; T-009 amendment 2 (finish order, push WIP) |
 | 2026-11-21 | T-008 merged; T-011 issued to Cursor |
 | 2026-11-21 | T-011 merged; Cursor idle until EX-P04 server exists (candidate: Android 4.3 baseline needs owner OK for SDK installs) |
+| 2026-11-21 | Owner approved Android baseline toolchain install; T-012 issued to Cursor |

@@ -250,7 +250,7 @@
 | R-MULTI | 3 исполнителя ломают друг друга | EX-DIR: lanes + trailers + CI `lane-check` + rebase-before-push; откат директором |
 | R-NAMES | Названия `ITEM-Q-*` рабочие (от названий квестов) | Владелец утверждает финальные имена; не блокер для P03 |
 | R-EQ | `EQ-CC-RR-SS-RR` | Typed fields, не слепой regex |
-| R-APK | Нет Android templates в CI VM | Честно блокировать APK stage |
+| R-APK | Нет Android templates в CI VM | Честно блокировать APK stage; **T-012** (2026-11-21): локальная debug-сборка на 4.3 + база метрик, установка инструментария одобрена владельцем |
 | R-VPS | 8GB / 18 events | Caps + staged rollout |
 
 ---
