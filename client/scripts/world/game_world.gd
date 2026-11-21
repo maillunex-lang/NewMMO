@@ -15,6 +15,8 @@ func _ready() -> void:
 	_try_attach_online_session()
 	if quest_manager and quest_manager.has_signal("dialogue_flow_requested"):
 		quest_manager.dialogue_flow_requested.connect(_on_flow)
+	if quest_manager and quest_manager.has_signal("dialogue_server_node"):
+		quest_manager.dialogue_server_node.connect(_on_server_node)
 	if dialogue and dialogue.has_signal("closed"):
 		dialogue.closed.connect(_on_dialogue_closed)
 	if dialogue and dialogue.has_signal("action_chosen"):
@@ -61,6 +63,15 @@ func _on_flow(npc_id: String, flow_ids: PackedStringArray, mode: String) -> void
 	if quest_manager and quest_manager.has_method("npc_display_name"):
 		name = quest_manager.npc_display_name(npc_id)
 	dialogue.open_flow(npc_id, name, flow_ids, tex, mode)
+
+func _on_server_node(npc_id: String, node: Dictionary) -> void:
+	if dialogue == null or not dialogue.has_method("open_server_node"):
+		return
+	var tex: Texture2D = load("res://assets/ui/portrait_mira.png") if npc_id == "NPC-102" else load("res://assets/ui/portrait_player.png")
+	var name := npc_id
+	if quest_manager and quest_manager.has_method("npc_display_name"):
+		name = quest_manager.npc_display_name(npc_id)
+	dialogue.open_server_node(npc_id, name, node, tex)
 
 func _on_dialogue_action(action: String, npc_id: String) -> void:
 	if quest_manager and quest_manager.has_method("on_dialogue_action"):

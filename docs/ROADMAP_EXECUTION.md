@@ -153,13 +153,14 @@
 **Контракт:** `docs/contracts/dialogue-engine.md` (D-005)  
 **Задачи:** T-024 (сервер: open/choice, filter, persist, WS)  
 **Приёмка:**
-- [ ] серверная фильтрация опций (ACCEPT/TURN_IN/ASK/LATER/CONTINUE)
-- [ ] `character_dialogue_choices` append-only; идемпотентный choice
-- [ ] illegal option → `PREREQUISITE_NOT_MET`; wrong contact → reject
+- [x] серверная фильтрация опций (ACCEPT/TURN_IN/ASK/LATER/CONTINUE) — T-024
+- [x] `character_dialogue_choices` append-only; идемпотентный choice — T-024
+- [x] illegal option → `PREREQUISITE_NOT_MET`; wrong contact → reject — T-024
 - [~] proximity — **R-PROX deferred** (same as quests; EX-P08/P09)
-- [ ] Stage-1 flows MQ-01-01…05 from `content/dialogues/flows_reg01.json` + `dialogue_line` entities  
-**Тесты:** CT-008, CT-014 + unit + CI `server-db`  
-**Статус:** [~] T-024 in review on `cursor/ex-p05-dialogue-engine-6dd6`
+- [x] Stage-1 flows MQ-01-01…05 from `content/dialogues/flows_reg01.json` + `dialogue_line` entities — T-024
+- [~] клиент показывает серверные опции / choice (T-025)  
+**Тесты:** CT-008, CT-014 + unit + CI `server-db` + ONLINE_SMOKE  
+**Статус:** [~] T-024 DONE (`a24e3d6`); T-025 client wiring in progress
 
 ### EX-P06 — Godot quest/dialogue UI polish (editable .tscn)
 **Зависит от:** EX-P05 (или параллельно тонкий UI после P04 с mock)  
@@ -294,8 +295,8 @@
 ## Актуальный handoff для Cursor-директора (2026-11-21)
 
 - **Завершено:** EX-P00–P03, T-018 REST auth, T-019 WebSocket (PR #2), T-020 quest engine (PR #3, `4461aa7`), T-022 login UI, T-015 Godot 4.7.2; EX-CONTENT-01 pilot интегрирован.
-- **Текущий этап:** EX-P05 [~]. **Сейчас:** T-024 dialogue engine PR. **Далее:** EX-P06 UI polish → EX-P07 vertical slice.
-- **Не завершено:** live E2E against running Go server (manual/env), R-PROX (S-02), Android device measurements, EX-P05–P13. Не отмечать их `[x]` по наличию stub или документации.
+- **Текущий этап:** EX-P05 [~]. **Сейчас:** T-025 client dialogue wiring. **Далее:** EX-P06 UI polish → EX-P07 vertical slice.
+- **Не завершено:** live E2E against running Go server (manual/env), R-PROX (S-02), Android device measurements, EX-P06–P13. Не отмечать их `[x]` по наличию stub или документации.
 - **Рабочие масштабы локаций:** деревня 200×200 м, город 500×500 м, открытая зона 1000×1000 м, большая дикая 1500×1500 м, подземелье 150–400 м маршрута; источник `docs/content/03_LOCATIONS.md`, предварительно до Android-профилирования.
 - **Автономия Cursor:** может корректировать план, выдавать и принимать задачи, обновлять статусы и сливать прошедшие проверки изменения. Без согласия владельца не менять канон, игровой баланс/монетизацию, архитектурные пины, не добавлять зависимости, не развёртывать VPS и не удалять данные.
-- **Первое действие:** принять T-024 (dialogue open/choice + filter + persist); затем EX-P06.
+- **Первое действие:** принять T-025; закрыть EX-P05; затем EX-P06/P07.

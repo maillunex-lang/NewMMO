@@ -79,12 +79,48 @@ func _run() -> void:
 	_assert(qm.is_online() == true, "online flag")
 	_assert(str(qm.get_status()) == "available", "available locally")
 
+	# T-025: server dialogue open → filtered ACCEPT → choice + quest.accept
+	qm.on_npc_talk("NPC-802", null)
+	net.poll(0.016)
+	var open_msg := _take_type(ft, "dialogue.open.request")
+	_assert(not open_msg.is_empty(), "dialogue open sent")
+	_assert(str(open_msg.get("payload", {}).get("npc_id", "")) == "NPC-802", "open npc")
+	_assert(str(open_msg.get("payload", {}).get("dialogue_id", "")) == "MQ-01-01", "open dialogue")
+	var open_rid := str(open_msg.get("request_id", ""))
+	ft.inject_text(_s2c("dialogue.node.state", {
+		"dialogue_id": "MQ-01-01",
+		"node_id": "DIA.MQ-01-01.START.01",
+		"speaker": "NPC-802",
+		"text": "Server line",
+		"options": [
+			{"option_id": "ACCEPT", "label_key": "ui.dialogue.accept"},
+			{"option_id": "ASK", "label_key": "ui.dialogue.ask"},
+			{"option_id": "LATER", "label_key": "ui.dialogue.later"},
+		],
+		"revision": 0,
+	}, 0, open_rid))
+	net.poll(0.016)
+	_assert(str(qm.debug_snapshot().get("dialogue_node_id", "")) == "DIA.MQ-01-01.START.01", "node stored")
+
 	qm.on_dialogue_action("ACCEPT", "NPC-802", null)
 	net.poll(0.016)
-	var accept_msg := _take_type(ft, "quest.accept.request")
+	var outbound: Array = ft.pop_outbound()
+	var choice_msg := _find_type(outbound, "dialogue.choice.request")
+	var accept_msg := _find_type(outbound, "quest.accept.request")
+	_assert(not choice_msg.is_empty(), "dialogue choice sent")
+	_assert(str(choice_msg.get("payload", {}).get("option_id", "")) == "ACCEPT", "choice ACCEPT")
 	_assert(not accept_msg.is_empty(), "accept sent")
 	_assert(str(accept_msg.get("payload", {}).get("quest_id", "")) == "MQ-01-01", "accept quest")
 	_assert(str(accept_msg.get("payload", {}).get("content_build_id", "")) == "build-test", "build id")
+	var choice_rid := str(choice_msg.get("request_id", ""))
+	ft.inject_text(_s2c("dialogue.node.state", {
+		"dialogue_id": "MQ-01-01",
+		"node_id": "DIA.MQ-01-01.PROGRESS.01",
+		"speaker": "NPC-802",
+		"text": "After accept",
+		"options": [{"option_id": "CONTINUE", "label_key": "ui.dialogue.continue"}],
+		"revision": 1,
+	}, 1, choice_rid))
 	var rid := str(accept_msg.get("request_id", ""))
 	ft.inject_text(_s2c("quest.accept.result", {
 		"quest_id": "MQ-01-01", "state": "ACTIVE", "revision": 1, "ok": true,
@@ -143,6 +179,9 @@ func _run() -> void:
 
 func _take_type(ft: RefCounted, type_name: String) -> Dictionary:
 	var batch: Array = ft.pop_outbound()
+	return _find_type(batch, type_name)
+
+func _find_type(batch: Array, type_name: String) -> Dictionary:
 	for raw in batch:
 		var m: Dictionary = JSON.parse_string(str(raw))
 		if typeof(m) == TYPE_DICTIONARY and str(m.get("type")) == type_name:
