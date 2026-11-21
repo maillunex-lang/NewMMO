@@ -1,0 +1,116 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Theme" path="res://themes/lunex_hud.tres" id="1"]
+[ext_resource type="Script" path="res://scripts/ui/inventory_ui.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area_margins.gd" id="3"]
+
+[node name="Inventory" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+theme = ExtResource("1")
+script = ExtResource("2")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(0.02, 0.03, 0.05, 0.55)
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3")
+base_margin = 16
+
+[node name="Chrome" type="Control" parent="SafeArea"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="SafeArea/Chrome"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -360.0
+offset_top = -240.0
+offset_right = 360.0
+offset_bottom = 240.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="SafeArea/Chrome/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 12
+
+[node name="VBox" type="VBoxContainer" parent="SafeArea/Chrome/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="SafeArea/Chrome/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="SafeArea/Chrome/Panel/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+text = "ui.inventory_title"
+
+[node name="Close" type="Button" parent="SafeArea/Chrome/Panel/Margin/VBox/Header"]
+custom_minimum_size = Vector2(120, 48)
+layout_mode = 2
+text = "ui.close"
+
+[node name="MaterialsSection" type="Label" parent="SafeArea/Chrome/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "ui.inventory_materials"
+
+[node name="MaterialsList" type="ItemList" parent="SafeArea/Chrome/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 0
+
+[node name="BagSection" type="Label" parent="SafeArea/Chrome/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "ui.inventory_bag"
+
+[node name="BagList" type="ItemList" parent="SafeArea/Chrome/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 0
+
+[node name="QuestKeysSection" type="Label" parent="SafeArea/Chrome/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "ui.inventory_quest_keys"
+
+[node name="QuestKeysList" type="ItemList" parent="SafeArea/Chrome/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 0

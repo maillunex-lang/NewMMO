@@ -62,7 +62,15 @@ func _run() -> void:
 		"session_id": "s1", "character_id": "7", "heartbeat_ms": 25000, "content_build_id": "build-test",
 	}, 0))
 	ft.inject_text(_s2c("state.snapshot", {
-		"scopes": {"quests": {"active": [], "completed": [], "available": ["MQ-01-01"]}},
+		"scopes": {
+			"quests": {"active": [], "completed": [], "available": ["MQ-01-01"]},
+			"inventory": {
+				"inventory_revision": 1,
+				"bag": [{"container": "bag", "slot": 0, "item_id": "ITM-01-001", "quantity": 2}],
+				"materials": [{"container": "materials", "slot": 0, "item_id": "MAT-01-001", "quantity": 5}],
+				"quest_keys": ["ITEM-Q-01-001"],
+			},
+		},
 		"revision": 0,
 	}, 0))
 	net.poll(0.016)
@@ -78,6 +86,50 @@ func _run() -> void:
 	qm.enable_online(net, "build-test")
 	_assert(qm.is_online() == true, "online flag")
 	_assert(str(qm.get_status()) == "available", "available locally")
+
+	# T-030: inventory panel binds snapshot / delta / move request
+	var inv_ui: Node = main.get_node_or_null("CanvasLayer/Inventory")
+	_assert(inv_ui != null, "inventory scene")
+	if inv_ui.has_method("bind_net"):
+		inv_ui.bind_net(net)
+	# Re-emit snapshot so UI catches scopes after bind.
+	ft.inject_text(_s2c("state.snapshot", {
+		"scopes": {
+			"quests": {"active": [], "completed": [], "available": ["MQ-01-01"]},
+			"inventory": {
+				"inventory_revision": 1,
+				"bag": [{"container": "bag", "slot": 0, "item_id": "ITM-01-001", "quantity": 2}],
+				"materials": [{"container": "materials", "slot": 0, "item_id": "MAT-01-001", "quantity": 5}],
+				"quest_keys": ["ITEM-Q-01-001"],
+			},
+		},
+		"revision": 0,
+	}, 0))
+	net.poll(0.016)
+	_assert(inv_ui.has_method("toggle"), "inventory toggle")
+	inv_ui.toggle()
+	_assert(inv_ui.visible == true, "inventory open")
+	var bag_list: ItemList = inv_ui.get_node_or_null("SafeArea/Chrome/Panel/Margin/VBox/BagList")
+	var mat_list: ItemList = inv_ui.get_node_or_null("SafeArea/Chrome/Panel/Margin/VBox/MaterialsList")
+	var key_list: ItemList = inv_ui.get_node_or_null("SafeArea/Chrome/Panel/Margin/VBox/QuestKeysList")
+	_assert(bag_list != null and bag_list.item_count >= 1, "bag rows")
+	_assert(mat_list != null and mat_list.item_count >= 1, "materials rows")
+	_assert(key_list != null and key_list.item_count >= 1, "quest key rows")
+	_assert(str(bag_list.get_item_text(0)).contains("ITM-01-001"), "bag item text")
+	ft.inject_text(_s2c("inventory.delta", {
+		"inventory_revision": 2,
+		"changes": [{"container": "bag", "slot": 0, "item_id": "ITM-01-001", "quantity": 3}],
+	}, 1))
+	net.poll(0.016)
+	_assert(str(bag_list.get_item_text(0)).contains("×3"), "delta quantity")
+	var move_rid := net.request_inventory_move("bag", 0, "bag", 1, 1)
+	_assert(move_rid != "", "move request id")
+	net.poll(0.016)
+	var move_msg := _take_type(ft, "inventory.move.request")
+	_assert(not move_msg.is_empty(), "move sent")
+	_assert(str(move_msg.get("payload", {}).get("from_container", "")) == "bag", "move from")
+	inv_ui.toggle()
+	_assert(inv_ui.visible == false, "inventory closed")
 
 	# T-025: server dialogue open → filtered ACCEPT → choice + quest.accept
 	qm.on_npc_talk("NPC-802", null)

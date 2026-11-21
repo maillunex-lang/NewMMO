@@ -51,6 +51,7 @@ func _run() -> void:
 	_test_revision_order_and_gap()
 	_test_reconnect_backoff_deterministic()
 	_test_mutation_idempotency_and_duplicate_ack()
+	_test_inventory_move_mutation()
 	_test_command_error_rate_limit()
 	_test_close_codes()
 	_test_unknown_type_and_bad_json()
@@ -226,6 +227,36 @@ func _test_mutation_idempotency_and_duplicate_ack() -> void:
 	client.poll(0.0)
 	_assert(client.get_pending_count() == 0, "duplicate response ok")
 	print("CASE mutation_idempotency_and_duplicate_ack OK")
+
+func _test_inventory_move_mutation() -> void:
+	var pair := _make_client(11)
+	var client: RefCounted = pair[0]
+	var ft: RefCounted = pair[1]
+	var deltas: Array = []
+	client.inventory_delta.connect(func(p): deltas.append(p))
+	client.connect_session()
+	ft.pop_outbound()
+	ft.inject_text(_s2c("session.ready", {"session_id": "s", "character_id": "1", "heartbeat_ms": 1, "content_build_id": "x"}, 0))
+	ft.inject_text(_s2c("state.snapshot", {"scopes": {"inventory": {"inventory_revision": 1, "bag": [], "materials": [], "quest_keys": []}}, "revision": 1}, 1))
+	client.poll(0.0)
+	ft.pop_outbound()
+	var rid: String = client.request_inventory_move("materials", 0, "bag", 3, 2)
+	_assert(rid != "", "inventory move request_id")
+	var sent: Array = ft.pop_outbound()
+	_assert(sent.size() == 1, "inventory.move.request sent")
+	var body: Dictionary = JSON.parse_string(sent[0])
+	_assert(str(body.get("type")) == "inventory.move.request", "move type")
+	_assert(str(body.get("payload", {}).get("from_container")) == "materials", "from_container")
+	_assert(int(body.get("payload", {}).get("to_slot")) == 3, "to_slot")
+	_assert(int(body.get("payload", {}).get("quantity")) == 2, "quantity")
+	ft.inject_text(_s2c("inventory.delta", {
+		"inventory_revision": 2,
+		"changes": [{"container": "bag", "slot": 3, "item_id": "MAT-01-001", "quantity": 2}],
+	}, 2, rid))
+	client.poll(0.0)
+	_assert(deltas.size() == 1, "inventory.delta emitted")
+	_assert(client.get_pending_count() == 0, "move acked via delta")
+	print("CASE inventory_move_mutation OK")
 
 func _test_command_error_rate_limit() -> void:
 	var pair := _make_client()

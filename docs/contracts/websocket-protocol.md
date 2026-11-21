@@ -76,6 +76,7 @@ Canon events keep their names and required fields (§15.2); added fields are mar
 | `dungeon.state.delta` | S→C | `instance_id, phase, revision` | canon |
 | `event.snapshot` | S→C | `event_instance_id, phase, remaining_ms` | canon |
 | `event.contribution` | S→C | `event_instance_id, contribution_score` | canon; server-computed only |
+| `inventory.move.request` ➕ (EX-P08) | C→S | `from_container, from_slot, to_container, to_slot`, opt `quantity` | mutation; server-validated (`inventory-engine.md`); answered by `inventory.delta` or `command.error` |
 | `inventory.delta` | S→C | `inventory_revision, changes[]` | canon; never client-authored |
 | `command.error` ➕ | S→C | `request_id, code, message_key`, opt `retry_after_ms` | correlated error for any rejected C→S message |
 

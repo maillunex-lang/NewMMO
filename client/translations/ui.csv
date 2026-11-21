@@ -9,6 +9,12 @@ ui.ask,Спросить,Ask
 ui.turn_in,Сдать,Turn in
 ui.you,Вы,You
 ui.journal,Журнал,Journal
+ui.inventory,Сумка,Bag
+ui.inventory_title,Инвентарь,Inventory
+ui.inventory_materials,Материалы,Materials
+ui.inventory_bag,Сумка,Bag
+ui.inventory_quest_keys,Ключи заданий,Quest keys
+ui.inventory_empty,(пусто),(empty)
 ui.journal_title,Журнал заданий,Quest Journal
 ui.active_section,Активное задание,Active Quest
 ui.objectives_section,Цели,Objectives

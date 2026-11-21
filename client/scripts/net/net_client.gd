@@ -141,6 +141,17 @@ func request_dialogue_choice(node_id: String, option_id: String, dialogue_id: St
 		payload["npc_id"] = npc_id
 	return send_mutation("dialogue.choice.request", payload)
 
+func request_inventory_move(from_container: String, from_slot: int, to_container: String, to_slot: int, quantity: int = 0) -> String:
+	var payload := {
+		"from_container": from_container,
+		"from_slot": from_slot,
+		"to_container": to_container,
+		"to_slot": to_slot,
+	}
+	if quantity > 0:
+		payload["quantity"] = quantity
+	return send_mutation("inventory.move.request", payload)
+
 func request_snapshot(scopes: Array = []) -> void:
 	var payload := {}
 	if scopes.size() > 0:
@@ -309,6 +320,7 @@ func _dispatch_typed(type_name: String, payload: Dictionary, request_id: String)
 			_ack_pending(request_id)
 			dialogue_node_state.emit(payload)
 		"inventory.delta":
+			_ack_pending(request_id)
 			inventory_delta.emit(payload)
 		"command.error":
 			_handle_command_error(payload, request_id)
