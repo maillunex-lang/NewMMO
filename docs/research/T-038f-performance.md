@@ -27,3 +27,17 @@ Command: `cd server && go test ./internal/world -run '^$' -bench 'BenchmarkZone(
 Snapshot costs are **per full snapshot for one observer**, not per tick, all connected players, or encoded WebSocket message. The benchmark does not include JSON serialization, network fanout, live combat, database I/O, or retained heap. Tick measurements in this run: 361 / 636 / 861 ns/op for 1/10/50 players. Single-run numbers are indicative only, not capacity limits.
 
 Director self-review: tests and `go vet ./internal/world` pass. This follow-up closes only the snapshot microbenchmark slice. **T-038f remains PARTIAL** pending realistic zone CPU/retained heap, JSON/WS fanout and physical Android measurements.
+
+## Follow-up: JSON encoding, worst-case fanout, approximate retained heap
+
+Same VPS, Go 1.26.11, 2026-11-21. Command: `cd server && go test ./internal/world -run '^$' -bench 'BenchmarkZone(SnapshotJSON|FanoutJSON)' -benchmem -benchtime=200ms -count=1`. Each iteration serializes a fresh full interest snapshot; fanout serializes once **for each player**, with all entities visible. These are deliberately expensive full snapshots, not normal incremental deltas.
+
+| Players + 50 passive enemies | JSON one viewer (µs/op) | JSON full fanout (µs/op) | Fanout B/op |
+|---|---:|---:|---:|
+| 1 | 31.6 | 31.6 | 15,690 |
+| 10 | 37.5 | 354 | 196,611 |
+| 50 | 64.2 | 2,814 | 1,458,555 |
+
+`go test ./internal/world -run '^TestZoneRetainedHeapApprox$' -v` (one diagnostic sample per size) reported **approximate live-heap deltas** of 43,896 / 54,128 / 89,472 bytes for 1/10/50 players with 50 passive enemies. These deltas include snapshot-known-set state; they are GC-sensitive and can be negative on other runs. Do not use them as capacity guarantees.
+
+**Director review:** `go test ./internal/world` and `go vet ./internal/world` pass. Important scaling observation: 50-player all-to-all full JSON fanout costs about 2.8 ms on this VPS, before network I/O. Actual world updates use deltas and interest filtering; measure them with active AI/combat and real WebSocket traffic before any capacity claim. No new dependencies, no gameplay/canon changes. Android remains unmeasured; T-038f stays PARTIAL.
