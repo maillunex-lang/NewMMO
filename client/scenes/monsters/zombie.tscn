@@ -1,0 +1,59 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/monster_actor.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/actors/directional_animator.gd" id="2"]
+[ext_resource type="Texture2D" path="res://assets/monsters/zombie_sheet.png" id="3"]
+
+[sub_resource type="CircleShape2D" id="body"]
+radius = 12.0
+
+[sub_resource type="StyleBoxFlat" id="hp_style"]
+bg_color = Color(0.7, 0.2, 0.2, 0.9)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[node name="Zombie" type="CharacterBody2D"]
+collision_layer = 1
+collision_mask = 1
+y_sort_enabled = true
+script = ExtResource("1")
+monster_id = "zombie"
+display_name = "Crypt Zombie"
+max_hp = 80.0
+move_speed = 100.0
+aggro_radius = 170.0
+attack_range = 52.0
+attack_damage = 11.0
+attack_cooldown = 1.0
+gold_min = 4
+gold_max = 10
+loot_item = "tattered_cloth"
+loot_chance = 0.7
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+offset = Vector2(0, -36)
+
+[node name="DirectionalAnimator" type="Node" parent="."]
+script = ExtResource("2")
+sprite_path = NodePath("../Sprite")
+sheet = ExtResource("3")
+frame_width = 96
+frame_height = 96
+idle_frames = 1
+run_frames = 4
+attack_frames = 3
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+shape = SubResource("body")
+
+[node name="HpBar" type="ProgressBar" parent="."]
+offset_left = -20.0
+offset_top = -74.0
+offset_right = 20.0
+offset_bottom = -66.0
+max_value = 80.0
+value = 80.0
+show_percentage = false
+theme_override_styles/fill = SubResource("hp_style")

@@ -1,7 +1,15 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/dungeon/dungeon_scene.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/world/interactable.tscn" id="2"]
+[ext_resource type="Texture2D" path="res://assets/dungeon/barrel.png" id="10"]
+[ext_resource type="Texture2D" path="res://assets/dungeon/barrelsstacked.png" id="11"]
+[ext_resource type="Texture2D" path="res://assets/dungeon/woodencrate.png" id="12"]
+[ext_resource type="Texture2D" path="res://assets/dungeon/woodencrates.png" id="13"]
+[ext_resource type="Texture2D" path="res://assets/dungeon/chestclosed.png" id="14"]
+[ext_resource type="Texture2D" path="res://assets/dungeon/stonecolumn.png" id="15"]
+[ext_resource type="Texture2D" path="res://assets/dungeon/tableround.png" id="16"]
+[ext_resource type="Texture2D" path="res://assets/dungeon/chair.png" id="17"]
 
 [node name="DungeonDng01001" type="Node2D"]
 script = ExtResource("1")
@@ -73,7 +81,7 @@ metadata/enemy_id = "ENM-01-001"
 
 [node name="DNG-01-001-R02-E3" type="Marker2D" parent="Rooms/R02/Spawns"]
 position = Vector2(640, 260)
-metadata/monster_scene = "res://scenes/monsters/wolf.tscn"
+metadata/monster_scene = "res://scenes/monsters/goblin.tscn"
 metadata/overrides = {}
 metadata/enemy_id = "ENM-01-002"
 
@@ -121,13 +129,13 @@ important = false
 
 [node name="DNG-01-001-R03-E1" type="Marker2D" parent="Rooms/R03/Spawns"]
 position = Vector2(420, 260)
-metadata/monster_scene = "res://scenes/monsters/slime.tscn"
+metadata/monster_scene = "res://scenes/monsters/zombie.tscn"
 metadata/overrides = {}
 metadata/enemy_id = "ENM-01-003"
 
 [node name="DNG-01-001-R03-E2" type="Marker2D" parent="Rooms/R03/Spawns"]
 position = Vector2(530, 260)
-metadata/monster_scene = "res://scenes/monsters/slime.tscn"
+metadata/monster_scene = "res://scenes/monsters/zombie.tscn"
 metadata/overrides = {}
 metadata/enemy_id = "ENM-01-003"
 
@@ -157,7 +165,7 @@ important = false
 
 [node name="DNG-01-001-R04-MINI" type="Marker2D" parent="Rooms/R04/Spawns"]
 position = Vector2(420, 260)
-metadata/monster_scene = "res://scenes/monsters/wolf.tscn"
+metadata/monster_scene = "res://scenes/monsters/ogre.tscn"
 metadata/overrides = {"max_hp": 260.0,"attack_damage": 14.0,"display_name": "Хранитель первой лампады"}
 metadata/enemy_id = "ENM-01-201"
 
@@ -229,7 +237,7 @@ important = false
 
 [node name="DNG-01-001-R06-BOSS" type="Marker2D" parent="Rooms/R06/Spawns"]
 position = Vector2(420, 260)
-metadata/monster_scene = "res://scenes/monsters/bandit.tscn"
+metadata/monster_scene = "res://scenes/monsters/skeleton.tscn"
 metadata/overrides = {"max_hp": 520.0,"attack_damage": 18.0,"display_name": "Криптарий Угасшего Огня"}
 metadata/enemy_id = "ENM-01-301"
 
@@ -256,3 +264,159 @@ dungeon_object_id = "EXIT-DNG-01-001"
 important = false
 
 [node name="Spawns" type="Node2D" parent="Rooms/R07"]
+
+[node name="Decor" type="Node2D" parent="Rooms/R01"]
+y_sort_enabled = true
+
+[node name="stonecolumn0" type="Sprite2D" parent="Rooms/R01/Decor"]
+position = Vector2(60, 150)
+texture = ExtResource("15")
+offset = Vector2(0, -66)
+
+[node name="stonecolumn1" type="Sprite2D" parent="Rooms/R01/Decor"]
+position = Vector2(700, 150)
+texture = ExtResource("15")
+offset = Vector2(0, -66)
+
+[node name="barrelsstacked2" type="Sprite2D" parent="Rooms/R01/Decor"]
+position = Vector2(650, 500)
+texture = ExtResource("11")
+offset = Vector2(0, -21)
+
+[node name="chestclosed3" type="Sprite2D" parent="Rooms/R01/Decor"]
+position = Vector2(380, 90)
+texture = ExtResource("14")
+offset = Vector2(0, -19)
+
+[node name="Decor" type="Node2D" parent="Rooms/R02"]
+y_sort_enabled = true
+
+[node name="woodencrates0" type="Sprite2D" parent="Rooms/R02/Decor"]
+position = Vector2(90, 120)
+texture = ExtResource("13")
+offset = Vector2(0, -27)
+
+[node name="barrel1" type="Sprite2D" parent="Rooms/R02/Decor"]
+position = Vector2(690, 110)
+texture = ExtResource("10")
+offset = Vector2(0, -21)
+
+[node name="woodencrate2" type="Sprite2D" parent="Rooms/R02/Decor"]
+position = Vector2(700, 470)
+texture = ExtResource("12")
+offset = Vector2(0, -20)
+
+[node name="barrel3" type="Sprite2D" parent="Rooms/R02/Decor"]
+position = Vector2(640, 490)
+texture = ExtResource("10")
+offset = Vector2(0, -21)
+
+[node name="Decor" type="Node2D" parent="Rooms/R03"]
+y_sort_enabled = true
+
+[node name="stonecolumn0" type="Sprite2D" parent="Rooms/R03/Decor"]
+position = Vector2(90, 130)
+texture = ExtResource("15")
+offset = Vector2(0, -66)
+
+[node name="stonecolumn1" type="Sprite2D" parent="Rooms/R03/Decor"]
+position = Vector2(680, 130)
+texture = ExtResource("15")
+offset = Vector2(0, -66)
+
+[node name="stonecolumn2" type="Sprite2D" parent="Rooms/R03/Decor"]
+position = Vector2(90, 520)
+texture = ExtResource("15")
+offset = Vector2(0, -66)
+
+[node name="stonecolumn3" type="Sprite2D" parent="Rooms/R03/Decor"]
+position = Vector2(680, 520)
+texture = ExtResource("15")
+offset = Vector2(0, -66)
+
+[node name="Decor" type="Node2D" parent="Rooms/R04"]
+y_sort_enabled = true
+
+[node name="barrelsstacked0" type="Sprite2D" parent="Rooms/R04/Decor"]
+position = Vector2(80, 110)
+texture = ExtResource("11")
+offset = Vector2(0, -21)
+
+[node name="woodencrates1" type="Sprite2D" parent="Rooms/R04/Decor"]
+position = Vector2(690, 120)
+texture = ExtResource("13")
+offset = Vector2(0, -27)
+
+[node name="stonecolumn2" type="Sprite2D" parent="Rooms/R04/Decor"]
+position = Vector2(380, 100)
+texture = ExtResource("15")
+offset = Vector2(0, -66)
+
+[node name="Decor" type="Node2D" parent="Rooms/R05"]
+y_sort_enabled = true
+
+[node name="tableround0" type="Sprite2D" parent="Rooms/R05/Decor"]
+position = Vector2(380, 160)
+texture = ExtResource("16")
+offset = Vector2(0, -28)
+
+[node name="chair1" type="Sprite2D" parent="Rooms/R05/Decor"]
+position = Vector2(300, 190)
+texture = ExtResource("17")
+offset = Vector2(0, -29)
+
+[node name="chair2" type="Sprite2D" parent="Rooms/R05/Decor"]
+position = Vector2(470, 190)
+texture = ExtResource("17")
+offset = Vector2(0, -29)
+
+[node name="barrel3" type="Sprite2D" parent="Rooms/R05/Decor"]
+position = Vector2(690, 480)
+texture = ExtResource("10")
+offset = Vector2(0, -21)
+
+[node name="barrel4" type="Sprite2D" parent="Rooms/R05/Decor"]
+position = Vector2(90, 500)
+texture = ExtResource("10")
+offset = Vector2(0, -21)
+
+[node name="Decor" type="Node2D" parent="Rooms/R06"]
+y_sort_enabled = true
+
+[node name="stonecolumn0" type="Sprite2D" parent="Rooms/R06/Decor"]
+position = Vector2(70, 110)
+texture = ExtResource("15")
+offset = Vector2(0, -66)
+
+[node name="stonecolumn1" type="Sprite2D" parent="Rooms/R06/Decor"]
+position = Vector2(690, 110)
+texture = ExtResource("15")
+offset = Vector2(0, -66)
+
+[node name="stonecolumn2" type="Sprite2D" parent="Rooms/R06/Decor"]
+position = Vector2(70, 520)
+texture = ExtResource("15")
+offset = Vector2(0, -66)
+
+[node name="stonecolumn3" type="Sprite2D" parent="Rooms/R06/Decor"]
+position = Vector2(690, 520)
+texture = ExtResource("15")
+offset = Vector2(0, -66)
+
+[node name="Decor" type="Node2D" parent="Rooms/R07"]
+y_sort_enabled = true
+
+[node name="chestclosed0" type="Sprite2D" parent="Rooms/R07/Decor"]
+position = Vector2(380, 150)
+texture = ExtResource("14")
+offset = Vector2(0, -19)
+
+[node name="barrel1" type="Sprite2D" parent="Rooms/R07/Decor"]
+position = Vector2(100, 110)
+texture = ExtResource("10")
+offset = Vector2(0, -21)
+
+[node name="barrel2" type="Sprite2D" parent="Rooms/R07/Decor"]
+position = Vector2(680, 110)
+texture = ExtResource("10")
+offset = Vector2(0, -21)

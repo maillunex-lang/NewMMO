@@ -33,23 +33,26 @@ loot_item = "wolf_fang"
 loot_chance = 0.6
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
-offset = Vector2(0, -12)
+offset = Vector2(0, -36)
 
 [node name="DirectionalAnimator" type="Node" parent="."]
 script = ExtResource("2")
 sprite_path = NodePath("../Sprite")
 sheet = ExtResource("3")
-frame_width = 64
-frame_height = 48
+frame_width = 96
+frame_height = 96
+idle_frames = 1
+run_frames = 4
+attack_frames = 3
 
 [node name="Collision" type="CollisionShape2D" parent="."]
 shape = SubResource("body")
 
 [node name="HpBar" type="ProgressBar" parent="."]
 offset_left = -20.0
-offset_top = -36.0
+offset_top = -74.0
 offset_right = 20.0
-offset_bottom = -28.0
+offset_bottom = -66.0
 max_value = 55.0
 value = 55.0
 show_percentage = false
