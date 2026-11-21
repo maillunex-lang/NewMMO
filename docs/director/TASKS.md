@@ -68,3 +68,4 @@ First parallel batch (different lanes, no dependencies, disjoint files): **T-001
 | 2026-11-21 | T-014 merged — EX-P03 complete (implementation + two independent reviews applied) |
 | 2026-11-21 | T-016 merged; dialogue_lint.py baseline: 240/240 quests have findings (3270 errors: 2070 exact-dup, 1200 stamps; 240 PROGRESS warnings); C-CHOICE-001 opened |
 | 2026-11-21 | T-015 merged: project pin = Godot 4.7.2; AGENTS.md/CONFLICTS updated; minSdk 24 accepted |
+| 2026-11-21 | Owner decided C-CHOICE-001 = C (no branching at MQ-01…05-20; confirmation only); batch MQ-01-20 unblocked |

@@ -42,10 +42,10 @@ Recorded by EX-P00 audit. **Do not silently pick a side in code.** Owner decides
 
 | Field | Value |
 |-------|--------|
-| Status | **OPEN** — owner decision needed before dialogue batch «REG-01 MQ-01-20» (found by T-016 audit, verified by director) |
-| Problem | `08_QUESTS_MAIN.md` §3 says branches are `CHOICE-RR-09` **and `CHOICE-RR-20`** (A/B). Quest cards `MQ-01-09`…`MQ-06-09` define the choice (e.g. `CHOICE-01-09`), and `MQ-06-20` defines the final three-way ending, but the cards `MQ-01-20`…`MQ-05-20` contain **no «Выбор» definition** (their journal text only says «зафиксировать выбор»), and `10_DIALOGUES.md` has no `CHOICE` lines for them. |
-| Options | **A** `CHOICE-RR-20` does not exist for chapters 1–5 (fix the sentence in `08` §3); **B** it exists: owner defines the A/B options, effects and flags per chapter (then `08` cards and `10` get them); **C** treat the «20» choice as the chapter-summary acknowledgement without gameplay branching. |
-| Interim | Nothing implemented; dialogue pilot (MQ-01-05, SQ-01-001…005) is unaffected. Batch `MQ-01-20` waits for this decision. |
+| Status | **RESOLVED** (2026-11-21) |
+| Decision | **C** (owner) — chapters 1–5 have **no branching choice at `MQ-RR-20`**. The phrase «зафиксировать выбор» in the `MQ-RR-20` journal texts means «the player confirms the chapter result» (acknowledgement without a branch, no flag with alternative values, no consequence). The real branching choices remain `CHOICE-RR-09` (A/B, chapters 1–6) and the final `CHOICE-06-FINAL` (`END-01|END-02|END-03`). `08` §3 mention of `CHOICE-RR-20` is read as «confirmation of the chapter result». Canon text not edited; the owner may later upgrade to option B (define A/B per chapter) without breaking IDs. |
+| Applied | Dialogue rule for batch `MQ-RR-20` (RR=01…05): a non-branching confirmation scene (`TURNIN`/`DONE`), no `CHOICE` lines; `MQ-06-20` keeps the three-way ending choice. Lint rule `DIA-CHOICE` of the T-016 spec must not require choices for `MQ-01-20…MQ-05-20`. |
+| History | OPEN (T-016 audit, verified by director) → owner chose C. |
 
 ## Other open notes
 
