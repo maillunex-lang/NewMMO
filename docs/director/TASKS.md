@@ -17,8 +17,8 @@ Prompts live in `docs/director/prompts/T-NNN.md`. Protocol: `DIRECTOR.md`.
 |----|------|-------|---------|-------|
 | D-001 | director | Content export contract (`declarations.json`/`crossrefs.json` → loader tables) in `docs/contracts/` | EX-P02 ✔ | Unblocks T-005…; director does it |
 | D-002 | director | POI id mapping contract (stub `POI-BOARD-01` … → canon `POI-01-*`, C-POI-001) | — | Needed by client EX-P06/07 |
-| T-001 | research | OSS research: PostgreSQL migrations + Go DB access (goose / golang-migrate / atlas / sqlc / pgx) → `docs/research/db-migrations.md` | — | **ISSUED** (`prompts/T-001.md`). Phase 1 only; required by EX-P03; no install until owner OK |
-| T-002 | research | Godot 4.7.2 upgrade gate (C-GODOT-001 B): compat checklist, export templates, Android → `docs/research/godot-4-7-2-upgrade.md` | — | Report only; engine NOT upgraded |
+| T-001 | research | OSS research: PostgreSQL migrations + Go DB access → `docs/research/db-migrations.md` | — | **DONE** `3fb9aa6` (branch `be9a5bb`, lane_check clean). Director spot-check of upstream `go.mod` at tags confirmed the report's Go-version warning (see ROADMAP EX-P03). Awaiting owner OK on tool choice + Go upgrade |
+| T-002 | research | Godot 4.7.2 upgrade gate (C-GODOT-001 B): compat checklist, export templates, Android → `docs/research/godot-4-7-2-upgrade.md` | — | **ISSUED** (`prompts/T-002.md`). Report only; engine NOT upgraded |
 | T-003 | research | OSS research: Go WebSocket libs + protocol patterns for authoritative MMO → `docs/research/go-websocket.md` | — | For EX-P04/P05 |
 | T-004 | client | Compliance review of existing HUD/dialogue/quest-log scenes (editable `.tscn`, Theme, landscape safe-area) + fix violations | — | **ISSUED** (`prompts/T-004.md`). Cursor; may not touch `client/data/**`; research note first |
 | T-005 | server | Go server hardening without new deps: config via env, `/healthz` `/readyz`, graceful shutdown, stdlib structured logging, tests | — | **ISSUED** (`prompts/T-005.md`). Codex; stdlib only; no Postgres yet |
@@ -31,3 +31,4 @@ First parallel batch (different lanes, no dependencies, disjoint files): **T-001
 |------|-------|
 | 2026-11-21 | Protocol, lanes, lane_check, CI `lane-check` created; backlog proposed |
 | 2026-11-21 | Owner delegated lanes/git mode; branch-per-task adopted; research-first (+Hysen Labs) made rule 0; T-001/T-004/T-005 prompts issued |
+| 2026-11-21 | T-001 reviewed and merged (`3fb9aa6`); T-002 issued to ChatGPT |

@@ -120,7 +120,10 @@
 ### EX-P03 — PostgreSQL migrations + content loader
 **Зависит от:** EX-P02; backup/dry-run policy  
 **OSS research:** migrate libs / sqlc / goose — отчёт (задача T-001, ChatGPT/research) → ждать ОК владельца
-**Контракты до старта:** D-001 content export (director) в `docs/contracts/`  
+**Контракты до старта:** D-001 content export (director) в `docs/contracts/`
+**OSS research:** [x] T-001 `docs/research/db-migrations.md` (merge `3fb9aa6`) — рекомендация: **goose + pgx/v5 (pgxpool)**, запасной golang-migrate; без ORM
+**Проверка директором (go.mod на тегах upstream, 2026-11-21):** goose v3.30.0 → Go 1.26.0 (v3.26.0 → 1.23.0); golang-migrate v4.20.1 → 1.25.11; pgx v5.13.0 → 1.25.0 (v5.7.6 → 1.23.0); tern v2.4.3 → 1.25.0; sqlc v1.31.1 → 1.26.0. `server/go.mod` = Go 1.22, CI `setup-go 1.22.x`, локально Go 1.24.7 ⇒ **без апгрейда Go актуальные версии не подключить**
+**Решения владельца для старта P03 (блокер):** (1) апгрейд Go сервера (рекомендую ≥1.25, обновить CI) либо старые теги с ревью безопасности; (2) OK на goose (рекомендую как **закреплённый внешний CLI/образ в отдельном migration-job**, чтобы не связывать Go-версию сервера) + pgx/v5  
 **Приёмка:** миграции из §16 (адаптированные), rollback, content_builds loader  
 **Тесты:** migrate up/down на локальном/Compose Postgres  
 **Статус:** [ ]
@@ -248,7 +251,7 @@
 
 1. ~~Владелец отвечает на вопросы~~ — получены.
 2. **Первый параллельный батч (выдан, ждём отчётов)** (разные lanes, без зависимостей): T-001 research БД-миграций (ChatGPT) · T-004 compliance-ревью клиентского UI (Cursor) · T-005 Go-скелет без зависимостей (Codex). Параллельно директор: D-001 (content export contract), D-002 (POI mapping).
-3. **EX-P03** (миграции + loader) — после отчёта T-001 и **OK владельца на выбор инструмента** + контракт D-001.
+3. **EX-P03** (миграции + loader) — отчёт T-001 готов; нужны **OK владельца: инструмент + апгрейд Go** (см. EX-P03) и контракт D-001 (директор).
 4. **EX-CONTENT-01** — только после утверждения `docs/CONTENT_EXPANSION_PLAN.md`.
 
 Не начинать P03+ без команды **«делай»**.
