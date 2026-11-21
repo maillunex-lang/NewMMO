@@ -226,6 +226,7 @@
 | 2026-11-21 | EX-P02 crossrefs + CT-003…009 | `59f5cbd` | unittest 32 OK; lint 0 ERROR | C-ITEMQ-001 найден (36 ITEM-Q без объявления) |
 | 2026-11-21 | C-ITEMQ-001 A (по решению владельца) | `8a61c6b` | unittest 32 OK | 36 `ITEM-Q-*` в `11` §12.1, имена — рабочие |
 | 2026-11-21 | Полная сверка связей: client-sync + docs-links + CI | см. `git log` | unittest 35 OK; client-sync 0 ERR; docs-links 0 | клиент == канон; 1 doc-путь починен (`AUDIT.md`) |
+| 2026-11-21 | T-005 Go server hardening (Codex) | `b026eab` | go vet + test -race OK; live smoke OK | stdlib only; replaced by T-006 follow-up (go 1.25 directive, WS-ready wrapper) |
 | 2026-11-21 | EX-DIR multi-agent protocol | см. `git log` | unittest 11 OK (lane_check) | задачи не выданы, ждём ответов владельца |
 
 ---
