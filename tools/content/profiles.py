@@ -164,8 +164,8 @@ def _quest_blocks(blocks, head_re, kind, file, obj_re, flag_re):
             continue
         txt = blk.text
         cur["fields"]["_body"].append(txt)
-        if txt.startswith("**Открытие") and "prereqs" not in cur["fields"]:
-            seg = re.split(r"\*\*(?:Начало|Цели)", txt)[0]
+        if "**Открытие" in txt and "prereqs" not in cur["fields"]:
+            seg = re.split(r"\*\*(?:Начало|Цели)", txt[txt.index("**Открытие"):])[0]
             seg = re.sub(r"`QF-[^`]*`|`SQF-[^`]*`", "", seg)
             cur["fields"]["prereqs"] = sorted(set(re.findall(r"(?<![A-Za-z0-9-])(?:MQ-\d\d-\d\d|SQ-\d\d-\d{3})(?![A-Za-z0-9-])", seg)))
         if blk.kind == "list_item":

@@ -64,13 +64,13 @@ class RealCanon(Sandbox):
     def test_no_id_collisions_without_allowlist(self):  # C-SET-001 RESOLVED (STL-*)
         res = self.run_lint(allow=None)
         self.assertEqual(self.errors(res, "DUPLICATE_DECLARATION"), [])
-        self.assertTrue(res["publishable"])
         self.assertEqual(res["counts"]["settlement"], 18)
         self.assertTrue(all(d["id"].startswith("STL-") for d in res["decls"] if d["kind"] == "settlement"))
 
-    def test_repo_allowlist_is_empty(self):
+    def test_repo_allowlist_only_itemq_gap(self):  # C-SET-001 entries are gone
         with open(ALLOW, encoding="utf-8") as fh:
-            self.assertEqual(json.load(fh)["entries"], [])
+            entries = json.load(fh)["entries"]
+        self.assertEqual([e["conflict"] for e in entries], ["C-ITEMQ-001"])
 
     def _dup_with_allow(self, expires):
         self.edit("08_QUESTS_MAIN.md", "#### `MQ-01-02` — Два свидетеля", "#### `MQ-01-01` — Два свидетеля")
@@ -135,6 +135,76 @@ class Negative(Sandbox):
     def test_dungeon_level_mismatch_03_vs_12(self):
         self.edit("12_DUNGEONS.md", "| `DNG-01-001` Склеп Первого Огня | `POI-01-006` | 7 |", "| `DNG-01-001` Склеп Первого Огня | `POI-01-006` | 8 |")
         self.assertTrue(self.errors(self.run_lint(), "DNG_LEVEL_MISMATCH"))
+
+
+class CrossrefsAndGraphs(Sandbox):  # CT-002..CT-009 (static)
+    def codes(self, res):
+        return {i["code"] for i in self.errors(res)}
+
+    def test_canon_resolves_all_refs_except_known_gap(self):
+        res = self.run_lint()
+        xr = res["crossrefs"]
+        self.assertTrue(all(k.startswith("ITEM-Q-") for k in xr["unresolved"]), list(xr["unresolved"])[:3])
+        self.assertEqual(len(xr["unresolved"]), 36)
+        self.assertEqual(len(xr["entities"]), 4889)
+        self.assertEqual(xr["entities"]["NPC-802"]["kind"], "npc")
+        self.assertTrue(xr["entities"]["NPC-802"]["referenced_from"])
+
+    def test_without_allowlist_itemq_gap_blocks(self):
+        res = self.run_lint(allow=None)
+        self.assertEqual(len(self.errors(res, "CT002_UNRESOLVED_REF")), 36)
+        self.assertFalse(res["publishable"])
+
+    def test_unresolved_npc_reference(self):
+        self.edit("01_WORLD.md", "# LUNEX MMORPG — 01 WORLD", "# LUNEX MMORPG — 01 WORLD\n\nТут `NPC-999` и `LOC-01-099`.")
+        res = self.run_lint()
+        ids = {i["id"] for i in self.errors(res, "CT002_UNRESOLVED_REF")}
+        self.assertEqual(ids, {"NPC-999", "LOC-01-099"})
+
+    def test_old_set_id_not_a_settlement(self):
+        self.edit("03_LOCATIONS.md", "| STL-01-01 | Астервиль |", "| SET-01-01 | Астервиль |")
+        self.assertEqual(self.run_lint()["counts"]["settlement"], 17)
+
+    def test_ct003_prereq_cycle_and_dead_end(self):
+        self.edit("08_QUESTS_MAIN.md", "**Открытие:** `MQ-01-02` завершён", "**Открытие:** `MQ-01-04` завершён")
+        res = self.run_lint()
+        self.assertIn("CT003_UNREACHABLE", self.codes(res))
+
+    def test_ct003_missing_prereq(self):
+        self.edit("08_QUESTS_MAIN.md", "**Открытие:** `MQ-01-02` завершён", "**Открытие:** `MQ-01-77` завершён")
+        self.assertIn("CT003_PREREQ_MISSING", self.codes(self.run_lint()))
+
+    def test_ct004_sq_unknown_prereq(self):
+        self.edit("09_QUESTS_SIDE.md", "**Открытие:** `completed(MQ-01-03)`", "**Открытие:** `completed(MQ-01-88)`")
+        self.assertIn("CT004_PREREQ_MISSING", self.codes(self.run_lint()))
+
+    def test_ct005_bad_ai(self):
+        self.edit("06_ENEMIES.md", "| 1 | `melee` | физический | `SPAWN-01-001` |", "| 1 | `flying` | физический | `SPAWN-01-001` |")
+        self.assertIn("CT005_BAD_AI", self.codes(self.run_lint()))
+
+    def test_ct005_spawn_wrong_region(self):
+        self.edit("06_ENEMIES.md", "| 1 | `melee` | физический | `SPAWN-01-001` |", "| 1 | `melee` | физический | `SPAWN-02-001` |")
+        self.assertIn("CT005_SPAWN_REGION", self.codes(self.run_lint()))
+
+    def test_ct006_dungeon_boss_invalid(self):
+        self.edit("12_DUNGEONS.md", "`ENM-01-301` Криптарий", "`ENM-01-399` Криптарий")
+        self.assertTrue({"CT006_BOSS", "CT002_UNRESOLVED_REF"} & self.codes(self.run_lint()))
+
+    def test_ct007_world_boss_link(self):
+        self.edit("13_WORLD_EVENTS.md", "`EVT-01-003` / `ENM-01-401`", "`EVT-01-003` / `ENM-02-401`")
+        self.assertIn("CT007_WORLD_BOSS", self.codes(self.run_lint()))
+
+    def test_ct008_dialogue_coverage(self):
+        self.edit("10_DIALOGUES.md", "`DIA.MQ-01-01.TURNIN.01`", "`DIA.MQ-01-01.OBJ3.77`")
+        self.assertIn("CT008_DIALOGUE_COVERAGE", self.codes(self.run_lint()))
+
+    def test_ct009_loot_probability_over_100(self):
+        self.edit("11_ITEMS_LOOT.md", "| 65% | 8% | 1.00% UNCOMMON | нет |", "| 165% | 8% | 1.00% UNCOMMON | нет |")
+        self.assertIn("SCHEMA_INVALID", self.codes(self.run_lint()))
+
+    def test_ct009_loot_table_for_unknown_enemy(self):
+        self.edit("11_ITEMS_LOOT.md", "Трактовый грабитель (`ENM-01-001`)", "Трактовый грабитель (`ENM-01-099`)")
+        self.assertTrue({"CT009_LOOT_ENEMY", "CT002_UNRESOLVED_REF"} & self.codes(self.run_lint()))
 
 
 class MiniSchema(unittest.TestCase):

@@ -19,6 +19,7 @@ import sys
 import unicodedata
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import crossrefs  # noqa: E402
 import md_ast  # noqa: E402
 import profiles  # noqa: E402
 import schema as js  # noqa: E402
@@ -50,7 +51,8 @@ class Report:
 
     def add(self, sev, code, msg, file=None, line=None, id_=None):
         for a in self.allow:
-            if a["code"] == code and a.get("id") in (None, id_):
+            if a["code"] == code and (a.get("id") in (None, id_) if "id_pattern" not in a
+                                      else bool(id_ and re.search(a["id_pattern"], id_))):
                 if a["expires"] >= datetime.date.today().isoformat():
                     self.items.append({"severity": "WARN", "code": code, "message": msg, "file": file,
                                        "line": line, "id": id_,
@@ -210,23 +212,13 @@ def run(content_dir, schemas_dir, allowlist_path=None):
         if sp and sp.startswith("NPC-") and sp not in npcs:
             rep.add("ERROR", "DIA_UNKNOWN_SPEAKER", f"speaker {sp} is not a declared NPC", d["file"], d["line"], d["id"])
 
-    # --- reference scan (WARN only; resolution policy is EX-P02) ---
-    declared = {d["id"] for d in decls}
-    unresolved = collections.defaultdict(list)
-    for fn, text in texts.items():
-        for ln, line in enumerate(text.split("\n"), 1):
-            for ns, rx in REF_NAMESPACES.items():
-                for m in re.finditer(r"(?<![A-Za-z0-9-])(" + rx + r")(?![A-Za-z0-9-])", line):
-                    if m.group(1) not in declared:
-                        unresolved[m.group(1)].append(f"{fn}:{ln}")
-    for rid, where in sorted(unresolved.items()):
-        rep.add("WARN", "REF_UNRESOLVED", f"{rid} mentioned {len(where)}x, no declaration (first: {where[0]}); crossref policy = EX-P02",
-                where[0].split(":")[0], int(where[0].split(":")[1]), rid)
+    # --- EX-P02: crossrefs (hard namespaces must resolve), typed + graph checks ---
+    xrefs = crossrefs.build(decls, texts, rep)
 
     publishable = rep.count("ERROR") == 0
     return {
         "decls": decls, "report": rep, "counts": counts, "manifest_files": manifest_files,
-        "unresolved_refs": {k: len(v) for k, v in unresolved.items()}, "publishable": publishable,
+        "crossrefs": xrefs, "publishable": publishable,
     }
 
 
@@ -243,10 +235,20 @@ def write_outputs(res, out_dir):
     h = hashlib.sha256()
     for f in sorted(res["manifest_files"], key=lambda x: x["file"]):
         h.update(f["sha256"].encode())
-    dump("content.manifest.json", {"schema": "newmmo.content.manifest/1", "stage": "EX-P01", "content_hash": h.hexdigest(),
+    dump("content.manifest.json", {"schema": "newmmo.content.manifest/1", "stage": "EX-P02", "content_hash": h.hexdigest(),
                                    "publishable": res["publishable"], "files": res["manifest_files"],
                                    "counts": summary["counts"]}, indent=2)
     dump("declarations.json", res["decls"])
+    dump("crossrefs.json", res["crossrefs"], indent=1)
+    with open(os.path.join(out_dir, "crossrefs.json"), "rb") as fh:
+        xh = hashlib.sha256(fh.read()).hexdigest()
+    with open(os.path.join(out_dir, "content.manifest.json"), encoding="utf-8") as fh:
+        man = json.load(fh)
+    man["stage"] = "EX-P02"
+    man["entities"] = len(res["crossrefs"]["entities"])
+    man["unresolved_refs"] = len(res["crossrefs"]["unresolved"])
+    man["outputs"] = {"crossrefs.json": xh}
+    dump("content.manifest.json", man, indent=2)
 
 
 def main(argv=None):

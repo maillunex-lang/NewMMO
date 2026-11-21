@@ -12,10 +12,18 @@ extractors (`profiles.py`, declarations only — prose mentions are ignored, cod
 JSON Schema per kind (`content/schemas/*.schema.json`, subset validator `schema.py`) →
 duplicate/golden-volume/consistency checks (`lint.py`).
 
-Outputs: `validation-report.json`, `content.manifest.json` (sha256 per file + content hash,
+Outputs (EX-P02 adds `crossrefs.json`): `validation-report.json`, `content.manifest.json` (sha256 per file + content hash,
 `publishable`), `declarations.json`. **Any ERROR → exit 1 → not publishable.**
 
 Known canon conflicts can be downgraded to WARN only via `content/lint_allowlist.json`
 (entry needs `conflict`, `owner`, `expires`; expired entries become ERROR). `DLG-*` → WARN (C-DIA-001 A).
 
-Out of scope here (EX-P02): full crossref resolution/policy, `crossrefs.json`, region/graph checks (CT-003…009).
+EX-P02 (`crossrefs.py`): every mention of a hard-namespace ID (FAC, STL, LOC, POI, NPC, CLS, ENM, MQ/SQ, OBJ/SQO,
+DNG, EVT, END, MAT, ITM, REC, LOOT, EQ, ITEM-Q/SQ) must resolve to a declaration (ERROR `CT002_UNRESOLVED_REF`);
+`crossrefs.json` holds `declared_in` / `referenced_from` per ID. Group IDs (`SPAWN`, `SPX`, `RES`, `RTE`, `TP`) are only counted.
+Static checks: CT-003/004 quest unlock graph (missing prereqs, cycles/unreachable, single root, dead ends, endings),
+CT-005 enemy AI/spawn-region/1:1 loot table, CT-006 dungeon entrance + miniboss/boss, CT-007 world-boss link,
+CT-008 dialogue stage coverage per quest, CT-009 loot table ↔ enemy and probabilities 0..100.
+
+Not covered (later stages): CT-009 loot *weights sum* / infinite-currency rules need balance data (EX-P08);
+per-region reachability of dungeon rooms/POI graph beyond declared links (EX-P09).
