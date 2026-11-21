@@ -33,6 +33,8 @@ def check(root, allow=()):
         if any(s in md for s in SKIP_DIRS):
             continue
         rel = os.path.relpath(md, root)
+        if rel.startswith(("docs/research/", "docs/reviews/")):
+            continue  # executor research notes cite external repos/files that are not part of this tree
         if rel.startswith("docs/director/prompts/"):
             continue  # executor prompts name output files that do not exist yet
         if re.match(r"docs/content/\d\d_", rel):
