@@ -53,7 +53,10 @@ def parse_trailers(msg: str):
     for line in msg.splitlines():
         m = re.match(r"^(Lane|Task|Extra-Write):\s*(\S.*?)\s*$", line)
         if m:
-            tr.setdefault(m.group(1), []).append(m.group(2))
+            if m.group(1) == "Extra-Write":  # several globs may be comma-separated on one line
+                tr.setdefault("Extra-Write", []).extend(x.strip() for x in m.group(2).split(",") if x.strip())
+            else:
+                tr.setdefault(m.group(1), []).append(m.group(2))
     return tr
 
 
