@@ -16,6 +16,7 @@ const MUTATION_TYPES := {
 	"dialogue.open.request": true,
 	"dialogue.choice.request": true,
 	"inventory.move.request": true,
+	"combat.loot.request": true,
 	"dungeon.enter.request": true,
 }
 

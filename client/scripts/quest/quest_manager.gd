@@ -51,6 +51,8 @@ func enable_online(net_client: RefCounted, content_build_id: String = "") -> voi
 			_net.quest_reward_granted.connect(_on_net_reward)
 		if not _net.state_snapshot.is_connected(_on_net_snapshot):
 			_net.state_snapshot.connect(_on_net_snapshot)
+		if _net.has_signal("loot_result") and not _net.loot_result.is_connected(_on_net_loot):
+			_net.loot_result.connect(_on_net_loot)
 		if not _net.dialogue_node_state.is_connected(_on_net_dialogue_node):
 			_net.dialogue_node_state.connect(_on_net_dialogue_node)
 		if _content_build_id == "" and str(_net.content_build_id) != "":
@@ -58,6 +60,20 @@ func enable_online(net_client: RefCounted, content_build_id: String = "") -> voi
 
 func is_online() -> bool:
 	return _online
+
+## Online: ask the server to roll the drop for a canon enemy (T-034, server-authoritative).
+## Returns true when the request was sent; the caller then skips the offline local roll.
+func request_loot(canon_enemy_id: String) -> bool:
+	if not _online or _net == null or canon_enemy_id == "":
+		return false
+	_net.request_loot(canon_enemy_id)
+	return true
+
+func _on_net_loot(payload: Dictionary) -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null or not player.has_method("apply_server_loot"):
+		return
+	player.apply_server_loot(int(payload.get("gold", 0)), int(payload.get("gold_total", 0)), payload.get("items", []))
 
 func _load_data() -> void:
 	var qf := FileAccess.open(QUEST_PATH, FileAccess.READ)

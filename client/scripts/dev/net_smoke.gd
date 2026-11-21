@@ -52,6 +52,7 @@ func _run() -> void:
 	_test_reconnect_backoff_deterministic()
 	_test_mutation_idempotency_and_duplicate_ack()
 	_test_inventory_move_mutation()
+	_test_loot_request_and_result()
 	_test_command_error_rate_limit()
 	_test_close_codes()
 	_test_unknown_type_and_bad_json()
@@ -257,6 +258,39 @@ func _test_inventory_move_mutation() -> void:
 	_assert(deltas.size() == 1, "inventory.delta emitted")
 	_assert(client.get_pending_count() == 0, "move acked via delta")
 	print("CASE inventory_move_mutation OK")
+
+func _test_loot_request_and_result() -> void:
+	var pair := _make_client(12)
+	var client: RefCounted = pair[0]
+	var ft: RefCounted = pair[1]
+	var results: Array = []
+	var deltas: Array = []
+	client.loot_result.connect(func(p): results.append(p))
+	client.inventory_delta.connect(func(p): deltas.append(p))
+	client.connect_session()
+	ft.pop_outbound()
+	ft.inject_text(_s2c("session.ready", {"session_id": "s", "character_id": "1", "heartbeat_ms": 1, "content_build_id": "x"}, 0))
+	ft.inject_text(_s2c("state.snapshot", {"scopes": {}, "revision": 1}, 1))
+	client.poll(0.0)
+	ft.pop_outbound()
+	var rid: String = client.request_loot("ENM-01-001")
+	var sent: Array = ft.pop_outbound()
+	_assert(sent.size() == 1, "combat.loot.request sent")
+	var body: Dictionary = JSON.parse_string(sent[0])
+	_assert(str(body.get("type")) == "combat.loot.request", "loot type")
+	_assert(str(body.get("payload", {}).get("enemy_id")) == "ENM-01-001", "enemy_id only")
+	_assert(body.get("payload", {}).size() == 1, "client never sends amounts")
+	_assert(client.get_pending_count() == 1, "loot pending until result")
+	ft.inject_text(_s2c("combat.loot.result", {
+		"enemy_id": "ENM-01-001", "loot_table_id": "LOOT-ENM-01-001", "gold": 3,
+		"items": [{"item_id": "MAT-01-001", "quantity": 1}], "gold_total": 3,
+		"inventory_revision": 2, "changes": [{"container": "materials", "slot": 0, "item_id": "MAT-01-001", "quantity": 1}],
+	}, 2, rid))
+	client.poll(0.0)
+	_assert(results.size() == 1 and int(results[0].get("gold", 0)) == 3, "loot_result emitted")
+	_assert(deltas.size() == 1 and int(deltas[0].get("inventory_revision", 0)) == 2, "bag delta derived from loot result")
+	_assert(client.get_pending_count() == 0, "loot acked")
+	print("CASE loot_request_and_result OK")
 
 func _test_command_error_rate_limit() -> void:
 	var pair := _make_client()

@@ -74,55 +74,69 @@ func (e *Engine) GrantMaterial(ctx context.Context, accountID string, characterI
 	}
 	var out Delta
 	err := e.withCharacter(ctx, accountID, characterID, func(tx pgx.Tx, invRev int64) error {
-		remaining := qty
-		changes := []Stack{}
-		for remaining > 0 {
-			container := "materials"
-			maxSlots := MaterialsSlots
-			stack, slot, err := e.findStackOrSlot(ctx, tx, characterID, container, itemID, maxSlots)
-			if err == ErrStateConflict {
-				container = "bag"
-				maxSlots = BagSlots
-				stack, slot, err = e.findStackOrSlot(ctx, tx, characterID, container, itemID, maxSlots)
-			}
-			if err != nil {
-				return err
-			}
-			add := remaining
-			if stack.Quantity+add > MATMaxStack {
-				add = MATMaxStack - stack.Quantity
-			}
-			if add <= 0 {
-				return ErrStateConflict
-			}
-			newQty := stack.Quantity + add
-			newRev := invRev + 1
-			if stack.Quantity == 0 {
-				_, err = tx.Exec(ctx, `
-					INSERT INTO public.character_inventory
-						(character_id, container, slot, item_id, quantity, inventory_revision)
-					VALUES ($1,$2,$3,$4,$5,$6)`, characterID, container, slot, itemID, newQty, newRev)
-			} else {
-				_, err = tx.Exec(ctx, `
-					UPDATE public.character_inventory
-					SET quantity=$1, inventory_revision=$2, updated_at=now()
-					WHERE character_id=$3 AND container=$4 AND slot=$5`,
-					newQty, newRev, characterID, container, slot)
-			}
-			if err != nil {
-				return ErrInternal
-			}
-			if _, err := tx.Exec(ctx, `UPDATE public.characters SET inventory_revision=$1 WHERE character_id=$2`, newRev, characterID); err != nil {
-				return ErrInternal
-			}
-			invRev = newRev
-			changes = append(changes, Stack{Container: container, Slot: slot, ItemID: itemID, Quantity: newQty})
-			remaining -= add
+		changes, newRev, err := GrantMaterialTx(ctx, tx, characterID, invRev, itemID, qty)
+		if err != nil {
+			return err
 		}
-		out = Delta{InventoryRevision: invRev, Changes: changes}
+		out = Delta{InventoryRevision: newRev, Changes: changes}
 		return nil
 	})
 	return out, err
+}
+
+// GrantMaterialTx stacks MAT into an already-open transaction that holds the character row lock
+// (SELECT … FOR UPDATE) and knows the current inventory_revision. It returns the changed stacks and
+// the new revision. Callers (loot, future crafting) own commit/rollback.
+func GrantMaterialTx(ctx context.Context, tx pgx.Tx, characterID int64, invRev int64, itemID string, qty int) ([]Stack, int64, error) {
+	if !strings.HasPrefix(itemID, "MAT-") || qty < 1 || qty > MATMaxStack*MaterialsSlots {
+		return nil, invRev, ErrBadRequest
+	}
+	remaining := qty
+	changes := []Stack{}
+	for remaining > 0 {
+		container := "materials"
+		maxSlots := MaterialsSlots
+		stack, slot, err := findStackOrSlot(ctx, tx, characterID, container, itemID, maxSlots)
+		if err == ErrStateConflict {
+			container = "bag"
+			maxSlots = BagSlots
+			stack, slot, err = findStackOrSlot(ctx, tx, characterID, container, itemID, maxSlots)
+		}
+		if err != nil {
+			return nil, invRev, err
+		}
+		add := remaining
+		if stack.Quantity+add > MATMaxStack {
+			add = MATMaxStack - stack.Quantity
+		}
+		if add <= 0 {
+			return nil, invRev, ErrStateConflict
+		}
+		newQty := stack.Quantity + add
+		newRev := invRev + 1
+		if stack.Quantity == 0 {
+			_, err = tx.Exec(ctx, `
+				INSERT INTO public.character_inventory
+					(character_id, container, slot, item_id, quantity, inventory_revision)
+				VALUES ($1,$2,$3,$4,$5,$6)`, characterID, container, slot, itemID, newQty, newRev)
+		} else {
+			_, err = tx.Exec(ctx, `
+				UPDATE public.character_inventory
+				SET quantity=$1, inventory_revision=$2, updated_at=now()
+				WHERE character_id=$3 AND container=$4 AND slot=$5`,
+				newQty, newRev, characterID, container, slot)
+		}
+		if err != nil {
+			return nil, invRev, ErrInternal
+		}
+		if _, err := tx.Exec(ctx, `UPDATE public.characters SET inventory_revision=$1 WHERE character_id=$2`, newRev, characterID); err != nil {
+			return nil, invRev, ErrInternal
+		}
+		invRev = newRev
+		changes = append(changes, Stack{Container: container, Slot: slot, ItemID: itemID, Quantity: newQty})
+		remaining -= add
+	}
+	return changes, invRev, nil
 }
 
 func (e *Engine) Move(ctx context.Context, accountID string, characterID int64, env Envelope) (Delta, error) {
@@ -228,7 +242,7 @@ func (e *Engine) Move(ctx context.Context, accountID string, characterID int64, 
 	return out, err
 }
 
-func (e *Engine) findStackOrSlot(ctx context.Context, tx pgx.Tx, characterID int64, container, itemID string, maxSlots int) (Stack, int, error) {
+func findStackOrSlot(ctx context.Context, tx pgx.Tx, characterID int64, container, itemID string, maxSlots int) (Stack, int, error) {
 	var slot, qty int
 	err := tx.QueryRow(ctx, `
 		SELECT slot, quantity FROM public.character_inventory

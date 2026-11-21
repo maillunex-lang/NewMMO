@@ -359,6 +359,27 @@ func (s *Server) commands(p *peer, owner string, id, revision int64) {
 			if !p.enqueue("inventory.delta", m.requestID, revision, result, 0) {
 				return
 			}
+		case m.typ == "combat.loot.request":
+			if s.loot == nil {
+				if !p.sendError(m.requestID, revision, "UNKNOWN_TYPE", 0, 0) {
+					return
+				}
+				continue
+			}
+			payload := rawPayload(m.payload)
+			ctx, cancel := context.WithTimeout(p.work, s.cfg.WriteTimeout)
+			result, err := s.loot.Claim(ctx, owner, id, m.typ, m.requestID, payload)
+			cancel()
+			if err != nil {
+				if !p.sendError(m.requestID, revision, questErrorCode(err), 0, 0) {
+					return
+				}
+				continue
+			}
+			revision = revisionFromResult(result, revision)
+			if !p.enqueue("combat.loot.result", m.requestID, revision, result, 0) {
+				return
+			}
 		default:
 			if !p.sendError(m.requestID, revision, "UNKNOWN_TYPE", 0, 0) {
 				return
@@ -454,7 +475,7 @@ func questErrorCode(err error) string {
 	switch msg {
 	case "NOT_FOUND", "STATE_CONFLICT", "PREREQUISITE_NOT_MET", "LEVEL_TOO_LOW",
 		"UNSUPPORTED_EVENT", "INVALID_TARGET", "CONTENT_MISMATCH", "IDEMPOTENCY_CONFLICT",
-		"REGION_CLOSED", "BAD_REQUEST", "INTERNAL":
+		"REGION_CLOSED", "RATE_LIMITED", "BAD_REQUEST", "INTERNAL":
 		return msg
 	default:
 		if u := errors.Unwrap(err); u != nil {

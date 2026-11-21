@@ -73,6 +73,9 @@ func run(logger *slog.Logger) error {
 	if err := attachInventoryEngine(store, socket, logger); err != nil {
 		logger.Warn("inventory engine unavailable at startup", "error", err.Error())
 	}
+	if err := attachLootEngine(ctx, store, socket, logger); err != nil {
+		logger.Warn("loot engine unavailable at startup", "error", err.Error())
+	}
 	socketLifetime, stopSocket := context.WithCancel(ctx)
 	socketDone := make(chan struct{})
 	go func() {

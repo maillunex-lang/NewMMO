@@ -38,7 +38,7 @@ Prompts live in `docs/director/prompts/T-NNN.md`. Protocol: `DIRECTOR.md`.
 | T-029 | server | EX-P08 start: inventory research + contract + `character_inventory` + grant/move/snapshot | T-028 ✔ | **DONE 2026-11-21** — PR #10 merge `820aa39` |
 | T-030 | client | EX-P08: inventory bag UI (`.tscn`) + HUD + snapshot/delta bind + `inventory.move.request` | T-029 ✔ | **DONE 2026-11-21** — PR #11 merge `23fe4cc` |
 | D-005 | director | EX-W01: complete draft `docs/contracts/location-generator.md` (seed schema, regen API; stub already on main) | owner schedule ✔ | **PROPOSED** |
-| T-034 | director/server+client | EX-P08: combat loot tables + grant path + client reward feedback (research-first) | T-030 ✔ | **PROPOSED** — next when Claude resumes |
+| T-034 | director (server+client) | EX-P08: combat loot — server-rolled drops from canon `LOOT-ENM-*` (`combat.loot.request/result`, ledger `00011`, `internal/loot`), exporter fields, contract `loot-engine.md` + WS rev 1.2, client request + HUD feedback | T-030 ✔ | **IN REVIEW** — branch `agent/director/T-034`; local gates + live Postgres 16 tests green; awaiting CI. Equipment roll deferred; R-KILL + C-LOOT-001 recorded |
 | T-031 | research | EX-W01: re-verify Gaea/WFC/in-house on Godot 4.7.2; recommend one | D-005 | **PROPOSED** — install only after owner OK |
 | T-032 | client | EX-W01: Lunex Generate editor dock → `Generated/*` only | T-031 ✔, owner OK if deps | **PROPOSED** |
 | T-033 | client | EX-W01: Manual-survive regen test + Dawn Valley generate pass | T-032 | **PROPOSED** |
@@ -112,3 +112,4 @@ First parallel batch (different lanes, no dependencies, disjoint files): **T-001
 | 2026-11-21 | Owner: schedule location generator with Godot-editable output → EX-W01 plan + D-005/T-031…T-033 PROPOSED |
 | 2026-11-21 | EX-W01 plan merged PR #13 (`06d5751`); draft `location-generator.md` for docs-links |
 | 2026-11-21 | Owner hands director+executor role to Claude; Cursor handoff closed; `CLAUDE_HANDOFF.md` published |
+| 2026-11-21 | Owner: Claude is the autonomous director+lead dev; T-034 loot implemented on `agent/director/T-034` (server `internal/loot`, migration 00011, client request + HUD feedback) |

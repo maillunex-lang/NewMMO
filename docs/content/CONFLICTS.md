@@ -47,6 +47,15 @@ Recorded by EX-P00 audit. **Do not silently pick a side in code.** Owner decides
 | Applied | Dialogue rule for batch `MQ-RR-20` (RR=01…05): a non-branching confirmation scene (`TURNIN`/`DONE`), no `CHOICE` lines; `MQ-06-20` keeps the three-way ending choice. Lint rule `DIA-CHOICE` of the T-016 spec must not require choices for `MQ-01-20…MQ-05-20`. |
 | History | OPEN (T-016 audit, verified by director) → owner chose C. |
 
+## C-LOOT-001 — «регион.коэф» in loot tables is not defined
+
+| Field | Value |
+|-------|--------|
+| Status | **OPEN, interim applied** (2026-11-21, EX-P08 T-034) |
+| Problem | `11_ITEMS_LOOT.md` §9 gold column is `min–max × регион.коэф`, but no region coefficient values exist anywhere in canon (`11`, `14`, `PACING.md`). Equipment drop (3rd percentage) also needs equipment instances (deferred). |
+| Interim | Server config `NEWMMO_LOOT_REGION_COEF_JSON` (`{"REG-01":1.0}`), **default 1.0 for every region** (neutral reading = canon gold range as printed). Equipment roll skipped until equip UI/instances exist. No balance change made. |
+| Owner decision needed | Region coefficients for REG-01…06 (balance). Until then gold is the printed canon range. |
+
 ## Other open notes
 
 | ID | Note |

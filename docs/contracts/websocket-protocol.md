@@ -1,6 +1,6 @@
 # Contract: WebSocket protocol v1 (D-003)
 
-**Owner:** director · **Version:** `protocol_version = 1`, contract rev **1.1** (EX-P04 additions, all additive) · Owner approvals (2026-11-21): **`coder/websocket v1.8.15`**, **JSON text messages**.
+**Owner:** director · **Version:** `protocol_version = 1`, contract rev **1.2** (EX-P04 + EX-P08 loot additions, all additive) · Owner approvals (2026-11-21): **`coder/websocket v1.8.15`**, **JSON text messages**.
 Basis: canon `14_CONTENT_INTEGRATION.md` §15 (event names and required fields are kept), research `docs/research/go-websocket.md`.
 Implementers (server lane: Go; client lane: Godot `WebSocketPeer`) build against this file; changes only via a director task. Machine-readable envelope: `websocket-envelope.schema.json`.
 
@@ -77,6 +77,8 @@ Canon events keep their names and required fields (§15.2); added fields are mar
 | `event.snapshot` | S→C | `event_instance_id, phase, remaining_ms` | canon |
 | `event.contribution` | S→C | `event_instance_id, contribution_score` | canon; server-computed only |
 | `inventory.move.request` ➕ (EX-P08) | C→S | `from_container, from_slot, to_container, to_slot`, opt `quantity` | mutation; server-validated (`inventory-engine.md`); answered by `inventory.delta` or `command.error` |
+| `combat.loot.request` ➕ (EX-P08, rev 1.2) | C→S | `enemy_id` (only; no amounts, no extra keys) | mutation; **interim kill report** (`loot-engine.md` §1); answered by `combat.loot.result` (includes the bag `changes[]`; no separate `inventory.delta`) or `command.error` |
+| `combat.loot.result` ➕ | S→C | `enemy_id, loot_table_id, gold, items[{item_id,quantity}], gold_total, inventory_revision, changes[]` | server-rolled drop; idempotent replay returns the same result |
 | `inventory.delta` | S→C | `inventory_revision, changes[]` | canon; never client-authored |
 | `command.error` ➕ | S→C | `request_id, code, message_key`, opt `retry_after_ms` | correlated error for any rejected C→S message |
 

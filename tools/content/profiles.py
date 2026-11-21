@@ -256,7 +256,9 @@ def p_items(b, f):
     out += _rows(b, r"EQ-\d\d-\d\d-[A-Z]{2}-\d\d", "equipment", f,
                  {"класс": "class_name", "слот": "slot", "название": "name", "базовый уровень": "level"})
     out += _rows(b, r"REC-\d\d-\d{3}", "recipe", f, {})
-    out += _rows(b, r"LOOT-ENM-\d\d-\d{3}", "loot_table", f, {"противник": "enemy_raw"})
+    out += _rows(b, r"LOOT-ENM-\d\d-\d{3}", "loot_table", f,
+                 {"противник": "enemy_raw", "категория": "category", "золото": "gold_raw", "mat-001": "mat1_raw",
+                  "mat-003": "mat3_raw", "экипировка": "equip_raw", "особая награда": "special_raw"})
     out += _rows(b, r"ITEM-Q-\d\d-\d\d", "quest_item", f, {"квест": "quest", "название": "name", "тип": "type"})
     out += _rows(b, r"ITEM-SQ-\d\d-\d{3}", "quest_item", f, {"название": "name"})
     for d in out:
@@ -265,6 +267,18 @@ def p_items(b, f):
             m = re.search(r"ENM-\d\d-\d{3}", d["fields"].pop("enemy_raw", ""))
             if m:
                 d["fields"]["enemy"] = m.group()
+            fl = d["fields"]
+            g = re.match(r"\s*(\d+)\s*[–-]\s*(\d+)", fl.pop("gold_raw", ""))
+            if g:
+                fl["gold_min"], fl["gold_max"] = int(g.group(1)), int(g.group(2))
+            for key, raw in (("mat1_pct", fl.pop("mat1_raw", "")), ("mat3_pct", fl.pop("mat3_raw", ""))):
+                m2 = re.match(r"\s*(\d+(?:\.\d+)?)\s*%", raw)
+                if m2:
+                    fl[key] = float(m2.group(1))
+            sp = re.search(r"`(MAT-\d\d-\d{3})`\s*(\d+(?:\.\d+)?)\s*%", fl.pop("special_raw", ""))
+            if sp:
+                fl["special_item"], fl["special_pct"] = sp.group(1), float(sp.group(2))
+            fl.pop("equip_raw", None)
         if d["kind"] == "equipment":
             d["fields"]["level"] = _int(d["fields"].get("level"))
     for blk in b:

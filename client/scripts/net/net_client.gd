@@ -14,6 +14,7 @@ signal quest_progress_delta(payload: Dictionary)
 signal quest_reward_granted(payload: Dictionary)
 signal dialogue_node_state(payload: Dictionary)
 signal inventory_delta(payload: Dictionary)
+signal loot_result(payload: Dictionary)
 signal command_error(payload: Dictionary)
 signal needs_client_update(code: int, reason: String)
 signal session_replaced()
@@ -43,6 +44,7 @@ const KNOWN_S2C := {
 	"event.snapshot": true,
 	"event.contribution": true,
 	"inventory.delta": true,
+	"combat.loot.result": true,
 	"command.error": true,
 }
 const DELTA_TYPES := {
@@ -151,6 +153,10 @@ func request_inventory_move(from_container: String, from_slot: int, to_container
 	if quantity > 0:
 		payload["quantity"] = quantity
 	return send_mutation("inventory.move.request", payload)
+
+## T-034: report a kill of a canon enemy; the server rolls the drop (loot-engine.md). Never sends amounts.
+func request_loot(enemy_id: String) -> String:
+	return send_mutation("combat.loot.request", {"enemy_id": enemy_id})
 
 func request_snapshot(scopes: Array = []) -> void:
 	var payload := {}
@@ -322,6 +328,13 @@ func _dispatch_typed(type_name: String, payload: Dictionary, request_id: String)
 		"inventory.delta":
 			_ack_pending(request_id)
 			inventory_delta.emit(payload)
+		"combat.loot.result":
+			_ack_pending(request_id)
+			loot_result.emit(payload)
+			# One message carries the bag change too (a second same-revision delta would look like a gap).
+			var changes: Variant = payload.get("changes", [])
+			if typeof(changes) == TYPE_ARRAY and (changes as Array).size() > 0:
+				inventory_delta.emit({"inventory_revision": payload.get("inventory_revision", 0), "changes": changes})
 		"command.error":
 			_handle_command_error(payload, request_id)
 		"dungeon.state.delta", "event.snapshot", "event.contribution":
