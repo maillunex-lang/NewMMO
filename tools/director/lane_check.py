@@ -5,6 +5,7 @@ Every commit in the range must carry trailers:
     Lane: client|server|research|director
     Task: T-NNN           (required for non-director lanes)
     Extra-Write: path/glob (optional; director-issued tasks may grant extra paths — must be listed in docs/director/TASKS.md)
+Every lane may also write its own research note `docs/research/<Task>-*.md`.
 A commit may only touch files matching its lane's `write` globs; `protected` paths are director-only.
 
     python3 tools/director/lane_check.py --range <base>..<head>
@@ -68,8 +69,12 @@ def check_commit(cfg, files, trailers):
         return v
     if not trailers.get("Task") or not re.fullmatch(r"T-\d{3,}", trailers["Task"][0]):
         v.append("missing/invalid `Task: T-NNN` trailer")
-    own = cfg["lanes"][lane]["write"]
-    extra = trailers.get("Extra-Write", [])
+    own = list(cfg["lanes"][lane]["write"])
+    extra = list(trailers.get("Extra-Write", []))
+    # every lane may write its own task's research note: docs/research/T-NNN-*.md (research-first rule)
+    tid = trailers["Task"][0] if trailers.get("Task") else None
+    if tid and re.fullmatch(r"T-\d{3,}", tid):
+        extra.append(f"docs/research/{tid}-*.md")
     for f in files:
         if matches(f, cfg["protected"]) and not matches(f, extra):
             v.append(f"{f}: protected path (director only)")

@@ -32,6 +32,8 @@ def check(root, allow=()):
         if any(s in md for s in SKIP_DIRS):
             continue
         rel = os.path.relpath(md, root)
+        if rel.startswith("docs/director/prompts/"):
+            continue  # executor prompts name output files that do not exist yet
         if re.match(r"docs/content/\d\d_", rel):
             continue  # canon specs describe planned/future structure; owner-approved, validated by lint.py instead
         base = os.path.dirname(md)

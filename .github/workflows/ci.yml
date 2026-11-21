@@ -2,7 +2,7 @@ name: ci
 
 on:
   push:
-    branches: [main, "cursor/**"]
+    branches: [main, "cursor/**", "agent/**"]
   pull_request:
 
 jobs:
@@ -59,7 +59,11 @@ jobs:
             RANGE="${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
           else
             BEFORE="${{ github.event.before }}"
-            if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then echo "no base; skip"; exit 0; fi
+            if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+              git fetch origin main:refs/remotes/origin/main 2>/dev/null || true
+              BEFORE="$(git merge-base origin/main ${{ github.sha }} || true)"
+              [ -n "$BEFORE" ] || { echo "no base; skip"; exit 0; }
+            fi
             RANGE="$BEFORE..${{ github.sha }}"
           fi
           python3 tools/director/lane_check.py --range "$RANGE"

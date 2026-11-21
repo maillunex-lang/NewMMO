@@ -49,6 +49,12 @@ class LaneCheck(unittest.TestCase):
         self.assertEqual(lc.check_commit(CFG, ["client/data/dialogues/a.json"], t), [])
         self.assertTrue(lc.check_commit(CFG, ["client/data/quests/a.json"], t))
 
+    def test_own_task_research_note_allowed_everywhere(self):
+        self.assertEqual(lc.check_commit(CFG, ["docs/research/T-001-notes.md"], T), [])
+        self.assertTrue(lc.check_commit(CFG, ["docs/research/T-002-notes.md"], T))  # someone else's task
+        srv = {"Lane": ["server"], "Task": ["T-005"]}
+        self.assertEqual(lc.check_commit(CFG, ["docs/research/T-005-go-health.md", "server/main.go"], srv), [])
+
     def test_director_unrestricted(self):
         self.assertEqual(lc.check_commit(CFG, ["docs/content/x.md", "AGENTS.md"], {"Lane": ["director"]}), [])
 

@@ -49,10 +49,10 @@ Any location generator must:
 
 ## Delivery loop
 
-1. **Work only on `main`.** Do not create feature branches or PRs unless the owner explicitly asks.
+1. **Work only on `main`** (director and owner). **Exception (owner-delegated 2026-11-21):** parallel AI executors work on one branch per task `agent/<lane>/T-NNN`, never on `main`; the director reviews, opens the PR and merges. No other branches/PRs unless the owner asks.
 2. Implement the smallest working slice; keep the game bootable.
 3. Test (headless smoke, `go test`, manual checks as applicable).
-4. Commit and push directly to `main`; report what is done / stubbed / blocked (APK, VPS, etc.).
+4. Commit and push directly to `main` (director/owner; executors follow the branch exception above); report what is done / stubbed / blocked (APK, VPS, etc.).
 5. Do not mix “docs written” with “feature shipped.”
 
 ## Execution priorities
@@ -62,5 +62,5 @@ Follow **`docs/ROADMAP_EXECUTION.md`** (EX-P00 → EX-P13). Do not start all sta
 ## Multi-agent work
 
 When several AI executors work in parallel, follow `docs/director/DIRECTOR.md`: write **lanes** (`docs/director/lanes.json`),
-mandatory commit trailers (`Lane:`, `Task:`), `git pull --rebase` before push, tasks issued by the director in `docs/director/TASKS.md`.
-Canon, contracts, tools, CI and roadmap are director-only. Still `main` only; no force-push.
+mandatory commit trailers (`Lane:`, `Task:`), branch-per-task `agent/<lane>/T-NNN` + `git pull --rebase origin main` before push, tasks issued by the director in `docs/director/TASKS.md`. **Research-first:** every task starts with a search of existing solutions (GitHub, Hysen Labs directory, Godot Asset Library, official docs) recorded in `docs/research/T-NNN-*.md`; nothing third-party is installed/vendored until the owner approves.
+Canon, contracts, tools, CI and roadmap are director-only. No force-push.

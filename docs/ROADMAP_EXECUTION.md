@@ -113,8 +113,9 @@
 - [x] Lanes (client / server / research / director) без пересечений; protected-пути только директору
 - [x] Обязательные trailers `Lane:` / `Task:`; gate проверяет файлы коммита против lane (11 unittest)
 - [x] Hard rules для исполнителей, цикл задач, формат отчёта, откат
-- [ ] Ответы владельца на вопросы в `docs/director/TASKS.md` (доступ к git, Godot/Go, режим main vs PR) — **блокер выдачи задач**
-**Статус:** [x] протокол/инструменты; задачи **не выданы** (все PROPOSED)
+- [x] Ответы владельца получены (все могут push; Godot/Go есть; lanes и режим git делегированы директору → branch-per-task `agent/<lane>/T-NNN`, PR/merge только директор)
+- [x] Research-first (GitHub + Hysen Labs + Asset Library + docs) — правило №0 для всех исполнителей
+**Статус:** [x] протокол/инструменты; **выданы T-001, T-004, T-005** (`docs/director/prompts/`), ждём отчётов
 
 ### EX-P03 — PostgreSQL migrations + content loader
 **Зависит от:** EX-P02; backup/dry-run policy  
@@ -245,8 +246,8 @@
 
 **EX-P00, EX-P01, EX-P02, EX-DIR закрыты.** Что дальше:
 
-1. **Владелец отвечает** на 4 вопроса в `docs/director/TASKS.md` (доступ исполнителей, Godot/Go, main vs PR).
-2. **Первый параллельный батч** (разные lanes, без зависимостей): T-001 research БД-миграций (ChatGPT) · T-004 compliance-ревью клиентского UI (Cursor) · T-005 Go-скелет без зависимостей (Codex). Параллельно директор: D-001 (content export contract), D-002 (POI mapping).
+1. ~~Владелец отвечает на вопросы~~ — получены.
+2. **Первый параллельный батч (выдан, ждём отчётов)** (разные lanes, без зависимостей): T-001 research БД-миграций (ChatGPT) · T-004 compliance-ревью клиентского UI (Cursor) · T-005 Go-скелет без зависимостей (Codex). Параллельно директор: D-001 (content export contract), D-002 (POI mapping).
 3. **EX-P03** (миграции + loader) — после отчёта T-001 и **OK владельца на выбор инструмента** + контракт D-001.
 4. **EX-CONTENT-01** — только после утверждения `docs/CONTENT_EXPANSION_PLAN.md`.
 
