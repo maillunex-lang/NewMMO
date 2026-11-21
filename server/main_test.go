@@ -1,29 +1,39 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
+
+	"github.com/maillunex-lang/NewMMO/server/internal/httpservice"
 )
 
 func TestHealthz(t *testing.T) {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "service": "newmmo-dev"})
-	})
-	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
-	rr := httptest.NewRecorder()
-	mux.ServeHTTP(rr, req)
-	if rr.Code != http.StatusOK {
-		t.Fatalf("status %d", rr.Code)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
+	handler := httpservice.NewHandler(ctx, logger)
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/healthz", nil))
+
+	if response.Code != http.StatusOK || response.Header().Get("Content-Type") != "application/json" {
+		t.Fatalf("health response = %d %v", response.Code, response.Header())
 	}
 	var body map[string]any
-	if err := json.Unmarshal(rr.Body.Bytes(), &body); err != nil {
+	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
 		t.Fatal(err)
 	}
-	if body["ok"] != true {
-		t.Fatalf("unexpected body %#v", body)
+	if len(body) != 3 || body["ok"] != true || body["service"] != "newmmo-dev" {
+		t.Fatalf("unexpected health body: %v", body)
+	}
+	stamp, ok := body["time"].(string)
+	parsed, err := time.Parse(time.RFC3339, stamp)
+	if !ok || err != nil || parsed.Location() != time.UTC {
+		t.Fatalf("health time = %v, want UTC RFC3339", body["time"])
 	}
 }

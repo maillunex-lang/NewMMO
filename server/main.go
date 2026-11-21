@@ -1,21 +1,26 @@
 package main
 
 import (
- "encoding/json"
- "log"
- "net/http"
- "os"
- "time"
+	"context"
+	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/maillunex-lang/NewMMO/server/internal/httpservice"
 )
 
 func main() {
- mux := http.NewServeMux()
- mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-  w.Header().Set("Content-Type", "application/json")
-  _ = json.NewEncoder(w).Encode(map[string]any{"service":"newmmo-dev","ok":true,"time":time.Now().UTC().Format(time.RFC3339)})
- })
- port := os.Getenv("PORT")
- if port == "" { port = "18086" }
- log.Printf("newmmo development API listening on 127.0.0.1:%s", port)
- log.Fatal(http.ListenAndServe("127.0.0.1:"+port, mux))
+	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
+	if err := run(logger); err != nil {
+		logger.Error("HTTP server failed", "error", err)
+		os.Exit(1)
+	}
+}
+
+func run(logger *slog.Logger) error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	return httpservice.Run(ctx, httpservice.Address(os.Getenv), logger)
 }
