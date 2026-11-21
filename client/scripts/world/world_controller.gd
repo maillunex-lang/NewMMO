@@ -51,6 +51,9 @@ var _self_state: Dictionary = {}
 var _server_position := Vector2.ZERO
 var _attack_reach := 0.0
 var _auto_cast_timer := 0.0
+var _resting := false
+const REST_START := 0.35
+const REST_END := 0.8
 
 func _ready() -> void:
 	add_to_group("world_controller")
@@ -383,6 +386,18 @@ func auto_tick() -> void:
 		return
 	var pl := _get_player()
 	if pl == null or bool(pl.get("online_dead")):
+		return
+	# Auto-combat rests instead of pulling the next mob while badly hurt (the server regenerates HP out of combat).
+	var hp_ratio: float = float(pl.hp) / maxf(1.0, float(pl.max_hp))
+	if _resting:
+		if hp_ratio >= REST_END:
+			_resting = false
+	elif hp_ratio < REST_START and nearest_enemy(260.0, true) == null:
+		_resting = true
+		_hint(tr("world.hint.resting"))
+	if _resting:
+		pl.tap_active = false
+		pl.cancel_path()
 		return
 	# Ranged classes should cast from their server-defined reach instead of
 	# running into melee range. Movement and damage remain server-authoritative.

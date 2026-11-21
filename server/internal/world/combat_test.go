@@ -256,3 +256,22 @@ func TestCastPublishesStationaryEnemyDeathOnNextTick(t *testing.T) {
 	}
 	t.Fatalf("delta missed the death of a stationary enemy: %+v", delta)
 }
+
+func TestPlayerRegeneratesHPOnlyOutOfCombat(t *testing.T) {
+	s, id, _ := combatSim("CLS-01", 1, Vec{1500, 100}) // enemy far away: no aggro
+	p := s.entities[id]
+	p.HP = p.MaxHP / 2
+	p.combatUntil = s.tick + 1000 // in combat: no regeneration
+	before := p.HP
+	step(s, 50)
+	if p.HP != before {
+		t.Fatalf("HP changed in combat: %d -> %d", before, p.HP)
+	}
+	p.combatUntil = 0
+	step(s, 100) // 10 s at 10 Hz, 2%/s of MaxHP
+	gain := p.HP - before
+	want := int(float64(p.MaxHP) * 0.02 * 10)
+	if gain < want-2 || gain > want+2 {
+		t.Fatalf("regen gained %d HP in 10 s, want about %d", gain, want)
+	}
+}

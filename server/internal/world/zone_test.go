@@ -177,7 +177,7 @@ func TestRealZoneDefinitionLoads(t *testing.T) {
 		t.Fatal(err)
 	}
 	d, ok := defs["ZONE-01-DAWN-VALLEY"]
-	if !ok || len(d.Enemies) != 7 || d.TickRate != 10 {
+	if !ok || len(d.Enemies) != 8 || d.TickRate != 10 {
 		t.Fatalf("zone def: %+v", d)
 	}
 }

@@ -118,3 +118,4 @@ ui.rarity_MYTHIC,Мифический,Mythic
 ui.err_wrong_class,Предмет другого класса,Item of another class
 ui.err_level_low,Недостаточный уровень,Level too low
 ui.err_bag_full,Сумка полна,Bag is full
+world.hint.resting,Отдыхаю: восстанавливаю здоровье,Resting to recover health

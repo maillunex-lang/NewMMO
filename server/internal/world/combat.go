@@ -19,6 +19,7 @@ type Combat struct {
 	CombatLeaveS  float64                     // seconds without combat actions before regen switches to out-of-combat
 	MinContribHP  float64                     // fraction of enemy MaxHP a player must deal to earn loot
 	CritChance    float64                     // base crit chance (canon 5%)
+	HPRegenOutPct float64                     // out-of-combat HP regeneration, fraction of MaxHP per second (interim C-REGEN-001)
 
 	// Enemy AI (06 §3 library; interim numbers where canon is silent, see C-RANGE-001)
 	EnemySpeedFrac float64 // enemy chase speed as a fraction of the player speed
@@ -35,7 +36,7 @@ type Combat struct {
 // DefaultCombat returns the tunables without any skill data.
 func DefaultCombat() *Combat {
 	return &Combat{Skills: map[string]combatdata.Skill{}, UnitsPerMeter: 32, MeleeRangeM: 2.5, RangedRangeM: 9,
-		RangeSlackM: 1.0, RespawnS: 30, CombatLeaveS: 5, MinContribHP: 0.10, CritChance: damage.CritBase,
+		RangeSlackM: 1.0, RespawnS: 30, CombatLeaveS: 5, MinContribHP: 0.10, CritChance: damage.CritBase, HPRegenOutPct: 0.02,
 		EnemySpeedFrac: 0.9, AlertS: 0.5, LeashM: 24, LoseAggroS: 8, MeleeAttackM: 2.0, RangedAttackM: 8.0,
 		TelegraphMinS: 0.8, BlastRadiusM: 2.0, PlayerRespawnS: 5}
 }
@@ -213,6 +214,14 @@ func (s *Sim) stepCombat() {
 				next := math.Min(100, math.Max(0, e.resource+rate*dt))
 				if next != e.resource {
 					e.resource, e.selfDirty = next, true
+				}
+			}
+			if !in && s.combat.HPRegenOutPct > 0 && e.HP < e.MaxHP {
+				e.hpFrac += float64(e.MaxHP) * s.combat.HPRegenOutPct * dt
+				if add := int(e.hpFrac); add > 0 {
+					e.hpFrac -= float64(add)
+					e.HP = min(e.MaxHP, e.HP+add)
+					e.changed = s.tick
 				}
 			}
 			if e.shield > 0 && s.tick >= e.shieldUntil {

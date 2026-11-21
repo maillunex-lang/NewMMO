@@ -69,7 +69,8 @@ type Entity struct {
 	resource    float64              // player resource 0..100
 	cooldowns   map[string]uint64    // skill id -> tick at which it is ready
 	gcdUntil    uint64
-	combatUntil uint64 // in combat while tick < combatUntil
+	combatUntil uint64  // in combat while tick < combatUntil
+	hpFrac      float64 // fractional out-of-combat HP regeneration carried between ticks
 	shield      int
 	shieldUntil uint64
 	contrib     map[string]int // enemy: damage by character ref

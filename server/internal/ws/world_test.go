@@ -23,7 +23,7 @@ func worldFixture(t *testing.T) (*world.Zone, *world.Handler) {
 	}
 	def := defs["ZONE-01-DAWN-VALLEY"]
 	var sb strings.Builder
-	for _, e := range []struct{ id, name string }{{"ENM-01-001", "A"}, {"ENM-01-003", "B"}, {"ENM-01-004", "C"}} {
+	for _, e := range []struct{ id, name string }{{"ENM-01-001", "A"}, {"ENM-01-002", "D"}, {"ENM-01-003", "B"}, {"ENM-01-004", "C"}} {
 		sb.WriteString(`{"id":"` + e.id + `","kind":"enemy","payload":{"name":"` + e.name + `","level":3,"threat":"обычный","ai":"melee"},"region_id":"REG-01"}` + "\n")
 		for _, slot := range []string{"A", "B"} {
 			sb.WriteString(`{"id":"AB-` + e.id + `-` + slot + `","kind":"ability","payload":{"enemy":"` + e.id + `","slot":"` + slot + `","coefficient":1,"scale":"AP","cooldown_s":2,"text":"x"},"region_id":"REG-01"}` + "\n")
@@ -194,7 +194,7 @@ func TestWorldCastOverWebSocket(t *testing.T) {
 	}
 	var enemy int
 	for _, e := range entities {
-		if e.Kind == "enemy" && e.Ref == "ENM-01-004" && (enemy == 0 || e.ID < enemy) {
+		if e.Kind == "enemy" && e.Ref == "ENM-01-002" && (enemy == 0 || e.ID < enemy) {
 			enemy = e.ID // ZS-01-001 at (1240,780), the first slime
 		}
 	}

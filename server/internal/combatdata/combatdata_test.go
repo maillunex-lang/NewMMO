@@ -103,13 +103,13 @@ func TestResourceGainParsedFromRule(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := map[string]int{"CLS-01": 10, "CLS-02": 12, "CLS-04": 10, "CLS-05": 8}
+	want := map[string]int{"CLS-01": 10, "CLS-02": 12, "CLS-03": 10, "CLS-04": 10, "CLS-05": 8}
 	for class, gain := range want {
 		if got := c.Skills[class][0].Gain; got != gain {
 			t.Errorf("%s SK01 gain = %d, want %d", class, got, gain)
 		}
 	}
-	if c.Skills["CLS-03"][0].Gain != 0 {
-		t.Error("mage SK01 has no gain")
+	if c.Skills["CLS-03"][0].Cost != 0 {
+		t.Error("mage SK01 is free (C-MAGE-001 resolved: cost 0, +10 mana)")
 	}
 }

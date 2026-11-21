@@ -40,6 +40,10 @@ func _run() -> void:
 	_shot("00_start")
 	if OS.get_environment("NEWMMO_PT_AUTO") != "0":
 		player.toggle_auto_combat()
+	var errs := {}
+	var casts := [0]
+	sess.net.command_error.connect(func(p): errs[str(p.get("code"))] = int(errs.get(str(p.get("code")), 0)) + 1)
+	sess.net.world_cast_result.connect(func(_p): casts[0] += 1)
 	var deaths := 0
 	var was_dead := false
 	var t := 0
@@ -65,7 +69,7 @@ func _run() -> void:
 		for k in ents.keys():
 			if is_instance_valid(ents[k]) and str(ents[k].get("kind")) == "enemy":
 				n_enemies += 1
-		print("PT t=%d hp=%.0f/%.0f mp=%.0f dead=%s deaths=%d enemies=%d nearest=%.0f %s auto=%s" % [t, player.hp, player.max_hp, player.mp, str(dead), deaths, n_enemies, dist, ehp, str(player.auto_combat)])
+		print("PT t=%d hp=%.0f/%.0f mp=%.0f dead=%s deaths=%d enemies=%d nearest=%.0f %s auto=%s casts=%d errs=%s" % [t, player.hp, player.max_hp, player.mp, str(dead), deaths, n_enemies, dist, ehp, str(player.auto_combat), casts[0], str(errs)])
 		if t == 8 or t == 30 or t == 60:
 			_shot("t%02d" % t)
 	_shot("end")

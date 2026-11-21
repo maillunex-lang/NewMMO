@@ -95,10 +95,19 @@ Recorded by EX-P00 audit. **Do not silently pick a side in code.** Owner decides
 
 | Field | Value |
 |-------|--------|
-| Status | **OPEN — owner decision needed** (2026-11-21, found by the live playtest bot, `client/scripts/dev/playtest.gd`) |
+| Status | **RESOLVED 2026-11-21 by the owner: option (a) + (d)** (found by the live playtest bot, `client/scripts/dev/playtest.gd`) |
 | Problem | `05_CLASSES.md`: all classes except the Mage have a free level-1 basic attack (cost 0, builds their resource: Guard/Rage/Focus/Light). `CLS-03-SK01` «Искра Узора» costs **20 mana**, CD 3 s, `1.05*SP`; mana is 100 with regen **5/s out of combat, 2/s in combat** (`05` §3). Region-1 open-world enemies are level 4: 258 HP vs ~36 damage per cast ⇒ 7 casts = 140 mana, but a mage has 100 and regains 2/s. Measured over 60 s with auto-combat: Mage dies (HP 288→0, enemy left with 6 HP); Guardian/Berserker/Ranger/Oracle survive and win. |
 | Options | (a) `CLS-03-SK01` cost 0 and +mana on cast like the others; (b) cost 8–10; (c) in-combat regen ≥ 5/s; (d) level-1 open-world enemies of level 1–2 (also fixes the first-fight difficulty of every class). |
-| Interim | None applied: all four numbers are canon. |
+| Applied | (a) `05_CLASSES.md` `CLS-03-SK01`: cost 0, rule «Базовый снаряд; +10 маны» (same pattern as the other classes' basic attacks). (d) Dawn Valley open-world spawns (`content/zones/dawn-valley.json`, not canon text) now use the canon level-1/2 enemies (`ENM-01-001`, `ENM-01-002`) nearest the spawn, level 3–4 further away; no change to `06_ENEMIES.md` levels. |
+
+## C-REGEN-001 — out-of-combat HP regeneration (new mechanic, interim)
+
+| Field | Value |
+|-------|--------|
+| Status | **OPEN, interim** (2026-11-21, playtest PLAYTEST-1) — not in canon |
+| Problem | Canon defines HP recovery only through heals/consumables (`11` §8); with no passive recovery a player who survives a fight is stuck near 0 HP and auto-combat keeps pulling. |
+| Interim | Server config `Combat.HPRegenOutPct = 2% of MaxHP per second`, only while out of combat (5 s without combat actions). Client auto-combat rests below 35% HP (no enemy within 8 m) until 80%. |
+| Owner decision needed | Whether to keep passive regeneration, its rate, and whether the consumables `ITM-00-001…005` stay the intended HP source. |
 
 ## Other open notes
 

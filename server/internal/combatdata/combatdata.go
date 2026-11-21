@@ -21,7 +21,7 @@ import (
 
 var durationRe = regexp.MustCompile(`(\d+)\s*с(?:\s|[,;.]|$)`)
 
-var gainRe = regexp.MustCompile(`\+(\d+)\s+(?:стойкости|ярости|фокуса|света)`)
+var gainRe = regexp.MustCompile(`\+(\d+)\s+(?:стойкости|ярости|фокуса|света|маны)`)
 
 type Ability struct {
 	ID         string

@@ -153,7 +153,7 @@ func TestThreatSwitchesToHigherDamageDealer(t *testing.T) {
 
 func TestPlayerDeathAndRespawn(t *testing.T) {
 	s, p, _ := aiSim("melee", Vec{140, 100}, Vec{100, 100})
-	s.entities[p].HP = 5 // one A hit (7) kills
+	s.entities[p].HP = 1 // one A hit (7) kills, even with a little out-of-combat regeneration first
 	step(s, 12)
 	pl := s.entities[p]
 	if !pl.Dead || pl.HP != 0 {

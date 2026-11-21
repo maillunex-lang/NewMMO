@@ -1,20 +1,69 @@
 {
-  "_comment": "Open-world zone definition for the server simulation (T-038b). Units = client world pixels (client player speed 180 px/s). Enemy ids are the canon stand-ins used by the stage-1 client scenes (bandit=ENM-01-001, wolf=ENM-01-003, slime=ENM-01-004). Checked by tools/content/check_zone_defs.py.",
+  "_comment": "Open-world zone definition for the server simulation (T-038b). Units = client world pixels (client player speed 180 px/s). Difficulty ramps with distance from the player spawn: level 1 (ENM-01-001) closest, then level 2 (-002), 3 (-003), 4 (-004) (owner decision 2026-11-21, C-MAGE-001 option d). Checked by tools/content/check_zone_defs.py.",
   "schema_version": 1,
   "zone_id": "ZONE-01-DAWN-VALLEY",
   "region_id": "REG-01",
   "tick_rate": 10,
   "player_speed": 180.0,
   "interest_radius": 1100.0,
-  "bounds": {"min_x": 0, "min_y": 0, "max_x": 2048, "max_y": 1400},
-  "player_spawn": {"x": 620, "y": 720},
+  "bounds": {
+    "min_x": 0,
+    "min_y": 0,
+    "max_x": 2048,
+    "max_y": 1400
+  },
+  "player_spawn": {
+    "x": 620,
+    "y": 720
+  },
   "enemies": [
-    {"spawn_id": "ZS-01-001", "enemy_id": "ENM-01-004", "x": 1240, "y": 780},
-    {"spawn_id": "ZS-01-002", "enemy_id": "ENM-01-004", "x": 1340, "y": 740},
-    {"spawn_id": "ZS-01-003", "enemy_id": "ENM-01-004", "x": 1300, "y": 860},
-    {"spawn_id": "ZS-01-004", "enemy_id": "ENM-01-003", "x": 1480, "y": 480},
-    {"spawn_id": "ZS-01-005", "enemy_id": "ENM-01-003", "x": 1620, "y": 560},
-    {"spawn_id": "ZS-01-006", "enemy_id": "ENM-01-001", "x": 1280, "y": 980},
-    {"spawn_id": "ZS-01-007", "enemy_id": "ENM-01-001", "x": 1400, "y": 1040}
+    {
+      "spawn_id": "ZS-01-001",
+      "enemy_id": "ENM-01-002",
+      "x": 1240,
+      "y": 780
+    },
+    {
+      "spawn_id": "ZS-01-002",
+      "enemy_id": "ENM-01-002",
+      "x": 1340,
+      "y": 740
+    },
+    {
+      "spawn_id": "ZS-01-003",
+      "enemy_id": "ENM-01-004",
+      "x": 1300,
+      "y": 940
+    },
+    {
+      "spawn_id": "ZS-01-004",
+      "enemy_id": "ENM-01-003",
+      "x": 1480,
+      "y": 480
+    },
+    {
+      "spawn_id": "ZS-01-005",
+      "enemy_id": "ENM-01-003",
+      "x": 1620,
+      "y": 560
+    },
+    {
+      "spawn_id": "ZS-01-006",
+      "enemy_id": "ENM-01-001",
+      "x": 860,
+      "y": 720
+    },
+    {
+      "spawn_id": "ZS-01-007",
+      "enemy_id": "ENM-01-001",
+      "x": 1064,
+      "y": 968
+    },
+    {
+      "spawn_id": "ZS-01-008",
+      "enemy_id": "ENM-01-001",
+      "x": 680,
+      "y": 984
+    }
   ]
 }
