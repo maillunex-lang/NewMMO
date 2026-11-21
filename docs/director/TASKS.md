@@ -50,6 +50,11 @@ Prompts live in `docs/director/prompts/T-NNN.md`. Protocol: `DIRECTOR.md`.
 | T-038d | client | Puppets from snapshots, prediction/interpolation, skill bar → `cast_skill`, telegraphs | T-038c | PROPOSED |
 | T-038e | server | Dungeon on the sim; retire R-KILL-DNG | T-038c, T-038d | PROPOSED |
 | T-038f | server+client | Measure CPU/RAM per zone, Android cost | T-038d | PROPOSED |
+| T-041 | server | Daily board engine (`docs/DAILY_LOOP.md` §8): templates, 03:00 UTC reset, deterministic rotation by day parity, progress from server-observed kills/interactions, ledger rewards, chest, weekly stamps | T-038c, T-020 ✔ | PROPOSED — design in `docs/DAILY_LOOP.md` (owner delegated parameters 2026-11-21) |
+| T-042 | client | Daily board + weekly book UI, tracker, optional event notifications | T-041 | PROPOSED |
+| T-043 | server | Event scheduler (4 windows/day per region, `EVT-*` instances, contribution, anti-AFK) — aligns with EX-P10 | T-041, EX-P10 | PROPOSED |
+| T-044 | content | Daily/event texts (new narrative, owner «делай» needed), RU/EN | owner | PROPOSED |
+| T-045 | server+tools | Retention telemetry (D1/D7, daily completion funnel) + parameter panel | T-041 | PROPOSED |
 | T-039 | server+client | EX-P09 4/4: equipment drops + class RARE first-clear reward, reward mail, pity, `STORY_SOLO`, party/queue | T-038, equip UI | PROPOSED |
 | T-031 | research | EX-W01: re-verify Gaea/WFC/in-house on Godot 4.7.2; recommend one | D-005 | **PROPOSED** — install only after owner OK |
 | T-032 | client | EX-W01: Lunex Generate editor dock → `Generated/*` only | T-031 ✔, owner OK if deps | **PROPOSED** |
@@ -127,3 +132,4 @@ First parallel batch (different lanes, no dependencies, disjoint files): **T-001
 | 2026-11-21 | Owner: Claude is the autonomous director+lead dev; T-034 loot implemented on `agent/director/T-034` (server `internal/loot`, migration 00011, client request + HUD feedback) |
 | 2026-11-21 | Owner: «Продолжай, EX-P09» → T-036 dungeon engine core on `agent/director/T-036`; T-037…T-039 queued (client scenes, server combat, equipment/mail/pity/party) |
 | 2026-11-21 | Owner: «Да на все» → T-038 approved (A, 10 Hz, split, movement authority); T-038a started |
+| 2026-11-21 | Owner: daily/event loop to retain players — «сделай как больше нравится игрокам» → `docs/DAILY_LOOP.md` (proposal), T-041…T-045 PROPOSED |
