@@ -42,7 +42,9 @@ idempotency_keys(character_id bigint REFERENCES characters, request_id uuid, mes
          payload_sha256 char(64) NOT NULL, result jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now(),
          PRIMARY KEY (character_id, request_id))                           -- retention ≥ 24 h, pruned by a job
 ```
-`character_dialogue_choices` — EX-P05 / T-024 (`00009_dialogue_choices.sql`, `dialogue-engine.md`). Deferred: `dungeon_instances`, `world_event_instances` (EX-P09/P10; canon §16 `world_event_instances` gets a `content_build_id` FK there), inventory (EX-P08).
+`character_dialogue_choices` — EX-P05 / T-024 (`00009_dialogue_choices.sql`, `dialogue-engine.md`).
+`character_inventory` + `characters.inventory_revision` — EX-P08 / T-029 (`00010_inventory.sql`, `inventory-engine.md`).
+Deferred: `dungeon_instances`, `world_event_instances` (EX-P09/P10; canon §16 `world_event_instances` gets a `content_build_id` FK there).
 
 ## 3. Integrity rules
 - `reward_claims`, `character_ledger`, `character_quest_items`: **append-only** (UPDATE/DELETE/TRUNCATE rejected by triggers, like `content_audit`). `reward_claims` is immutable once inserted.
