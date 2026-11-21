@@ -220,10 +220,12 @@ func _try_event(...):
 	_progress[oid] = have + 1
 ```
 
-- **In-session:** progress capped at `need` (good for smoke).
-- **Not durable:** no save / server revision.
-- **Turn-in:** status gate only; no `reward_claims` unique key → fails CT-011/CT-013 requirements.
-- `mq01_smoke.gd` drives events via API without proximity checks — fine for headless, proves client trust model.
+- **In-session:** progress capped at `need` (no overshoot past need).
+- **Shared-target spam (PARTIAL):** progress keys by objective `target` string, not world instance. Repeating interact on **one** node with matching `interact_id` (e.g. single `POI-CLUE` / `POI-RESIDENT-GROUP`) can fill `count: 2|3` without visiting sibling markers in `dawn_valley.tscn`.
+- **Not durable:** no save / server revision / `request_id` dedupe.
+- **Turn-in:** status gate only; `QF-*-REWARD` set after grant, not used as ledger keys → fails CT-011/CT-013.
+- `mq01_smoke.gd` drives events via API without proximity — fine for headless; proves client trust model.
+- `QF-*-DONE` unlocks the chain only; not a reward idempotency key.
 
 ### 4.5 Godot 4.3 / 4.7.2
 
@@ -278,6 +280,7 @@ Local `tools/smoke_stage1.sh` also skips mq01.
 |----|------|----------|-----------------|
 | R-REWARD | Client grants gold/XP/loot | Critical | EX-P04/P08 ledger |
 | R-OBJ | Objective progress not durable / not authoritative | High | EX-P04 |
+| R-OBJ-SPAM | Same `interact_id` node can satisfy `count>1` | Medium | Distinct targets or server instance IDs in EX-P04 |
 | R-DIA | `DLG-*` vs `DIA.*` naming in docs | Medium | CONFLICTS + schema alias |
 | R-OBJDIA | Missing OBJ dialogue lines in client | Low–Med | Content export EX-P01/P06 |
 | R-GODOT | Version drift 4.3/4.7.2 | High (if ignored) | Owner pin |
