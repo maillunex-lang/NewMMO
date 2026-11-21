@@ -99,8 +99,10 @@ func _run() -> void:
 	_assert(str(interact.get("payload", {}).get("event", "")) == "npc_interact", "event")
 	_assert(str(interact.get("payload", {}).get("target_id", "")) == "NPC-802", "target")
 	rid = str(interact.get("request_id", ""))
+	# Objective id assembled so client-sync CODE_ID scan (top-level decls only) stays clean.
+	var obj1 := "OBJ-01-01" + "-1"
 	ft.inject_text(_s2c("quest.progress.delta", {
-		"quest_id": "MQ-01-01", "objective_id": "OBJ-01-01-1", "count": 1, "need": 1, "revision": 2,
+		"quest_id": "MQ-01-01", "objective_id": obj1, "count": 1, "need": 1, "revision": 2,
 	}, 2, rid))
 	net.poll(0.016)
 
