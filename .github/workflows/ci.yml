@@ -103,11 +103,13 @@ jobs:
           GOOSE_DRIVER: postgres
           GOOSE_DBSTRING: ${{ env.NEWMMO_TEST_MIGRATE_DATABASE_URL }}
         run: |
-          set -uo pipefail
+          set +e   # GitHub runs steps with bash -e: one runner is EXPECTED to fail, do not abort on it
+          set -o pipefail
           goose -dir server/migrations reset
           goose -dir server/migrations up > /tmp/goose-a.log 2>&1 & pa=$!
           goose -dir server/migrations up > /tmp/goose-b.log 2>&1 & pb=$!
-          wait $pa; ra=$?; wait $pb; rb=$?
+          wait $pa; ra=$?
+          wait $pb; rb=$?
           echo "runner A exit=$ra, runner B exit=$rb"; tail -n 5 /tmp/goose-a.log /tmp/goose-b.log
           if [ $ra -ne 0 ] && [ $rb -ne 0 ]; then echo "both runners failed"; exit 1; fi
           set -e
