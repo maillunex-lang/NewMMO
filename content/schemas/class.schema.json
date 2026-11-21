@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "newmmo/content/class.schema.json",
+  "title": "Class",
+  "type": "object",
+  "required": [
+    "kind",
+    "id",
+    "file",
+    "line",
+    "fields"
+  ],
+  "properties": {
+    "kind": {
+      "const": "class"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^CLS-0[1-5]$"
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fields": {
+      "type": "object",
+      "required": [
+        "name",
+        "role",
+        "resource"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resource": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

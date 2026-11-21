@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "newmmo/content/region.schema.json",
+  "title": "Region",
+  "type": "object",
+  "required": [
+    "kind",
+    "id",
+    "file",
+    "line",
+    "fields"
+  ],
+  "properties": {
+    "kind": {
+      "const": "region"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^REG-0[1-6]$"
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fields": {
+      "type": "object",
+      "required": [
+        "name",
+        "levels",
+        "capital"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "levels": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\d+[–-]\\d+$"
+        },
+        "capital": {
+          "type": "string",
+          "minLength": 1
+        },
+        "story_node": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

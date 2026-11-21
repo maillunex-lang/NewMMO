@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "newmmo/content/item.schema.json",
+  "title": "Item",
+  "type": "object",
+  "required": [
+    "kind",
+    "id",
+    "file",
+    "line",
+    "fields"
+  ],
+  "properties": {
+    "kind": {
+      "const": "item"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^ITM-0[0-6]-\\d{3}$"
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fields": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "quality": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

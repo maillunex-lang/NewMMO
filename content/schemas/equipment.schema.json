@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "newmmo/content/equipment.schema.json",
+  "title": "Equipment",
+  "type": "object",
+  "required": [
+    "kind",
+    "id",
+    "file",
+    "line",
+    "fields"
+  ],
+  "properties": {
+    "kind": {
+      "const": "equipment"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^EQ-0[1-5]-0[1-6]-(MH|OH|HD|CH|HA|LG|FT|RG|AM)-0[12]$"
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fields": {
+      "type": "object",
+      "required": [
+        "slot",
+        "name",
+        "level"
+      ],
+      "properties": {
+        "class_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "slot": {
+          "enum": [
+            "MH",
+            "OH",
+            "HD",
+            "CH",
+            "HA",
+            "LG",
+            "FT",
+            "RG",
+            "AM"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        }
+      }
+    }
+  }
+}

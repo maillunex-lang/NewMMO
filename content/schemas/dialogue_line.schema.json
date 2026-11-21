@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "newmmo/content/dialogue_line.schema.json",
+  "title": "Dialogue line (DIA.* only, C-DIA-001 A)",
+  "type": "object",
+  "required": [
+    "kind",
+    "id",
+    "file",
+    "line",
+    "fields"
+  ],
+  "properties": {
+    "kind": {
+      "const": "dialogue_line"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^DIA\\.(?:(?:MQ-0[1-6]-\\d\\d|SQ-0[1-6]-\\d{3})\\.(?:START|OBJ[123]|PROGRESS|TURNIN|DONE)\\.\\d\\d|(?:MQ-0[1-6]-\\d\\d|SQ-0[1-6]-\\d{3})\\.CHOICE\\.(?:\\d\\d|[A-Z0-9_]+)|NPC\\.NPC-\\d{3}\\.[A-Z]+\\.\\d\\d|REG-0[1-6]\\.(?:LOW_REP|HIGH_REP|AFTER_CHOICE)|END-0[1-3]\\.\\d\\d|END-ALL\\.PLAYER)$"
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fields": {
+      "type": "object",
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "speaker": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(NPC-\\d{3}|PLAYER|SYSTEM)$"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "newmmo/content/material.schema.json",
+  "title": "Material",
+  "type": "object",
+  "required": [
+    "kind",
+    "id",
+    "file",
+    "line",
+    "fields"
+  ],
+  "properties": {
+    "kind": {
+      "const": "material"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^MAT-0[1-6]-\\d{3}$"
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fields": {
+      "type": "object",
+      "required": [
+        "name",
+        "quality"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "quality": {
+          "enum": [
+            "COMMON",
+            "UNCOMMON",
+            "RARE",
+            "EPIC",
+            "LEGENDARY"
+          ]
+        }
+      }
+    }
+  }
+}

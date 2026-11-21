@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "newmmo/content/quest_side.schema.json",
+  "title": "Side quest",
+  "type": "object",
+  "required": [
+    "kind",
+    "id",
+    "file",
+    "line",
+    "fields"
+  ],
+  "properties": {
+    "kind": {
+      "const": "quest_side"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^SQ-0[1-6]-(0[01]\\d|020)$"
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fields": {
+      "type": "object",
+      "required": [
+        "title",
+        "objectives",
+        "reward"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "objectives": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "text"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^SQO-0[1-6]-\\d{3}-\\d\\d$"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "line": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^SQ[FR]-"
+          }
+        },
+        "npcs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^NPC-\\d{3}$"
+          }
+        },
+        "locations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^LOC-0[1-6]-\\d{3}$"
+          }
+        },
+        "reward": {
+          "type": "object",
+          "required": [
+            "xp"
+          ],
+          "properties": {
+            "xp": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "gold": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "reputation": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "faction",
+                  "delta"
+                ],
+                "properties": {
+                  "faction": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^FAC-0[1-8]$"
+                  },
+                  "delta": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "newmmo/content/dungeon.schema.json",
+  "title": "Dungeon",
+  "type": "object",
+  "required": [
+    "kind",
+    "id",
+    "file",
+    "line",
+    "fields"
+  ],
+  "properties": {
+    "kind": {
+      "const": "dungeon"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^DNG-0[1-6]-00[12]$"
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fields": {
+      "type": "object",
+      "required": [
+        "name",
+        "entrance",
+        "level",
+        "miniboss",
+        "boss"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entrance": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^POI-0[1-6]-00[67]$"
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
+        "format": {
+          "type": "string",
+          "minLength": 1
+        },
+        "miniboss": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^ENM-\\d\\d-20[12]$"
+        },
+        "boss": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^ENM-\\d\\d-30[12]$"
+        }
+      }
+    }
+  }
+}

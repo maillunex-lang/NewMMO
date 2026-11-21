@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "newmmo/content/recipe.schema.json",
+  "title": "Recipe",
+  "type": "object",
+  "required": [
+    "kind",
+    "id",
+    "file",
+    "line",
+    "fields"
+  ],
+  "properties": {
+    "kind": {
+      "const": "recipe"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^REC-0[1-6]-\\d{3}$"
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fields": {
+      "type": "object",
+      "required": [],
+      "properties": {}
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "newmmo/content/loot_table.schema.json",
+  "title": "Loot table",
+  "type": "object",
+  "required": [
+    "kind",
+    "id",
+    "file",
+    "line",
+    "fields"
+  ],
+  "properties": {
+    "kind": {
+      "const": "loot_table"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^LOOT-ENM-0[1-6]-\\d{3}$"
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fields": {
+      "type": "object",
+      "required": [
+        "enemy"
+      ],
+      "properties": {
+        "enemy": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "ENM-\\d\\d-\\d{3}"
+        }
+      }
+    }
+  }
+}
