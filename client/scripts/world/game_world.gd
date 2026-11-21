@@ -8,10 +8,14 @@ extends Node2D
 @onready var camera: Camera2D = $DawnValley/Player/Camera2D
 
 func _ready() -> void:
-	# Honor project.godot [internationalization] locale/locale (OS locale otherwise wins).
-	var forced := str(ProjectSettings.get_setting("internationalization/locale/locale", ""))
-	if forced != "":
-		TranslationServer.set_locale(forced)
+	# Prefer user://settings.cfg (EX-P06), else project.godot locale pin.
+	var LocaleSettings = load("res://scripts/ui/locale_settings.gd")
+	if LocaleSettings != null:
+		TranslationServer.set_locale(LocaleSettings.load_locale())
+	else:
+		var forced := str(ProjectSettings.get_setting("internationalization/locale/locale", ""))
+		if forced != "":
+			TranslationServer.set_locale(forced)
 	_try_attach_online_session()
 	if quest_manager and quest_manager.has_signal("dialogue_flow_requested"):
 		quest_manager.dialogue_flow_requested.connect(_on_flow)

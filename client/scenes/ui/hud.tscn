@@ -124,6 +124,23 @@ offset_bottom = 150.0
 grow_horizontal = 0
 text = "ui.journal"
 
+[node name="LocaleBtn" type="OptionButton" parent="SafeArea/Chrome"]
+custom_minimum_size = Vector2(88, 40)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -192.0
+offset_top = 102.0
+offset_right = -96.0
+offset_bottom = 142.0
+grow_horizontal = 0
+item_count = 2
+popup/item_0/text = "RU"
+popup/item_0/id = 0
+popup/item_1/text = "EN"
+popup/item_1/id = 1
+
 [node name="Skills" type="HBoxContainer" parent="SafeArea/Chrome"]
 layout_mode = 1
 anchors_preset = 3

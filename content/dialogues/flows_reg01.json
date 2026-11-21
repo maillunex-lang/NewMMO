@@ -81,6 +81,22 @@
     "DIA.MQ-01-05.TURNIN.01",
     "DIA.MQ-01-05.DONE.01"
    ]
+  },
+  "SQ-01-001": {
+   "start": [
+    "DIA.SQ-01-001.START.01",
+    "DIA.SQ-01-001.START.02",
+    "DIA.SQ-01-001.START.03"
+   ],
+   "progress": [
+    "DIA.SQ-01-001.PROGRESS.01",
+    "DIA.SQ-01-001.PROGRESS.02",
+    "DIA.SQ-01-001.PROGRESS.03"
+   ],
+   "turnin": [
+    "DIA.SQ-01-001.TURNIN.01",
+    "DIA.SQ-01-001.DONE.01"
+   ]
   }
  }
 }
