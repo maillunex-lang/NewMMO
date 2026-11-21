@@ -10,7 +10,6 @@ import (
 
 	"github.com/maillunex-lang/NewMMO/server/internal/api"
 	"github.com/maillunex-lang/NewMMO/server/internal/auth"
-
 	"github.com/maillunex-lang/NewMMO/server/internal/httpservice"
 	"github.com/maillunex-lang/NewMMO/server/internal/ws"
 )
@@ -65,6 +64,9 @@ func run(logger *slog.Logger) error {
 	}()
 
 	socket := ws.New(ctx, wsConfig, store, logger)
+	if err := attachQuestEngine(ctx, store, socket, logger); err != nil {
+		logger.Warn("quest engine unavailable at startup", "error", err.Error())
+	}
 	socketLifetime, stopSocket := context.WithCancel(ctx)
 	socketDone := make(chan struct{})
 	go func() {

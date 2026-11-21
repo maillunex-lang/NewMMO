@@ -76,6 +76,9 @@ func Open(ctx context.Context, cfg Config) (*Store, error) {
 
 func (s *Store) Close() { s.pool.Close() }
 
+// Pool exposes the application DB pool for gameplay packages (quest engine).
+func (s *Store) Pool() *pgxpool.Pool { return s.pool }
+
 func (s *Store) Ready(ctx context.Context) error {
 	return s.pool.Ping(ctx)
 }
