@@ -1,0 +1,26 @@
+keys,ru,en
+ui.auto,АВТО,AUTO
+ui.auto_on,АВТО ВКЛ,AUTO ON
+ui.talk,ГОВОРИТЬ,TALK
+ui.next,Далее,Continue
+ui.close,Закрыть,Close
+ui.accept,Принять,Accept
+ui.ask,Спросить,Ask
+ui.turn_in,Сдать,Turn in
+ui.you,Вы,You
+ui.journal,Журнал,Journal
+ui.journal_title,Журнал заданий,Quest Journal
+ui.active_section,Активное задание,Active Quest
+ui.objectives_section,Цели,Objectives
+ui.reward_section,Награда,Reward
+ui.completed_section,Завершённые,Completed
+ui.no_active_quest,Нет активного основного задания,No active main quest
+ui.status_available,Доступно,Available
+ui.status_active,В процессе,In progress
+ui.status_objectives_complete,Цели выполнены — сдайте задание,Objectives done — turn in
+ui.status_completed,Завершено,Completed
+ui.reward_xp,XP,XP
+ui.reward_gold,золото,gold
+ui.reward_rep,репутация,reputation
+ui.objective_fmt,%s (%d/%d),%s (%d/%d)
+ui.quest_complete_prefix,✓ ,✓ 
