@@ -184,12 +184,12 @@
 **Контракт:** `docs/contracts/inventory-engine.md`  
 **Приёмка:**
 - [x] серверный инвентарь (T-029 bag/materials + move) — `820aa39`
-- [x] bag UI snapshot/delta (T-030) — branch `cursor/ex-p08-inventory-ui-6dd6`
+- [x] bag UI snapshot/delta (T-030) — merge `23fe4cc`
 - [x] `MAT-01-*` stacks; `ITEM-Q-*` via `character_quest_items` (QUEST_KEY)
 - [x] класс CLS-01…05 selectable (character create, T-018)
 - [ ] combat loot tables / equip UI (follow-up)  
 **Тесты:** CT-009, CT-017 + PG inventory + ONLINE_SMOKE inventory panel  
-**Статус:** [~] T-030 in review; loot/equip remain
+**Статус:** [~] bag+server inventory done; loot/equip remain
 
 ### EX-P09 — First dungeon `DNG-01-001`
 **Зависит от:** EX-P08 (базовый бой/лут), `12_DUNGEONS.md`  
@@ -301,8 +301,8 @@
 ## Актуальный handoff для Cursor-директора (2026-11-21)
 
 - **Завершено:** EX-P00–P03, T-018 REST auth, T-019 WebSocket (PR #2), T-020 quest engine (PR #3, `4461aa7`), T-022 login UI, T-015 Godot 4.7.2; EX-CONTENT-01 pilot интегрирован.
-- **Текущий этап:** EX-P08 [~]. **Сейчас:** T-030 inventory bag UI (PR). **Далее после merge:** combat loot / equip; then EX-P09 dungeon.
+- **Текущий этап:** EX-P08 [~]. **Стоп:** T-030 merged (`23fe4cc`). **Далее при возобновлении:** combat loot / equip; then EX-P09 dungeon.
 - **Не завершено:** live E2E against running Go server (manual/env), R-PROX (S-02), Android device measurements, EX-P08 loot/equip, EX-P09–P13. Не отмечать их `[x]` по наличию stub или документации.
 - **Рабочие масштабы локаций:** деревня 200×200 м, город 500×500 м, открытая зона 1000×1000 м, большая дикая 1500×1500 м, подземелье 150–400 м маршрута; источник `docs/content/03_LOCATIONS.md`, предварительно до Android-профилирования.
 - **Автономия Cursor:** может корректировать план, выдавать и принимать задачи, обновлять статусы и сливать прошедшие проверки изменения. Без согласия владельца не менять канон, игровой баланс/монетизацию, архитектурные пины, не добавлять зависимости, не развёртывать VPS и не удалять данные.
-- **Стоп после этапа:** владелец попросил остановиться после завершения текущего этапа (T-030).
+- **Пауза:** владелец попросил остановиться после T-030 — разработка приостановлена до новой команды.
