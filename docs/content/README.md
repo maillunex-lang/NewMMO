@@ -32,5 +32,7 @@ Files in `docs/content/` are the **approved narrative and content canon** for Lu
 
 ## Implementation snapshot
 
+- **Baseline audit:** [`../AUDIT_BASELINE.md`](../AUDIT_BASELINE.md) (EX-P00).
+- **Conflicts:** [`CONFLICTS.md`](CONFLICTS.md) (e.g. DIA vs DLG).
 - **Done (partial):** REG-01 MQ-01-01…05 local client stub; Stage 1 visual Dawn Valley.
 - **Not done:** authoritative Go/Postgres quests, SQ, DNG, EVT, full 240 quests, Android metrics.

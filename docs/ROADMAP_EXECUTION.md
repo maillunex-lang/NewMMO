@@ -6,7 +6,7 @@
 **Главный канон-оркестратор:** `docs/content/14_CONTENT_INTEGRATION.md`  
 **Канон контента:** `docs/content/01_WORLD.md` … `14_CONTENT_INTEGRATION.md`  
 **Процесс:** `AGENTS.md`, `.cursor/rules/open-source-research.mdc`  
-**Обновлено:** 2026-11-21 · `main` @ `5430a66`
+**Обновлено:** 2026-11-21 · EX-P00 closed → `docs/AUDIT_BASELINE.md`
 
 ---
 
@@ -34,7 +34,7 @@
 
 | ID | Что | Доказательство | Статус |
 |----|-----|----------------|--------|
-| DONE-A | Read-ish audits | `docs/AUDIT.md`, `docs/AUDIT_CONTENT_SYNC.md` | [~] нужна формализация `AUDIT_BASELINE.md` (P00) |
+| DONE-A | Baseline audits | `docs/AUDIT_BASELINE.md` (+ legacy `AUDIT.md`, `AUDIT_CONTENT_SYNC.md`) | [x] EX-P00 |
 | DONE-B | Stage 1 visual slice | Dawn Valley `.tscn`, joystick/HUD, World Studio, procedural art | [x] `5846c1a` era / на `main` |
 | DONE-C | Agent process rules | `AGENTS.md`, `.cursor/rules/open-source-research.mdc` | [x] |
 | DONE-D | Location procgen research + decision D | `docs/research/location-procgen-isometric.md` — генератор отложен | [x] |
@@ -54,12 +54,13 @@
 **Цель:** единый `docs/AUDIT_BASELINE.md` (пути, LOC строк, DONE/PARTIAL/MISSING/BLOCKED)  
 **Не делать:** новый геймплей  
 **Приёмка:**
-- [ ] Таблица всех подсистем client/server/admin/db/ci
-- [ ] Матрица REG-01: что уже в коде vs канон
-- [ ] Список блокеров (Godot 4.3 vs 4.7.2, нет Postgres, APK toolchain)
-- [ ] Обновлён этот ROADMAP  
+- [x] Таблица всех подсистем client/server/admin/db/ci
+- [x] Матрица REG-01: что уже в коде vs канон
+- [x] Список блокеров (Godot 4.3 vs 4.7.2, нет Postgres, APK toolchain)
+- [x] Обновлён этот ROADMAP  
 **Тесты:** N/A (docs)  
-**Статус:** [~] частично закрыто `AUDIT.md` / `AUDIT_CONTENT_SYNC.md` — **следующий рекомендуемый шаг**
+**Статус:** [x] `docs/AUDIT_BASELINE.md` + `docs/content/CONFLICTS.md` (C-DIA-001)  
+**Проверки:** read-only сверка дерева, `quest_manager`/`main.go`/`ci.yml`/`project.godot`, объёмы канона vs runtime
 
 ### EX-P01 — Content parsers + JSON Schema (MD → AST)
 **Зависит от:** EX-P00  
@@ -175,7 +176,7 @@
 | 2026-11-21 | DONE-C/D process+research | `84ccea4`/`7f817f9` | — | procgen = D |
 | 2026-11-21 | DONE-E MQ-01-01…05 local | `11d48ca` | `MQ01_SMOKE_OK` | не сервер |
 | 2026-11-21 | Canon 01–14 present | `efe1c7b` | — | integration+events |
-| | EX-P00 | | | *ожидает* |
+| 2026-11-21 | EX-P00 baseline audit | *(this push)* | docs-only | local rewards + authority gaps documented |
 
 ---
 
@@ -194,8 +195,6 @@
 
 ## 6. Следующий этап (предложение)
 
-**Рекомендация:** выполнить **EX-P00** — создать `docs/AUDIT_BASELINE.md` (read-only сводка репозитория под чеклист §19/§20), отметить `[x]` здесь, затем остановиться.
+**EX-P00 закрыт.** Следующий рекомендуемый этап: **EX-P01** — content parsers + JSON Schema (MD → AST), OSS research first, без установки чужого кода до подтверждения.
 
-После команды владельца **«делай»** — только этот этап (без P01+).
-
-Альтернатива по явной команде: сразу **EX-P01** (валидатор контента), если baseline считать достаточным.
+После команды владельца **«делай»** — только EX-P01 (без P02+).

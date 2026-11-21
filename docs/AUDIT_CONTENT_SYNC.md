@@ -1,7 +1,8 @@
 # Audit: docs/content canon vs client (2026-11-21)
 
-**Branch:** `main` @ sync after content import (`072f54b`+)  
-**Scope:** 10 approved `docs/content/*.md` vs NewMMO Stage 1 client
+**Branch:** `main`  
+**Scope:** approved `docs/content/*.md` vs NewMMO client  
+**Superseded for readiness claims by:** `docs/AUDIT_BASELINE.md` (EX-P00)
 
 ## Canon inventory
 
