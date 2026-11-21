@@ -119,12 +119,16 @@ static func load_glb(name: String, height := 0.0) -> Node3D:
 	holder.add_child(body)
 	body.add_child(inst)
 	_attach_animations(inst)
+	var sink: float = float(SINK.get(name, 0.0))
 	var box := _aabb_of(inst)  # inst itself has identity transform here
 	if box.size.y > 0.001:
 		var k := h / box.size.y
 		inst.scale = Vector3.ONE * k
-		inst.position = Vector3(-box.get_center().x * k, -box.position.y * k, -box.get_center().z * k)
+		inst.position = Vector3(-box.get_center().x * k, -box.position.y * k - sink, -box.get_center().z * k)
 	return holder
+
+## Meshy added a thin dirt "base plate" under some buildings; sinking the model hides it below the ground plane.
+const SINK := {"cottage": 0.16, "well": 0.12, "haystack": 0.05, "barrel": 0.03}
 
 static var _anim_cache: Dictionary = {}
 

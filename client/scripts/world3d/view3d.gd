@@ -9,6 +9,7 @@ const PITCH_DEG := 48.0
 const ZOOM_MIN := 7.0
 const ZOOM_MAX := 30.0
 const MAP_SIZE := Vector2(2048, 1400)
+const CHAR_SCALE := 1.3   # characters read larger than life, like most MMOs
 
 var valley: Node2D = null
 var player: Node2D = null
@@ -16,7 +17,7 @@ var camera: Camera3D = null
 var sun: DirectionalLight3D = null
 var environment: Environment = null
 var preset := "high"
-var zoom := 13.0
+var zoom := 10.5
 var fx: Fx3D = null
 var grass: Grass = null
 var _road_tex: Texture2D = null
@@ -30,7 +31,7 @@ var _views: Dictionary = {}        # instance_id -> {node, view, kind, last, tag
 var _scan_t := 0.0
 var _cam_target := Vector3.ZERO
 var _t := 0.0
-var _name_font_size := 30
+var _name_font_size := 24
 
 func setup(p_valley: Node2D, p_player: Node2D) -> void:
 	valley = p_valley
@@ -315,6 +316,8 @@ func _make_view(n: Node2D, kind: String) -> void:
 			label = tr(str(n.get("display_name")))
 	if view == null:
 		return
+	if kind != "poi":
+		view.scale = Vector3.ONE * CHAR_SCALE
 	add_child(view)
 	var tag := Label3D.new()
 	tag.text = label
@@ -323,7 +326,7 @@ func _make_view(n: Node2D, kind: String) -> void:
 	tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	tag.no_depth_test = true
 	tag.pixel_size = 0.006
-	tag.position = Vector3(0, 2.7 if kind != "poi" else 1.6, 0)
+	tag.position = Vector3(0, 2.7 if kind != "poi" else 1.6, 0) / (CHAR_SCALE if kind != "poi" else 1.0)
 	tag.visible = label != "" and kind != "poi"
 	view.add_child(tag)
 	var bar: MeshInstance3D = null
@@ -375,7 +378,7 @@ func _poi_marker() -> Node3D:
 func _hp_bar() -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	var q := QuadMesh.new()
-	q.size = Vector2(1.2, 0.14)
+	q.size = Vector2(0.95, 0.075)
 	mi.mesh = q
 	var m := StandardMaterial3D.new()
 	m.albedo_color = Color(0.9, 0.2, 0.2)
@@ -439,7 +442,12 @@ func _sync_actors(delta: float) -> void:
 		if e["ap"] != null:
 			_drive_humanoid(e, moving, speed, dead_now, delta)
 		var body := v.get_node_or_null("Body") as Node3D
-		if body != null and e["ap"] == null:
+		if body != null and e["ap"] == null and kind == "enemy" and str(n.get("ref")) == "ENM-01-004":
+			e["bob"] = float(e["bob"]) + delta * (9.0 if moving else 3.0)
+			var q := sin(float(e["bob"]))
+			body.scale = Vector3(1.0 - 0.07 * q, 1.0 + 0.12 * q, 1.0 - 0.07 * q)
+			body.position.y = maxf(0.0, q) * (0.25 if moving else 0.04)
+		elif body != null and e["ap"] == null:
 			e["bob"] = float(e["bob"]) + (delta * (11.0 if moving else 2.2))
 			body.position.y = absf(sin(float(e["bob"]))) * (0.12 if moving else 0.03)
 		# server puppet state
