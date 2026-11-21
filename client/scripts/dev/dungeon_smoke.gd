@@ -126,12 +126,23 @@ func _run() -> void:
 	_assert(_last_out(ft).is_empty(), "no client death report")
 	_assert(int(player.gold) == 0, "dungeon gold waits for claim")
 
-	# Phase 2 highlights cover and routes crystal interaction to the live stream.
 	_rev = 2
 	var arena := "DNG-01-001-R06"
 	ft.inject_text(_s2c("dungeon.snapshot", _snap(arena, "BOSS_ACTIVE")))
 	net.poll(0.016)
 	await process_frame
+	var sector := [[{"x": 420, "y": 260}, {"x": 510, "y": 170}, {"x": 510, "y": 350}]]
+	ft.inject_text(_s2c("world.event", {"encounter_id": arena, "events": [{"type": "sector_telegraph", "amount": 1500, "sectors": sector}]}))
+	net.poll(0.016)
+	await process_frame
+	var warnings := get_nodes_in_group("telegraphs")
+	_assert(warnings.size() == 1 and warnings[0]._sectors.size() == 1, "phase 1 uses server sector vertices")
+	ft.inject_text(_s2c("world.event", {"encounter_id": arena, "events": [{"type": "sector_end"}]}))
+	net.poll(0.016)
+	await process_frame
+	_assert(get_nodes_in_group("telegraphs").is_empty(), "phase 1 warning clears on resolution")
+
+	# Phase 2 highlights cover and routes crystal interaction to the live stream.
 	var crystal_id := "OBJ-DNG-01-001-CRYSTAL-1"
 	var crystal: Area2D = scene.get_node("Rooms/R06/Objects/" + crystal_id)
 	_assert(not crystal.monitorable, "crystal dormant before cast")

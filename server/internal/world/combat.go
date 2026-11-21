@@ -73,6 +73,7 @@ type Event struct {
 	AimX      float64  `json:"aim_x,omitempty"` // telegraph centre
 	AimY      float64  `json:"aim_y,omitempty"`
 	ObjectID  string   `json:"object_id,omitempty"`
+	Sectors   [][]Vec  `json:"sectors,omitempty"`
 	SafeAreas []Rect2  `json:"safe_areas,omitempty"`
 	Radius    float64  `json:"radius,omitempty"` // telegraph radius (world units)
 }
@@ -368,6 +369,7 @@ func (s *Sim) killEnemy(v *Entity) {
 	s.emit(Event{Type: "death", Target: v.ID, HP: 0})
 	if s.witness != nil && s.witness.boss == v.ID {
 		s.endWitness()
+		s.endBrokenCircle(v)
 	}
 	if v.temporary {
 		return

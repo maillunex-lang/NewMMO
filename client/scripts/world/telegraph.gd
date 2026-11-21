@@ -6,6 +6,7 @@ var radius := 64.0
 var duration := 0.8
 var _t := 0.0
 var _safe_areas: Array[Rect2] = []
+var _sectors: Array[PackedVector2Array] = []
 
 func setup(p_radius: float, p_duration: float) -> void:
 	radius = p_radius
@@ -19,6 +20,15 @@ func setup_safe_areas(areas: Array, seconds: float) -> void:
 		var top_left := Vector2(float(area["min_x"]), float(area["min_y"]))
 		var bottom_right := Vector2(float(area["max_x"]), float(area["max_y"]))
 		_safe_areas.append(Rect2(top_left, bottom_right - top_left))
+
+func setup_sectors(sectors: Array, seconds: float) -> void:
+	setup(0.0, seconds)
+	for sector in sectors:
+		var points := PackedVector2Array()
+		for point in sector:
+			points.append(Vector2(float(point["x"]), float(point["y"])))
+		if points.size() >= 3:
+			_sectors.append(points)
 
 func _process(delta: float) -> void:
 	_t += delta
@@ -37,6 +47,13 @@ func _draw() -> void:
 				center + Vector2(23, -16)]), Color(0.9, 1.0, 0.92), 6.0, true)
 			draw_line(area.position, area.position + Vector2(area.size.x * (1.0 - k), 0),
 				Color(0.95, 1.0, 0.96), 5.0)
+		return
+	if not _sectors.is_empty():
+		for points in _sectors:
+			draw_colored_polygon(points, Color(0.9, 0.12, 0.12, 0.18 + 0.32 * k))
+			var outline := points.duplicate()
+			outline.append(points[0])
+			draw_polyline(outline, Color(1.0, 0.45, 0.35), 3.0, true)
 		return
 	# True circle: the server hit area is a circle in world units; the fill grows with the wind-up.
 	var pts := PackedVector2Array()

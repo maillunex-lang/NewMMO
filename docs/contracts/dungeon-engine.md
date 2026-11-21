@@ -1,12 +1,12 @@
 # Contract: dungeon engine (EX-P09 / T-036)
 
-**Owner:** director · **Version:** 2 (solo server combat in `DNG-01-001`) · Canon: `12_DUNGEONS.md` §2–§4.1, §7, §9–§10. Data: `content/dungeons/dng-01-001.json`. Protocol: `websocket-protocol.md` rev 1.7. No new dependencies.
+**Owner:** director · **Version:** 2 (solo server combat in `DNG-01-001`) · Canon: `12_DUNGEONS.md` §2–§4.1, §7, §9–§10. Data: `content/dungeons/dng-01-001.json`. Protocol: `websocket-protocol.md` rev 1.8. No new dependencies.
 
 ## 1. Scope and honest interims
 Implemented now: **solo `NORMAL`**, data-driven state machine (reused for the other 11 dungeons by adding definitions), linear doors, server-checked puzzle sequence, checkpoints, personal reward claim, first-clear, server-observed combat, reconnect (idempotent re-enter), idle expiry.
 **Not yet (recorded, not hidden):**
 - No parties/queue/ready-check (no party system yet) → `max_party=1`; `STORY_SOLO`, `VETERAN`, pity (8 dry clears), class RARE equipment drop, reward mail: deferred (equipment instances/mail do not exist).
-- The first and third boss phases still use the shared combat behavior. The mini-boss mechanic remains a future slice. The owner confirmed the three final flame interactions as the clear condition for the first server-combat slice (C-DNG-001).
+- The third boss phase still uses the shared combat behavior. The mini-boss mechanic remains a future slice. The owner confirmed the three final flame interactions as the clear condition for the first server-combat slice (C-DNG-001).
 
 ## 2. States (canon §3)
 Instance: `ACTIVE → BOSS_ACTIVE → COMPLETED → CLOSED`, plus `EXPIRED`, `ABANDONED`. Room: `LOCKED → AVAILABLE → IN_PROGRESS → CLEARED`. Every transition is atomic, appends `dungeon_event_log` with a monotonic `event_seq`, and never skips a step. A door opens only when the server-evaluated `clear` condition of the room holds (`objects` all interacted; `spawns_all` all non-optional spawns defeated in server combat; `puzzle` solved).
@@ -37,7 +37,11 @@ The registry stores each room's floor width and height, entry point, and each sp
 
 The server applies kills and wipes atomically against the expected `event_seq` and pushes `dungeon.snapshot` when progression changes. A player defeat wins over a concurrent kill in that tick. The retired `dungeon.encounter.report` returns `UNKNOWN_TYPE`. Private kills never call the open-world loot hook. Pre-existing instance progress remains readable.
 
-## 5.2 Double Witness (final arena, 35–70% HP)
+## 5.2 Broken Circle (final arena, above 70% HP)
+
+The server locks two opposite quarter circles at the start of `AB-ENM-01-301-B`. One faces the target. The radius reuses the shared boss signature range. Godot renders the same polygon vertices used for the server hit check after 1.5 s. The 18 s cooldown starts with the warning. In the current unobstructed arena the path to a point outside the attack is at most 257 px, within the 270 px movement allowance.
+
+## 5.3 Double Witness (final arena, 35–70% HP)
 
 The server starts `AB-ENM-01-301-C` after aggro, during phase 2. Each cast marks two diagonal quadrants safe for 2.2 s and damages only players outside them on the resolution tick. The 25 s cooldown begins at cast start. One pair of regular regional enemies joins on the first cast. These temporary summons never grant loot or room progress.
 

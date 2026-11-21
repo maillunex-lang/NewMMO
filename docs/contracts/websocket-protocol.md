@@ -1,6 +1,6 @@
 # Contract: WebSocket protocol v1 (D-003)
 
-**Owner:** director · **Version:** `protocol_version = 1`, contract rev **1.7** (EX-P09 phase-2 crystal interactions and safe-area events) · Owner approvals (2026-11-21): **`coder/websocket v1.8.15`**, **JSON text messages**.
+**Owner:** director · **Version:** `protocol_version = 1`, contract rev **1.8** (EX-P09 boss sector events) · Owner approvals (2026-11-21): **`coder/websocket v1.8.15`**, **JSON text messages**.
 Basis: canon `14_CONTENT_INTEGRATION.md` §15 (event names and required fields are kept), research `docs/research/go-websocket.md`.
 Implementers (server lane: Go; client lane: Godot `WebSocketPeer`) build against this file; changes only via a director task. Machine-readable envelope: `websocket-envelope.schema.json`.
 
@@ -96,6 +96,8 @@ Canon events keep their names and required fields (§15.2); added fields are mar
 Inside a dungeon, `dungeon.snapshot.combat` carries a full world snapshot with an opaque `encounter_id`. The current ID is required on room movement, stop and cast requests, and included in room deltas and events. Old IDs are rejected with `STATE_CONFLICT`. Room transitions and checkpoint resets start fresh streams. The old `dungeon.encounter.report` is rejected as `UNKNOWN_TYPE`.
 
 Phase 2 sends critical, encounter-scoped `world.event` messages. `witness_telegraph` includes `amount` in milliseconds and two `safe_areas` in the same rectangle format as world bounds. `witness_crystal` carries the broken `object_id`. `witness_end` clears the warning on resolution, interruption, or boss defeat. Crystal interactions use `dungeon.interact.request {instance_id, object_id, encounter_id}` and acknowledge with `dungeon.snapshot`.
+
+The Broken Circle sends encounter-scoped `sector_telegraph` with `amount` in milliseconds and `sectors` as arrays of ordered `{x,y}` points. The client paints those polygons directly. `sector_end` clears the warning on resolution or boss defeat. Both ride the critical `world.event` path.
 
 **Reserved, not defined in v1** (separate contracts when EX-P08/P09 start): `movement.input`, `combat.ability.request`, `combat.result`, chat. Servers must reject unknown C→S types with `command.error UNKNOWN_TYPE` (no disconnect) and clients must ignore unknown S→C types (log only).
 
