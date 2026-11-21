@@ -42,4 +42,22 @@ go run ./cmd/contentctl publish '<build-id>'
 
 Игровой HTTP-сервер ожидает `NEWMMO_DATABASE_URL` роли `newmmo_app`. Утилита `contentctl` использует отдельный URL издателя контента. Сначала примените миграции через goose, затем запустите `go run .` из каталога серверного модуля. `/readyz` проверяет доступность БД.
 
-`NEWMMO_PUBLIC_WS_URL` задаёт URL для клиента. Локальное значение по умолчанию использует `127.0.0.1`, порт HTTP-сервера и путь `/v1/ws`. Значения `NEWMMO_LOGIN_LIMIT_PAIR` и `NEWMMO_LOGIN_LIMIT_IP` задают пределы неудачных входов за 15 минут (по умолчанию 5 и 20). `NEWMMO_REGISTRATION_LIMIT_IP` задаёт предел валидных запросов регистрации за час (по умолчанию 5). Лимиты используют IP TCP-соединения. Тикеты выдаются для WebSocket-этапа T-019.
+`NEWMMO_PUBLIC_WS_URL` задаёт URL для клиента. Локальное значение по умолчанию использует `127.0.0.1`, порт HTTP-сервера и путь `/v1/ws`. Значения `NEWMMO_LOGIN_LIMIT_PAIR` и `NEWMMO_LOGIN_LIMIT_IP` задают пределы неудачных входов за 15 минут (по умолчанию 5 и 20). `NEWMMO_REGISTRATION_LIMIT_IP` задаёт предел валидных запросов регистрации за час (по умолчанию 5). Лимиты используют IP TCP-соединения.
+
+WebSocket принимает `newmmo.v1` по `/v1/ws` и одноразовый билет в первом сообщении `session.auth`. Перед подключением опубликуйте совместимую сборку контента через `contentctl`. Для доступа вне loopback клиенту нужен `wss://`. При завершении TLS на обратном прокси используйте loopback между прокси и HTTP-сервером. Лимиты используют адрес TCP-соединения, поэтому клиенты за одним прокси делят его IP-лимит.
+
+| Переменная | По умолчанию |
+|---|---:|
+| `NEWMMO_WS_HANDSHAKES_PER_MINUTE` | 10 |
+| `NEWMMO_WS_PREAUTH_PER_IP` | 3 |
+| `NEWMMO_WS_COMMANDS_PER_SECOND` | 20 |
+| `NEWMMO_WS_COMMAND_BURST` | 40 |
+| `NEWMMO_WS_MUTATIONS_PER_SECOND` | 5 |
+| `NEWMMO_WS_QUEUE_SIZE` | 256 |
+| `NEWMMO_WS_RATE_VIOLATIONS` | 3 подряд |
+| `NEWMMO_WS_PREAUTH_TIMEOUT` | `5s` |
+| `NEWMMO_WS_HEARTBEAT_INTERVAL` | `25s` |
+| `NEWMMO_WS_PONG_TIMEOUT` | `15s` |
+| `NEWMMO_WS_WRITE_TIMEOUT` | `10s` |
+
+На SIGTERM сервер прекращает принимать соединения и закрывает WebSocket с кодом 1001. На дренаж отведено до 10 секунд.
