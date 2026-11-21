@@ -16,8 +16,8 @@ import (
 
 const usage = `usage: contentctl verify <dir>
        contentctl stage <dir>
-       contentctl publish <build_id> [--expected-previous <id>]
-       contentctl rollback <build_id>
+       contentctl publish <build_id> [--expected-current <id>]
+       contentctl rollback <build_id> --expected-current <id>
        contentctl status`
 
 func main() {
@@ -35,23 +35,26 @@ func run(ctx context.Context, args []string, getenv func(string) string, out io.
 		return errors.New(usage)
 	}
 	command := args[0]
-	var expectedPrevious string
+	var expectedCurrent string
 	switch command {
-	case "verify", "stage", "rollback":
+	case "verify", "stage":
 		if len(args) != 2 {
 			return errors.New(usage)
 		}
-	case "publish":
+	case "publish", "rollback":
 		if len(args) < 2 {
 			return errors.New(usage)
 		}
 		flags := flag.NewFlagSet(command, flag.ContinueOnError)
 		flags.SetOutput(io.Discard)
-		flags.StringVar(&expectedPrevious, "expected-previous", "", "expected active build ID")
+		flags.StringVar(&expectedCurrent, "expected-current", "", "expected active build ID")
+		if command == "publish" {
+			flags.StringVar(&expectedCurrent, "expected-previous", "", "alias for --expected-current")
+		}
 		if err := flags.Parse(args[2:]); err != nil {
 			return err
 		}
-		if flags.NArg() != 0 {
+		if flags.NArg() != 0 || flags.NFlag() > 1 || (command == "rollback" && flags.NFlag() != 1) {
 			return errors.New(usage)
 		}
 	case "status":
@@ -98,9 +101,9 @@ func run(ctx context.Context, args []string, getenv func(string) string, out io.
 		}
 		return encoder.Encode(summary)
 	case "publish":
-		err = store.Publish(ctx, args[1], expectedPrevious)
+		err = store.Publish(ctx, args[1], expectedCurrent)
 	case "rollback":
-		err = store.Rollback(ctx, args[1], expectedPrevious)
+		err = store.Rollback(ctx, args[1], expectedCurrent)
 	}
 	if err != nil {
 		return err
