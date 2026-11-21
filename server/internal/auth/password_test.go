@@ -61,6 +61,10 @@ func TestConfig(t *testing.T) {
 	if cfg, err := LoadConfig(getenv, "127.0.0.1:18086"); err != nil || cfg.Limits.LoginPerIP != 1 {
 		t.Fatalf("override not applied: %v", err)
 	}
+	env["NEWMMO_PUBLIC_WS_URL"] = "ws://example.test/v1/ws"
+	if _, err := LoadConfig(getenv, "127.0.0.1:18086"); err == nil {
+		t.Fatal("remote plaintext WebSocket URL was accepted")
+	}
 	env["NEWMMO_PUBLIC_WS_URL"] = "wss://example.test/v1/ws?ticket=fixture"
 	if _, err := LoadConfig(getenv, "127.0.0.1:18086"); err == nil || strings.Contains(err.Error(), "fixture") {
 		t.Fatal("expected redacted WebSocket configuration error")

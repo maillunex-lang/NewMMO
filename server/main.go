@@ -6,6 +6,10 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
+
+	"github.com/maillunex-lang/NewMMO/server/internal/api"
+	"github.com/maillunex-lang/NewMMO/server/internal/auth"
 
 	"github.com/maillunex-lang/NewMMO/server/internal/httpservice"
 )
@@ -22,5 +26,40 @@ func run(logger *slog.Logger) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	return httpservice.Run(ctx, httpservice.Address(os.Getenv), logger)
+	address := httpservice.Address(os.Getenv)
+	config, err := auth.LoadConfig(os.Getenv, address)
+	if err != nil {
+		return err
+	}
+	store, err := auth.Open(ctx, config)
+	if err != nil {
+		return err
+	}
+	defer store.Close()
+
+	cleanupCtx, stopCleanup := context.WithCancel(ctx)
+	cleanupDone := make(chan struct{})
+	go func() {
+		defer close(cleanupDone)
+		ticker := time.NewTicker(time.Minute)
+		defer ticker.Stop()
+		for cleanupCtx.Err() == nil {
+			pruneCtx, cancel := context.WithTimeout(cleanupCtx, 5*time.Second)
+			store.Prune(pruneCtx)
+			cancel()
+			select {
+			case <-cleanupCtx.Done():
+				return
+			case <-ticker.C:
+			}
+		}
+	}()
+	defer func() {
+		stopCleanup()
+		<-cleanupDone
+	}()
+
+	return httpservice.Run(ctx, address, logger, httpservice.Application{
+		API: api.New(store, config.WSURL), Ready: store.Ready,
+	})
 }

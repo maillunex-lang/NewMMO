@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 type Limits struct {
@@ -40,6 +41,9 @@ func LoadConfig(getenv func(string) string, listenAddress string) (Config, error
 	if err != nil || (ws.Scheme != "ws" && ws.Scheme != "wss") || ws.Hostname() == "" ||
 		ws.User != nil || ws.Path != "/v1/ws" || ws.RawQuery != "" || ws.ForceQuery || ws.Fragment != "" {
 		return Config{}, errors.New("NEWMMO_PUBLIC_WS_URL must be a ws or wss URL ending in /v1/ws")
+	}
+	if ws.Scheme == "ws" && !strings.EqualFold(ws.Hostname(), "localhost") && !net.ParseIP(ws.Hostname()).IsLoopback() {
+		return Config{}, errors.New("NEWMMO_PUBLIC_WS_URL requires wss outside loopback")
 	}
 	for _, setting := range []struct {
 		name  string
