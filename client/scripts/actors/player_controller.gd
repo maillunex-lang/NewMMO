@@ -107,14 +107,14 @@ func _auto_combat_tick() -> void:
 		await use_skill(0)
 		_auto_busy = false
 
-func _nearest_monster() -> Node2D:
+func _nearest_monster(reach: float = INF) -> Node2D:
 	var best: Node2D = null
-	var best_d := 99999.0
+	var best_d := reach
 	for n in get_tree().get_nodes_in_group("monsters"):
-		if not is_instance_valid(n) or n.get("hp") != null and float(n.hp) <= 0.0:
+		if not is_instance_valid(n) or n.is_queued_for_deletion() or n.get("hp") != null and float(n.hp) <= 0.0:
 			continue
 		var d: float = global_position.distance_to(n.global_position)
-		if d < best_d:
+		if d < best_d or (d == best_d and best == null):
 			best_d = d
 			best = n
 	return best
@@ -128,17 +128,29 @@ func use_skill(slot: int) -> void:
 		return
 	var costs := [0.0, 8.0, 12.0, 10.0, 14.0, 18.0]
 	var mults := [1.0, 1.35, 1.6, 1.25, 1.8, 2.1]
-	var cost: float = costs[clamp(slot, 0, 5)]
+	var skill := clampi(slot, 0, 5)
+	var cost: float = costs[skill]
 	if mp < cost:
 		return
+	var reach := attack_range + float(skill) * 4.0
+	var manual := not auto_combat
+	var target: Node2D = null
+	if manual:
+		target = _nearest_monster(reach)
+		if target == null:
+			show_hint(tr("world.hint.no_target"))
+			return
 	mp -= cost
 	mp_changed.emit(mp, max_mp)
 	_attack_cd = attack_cooldown
-	var facing := Vector2.RIGHT.rotated(_dir_to_angle())
+	var facing := (target.global_position - global_position) if manual else Vector2.RIGHT.rotated(_dir_to_angle())
 	animator.set_direction_from_vector(facing)
 	await animator.play_attack()
-	var dmg: float = attack_damage * float(mults[clamp(slot, 0, 5)])
-	_deal_damage_in_front(dmg, attack_range + float(slot) * 4.0)
+	var dmg := attack_damage * float(mults[skill])
+	if not manual:
+		_deal_damage_in_front(dmg, reach)
+	elif is_instance_valid(target) and not target.is_queued_for_deletion() and global_position.distance_to(target.global_position) <= reach:
+		target.apply_damage(dmg, self)
 
 func _dir_to_angle() -> float:
 	# Match DirectionalAnimator dir index if exposed; approximate from velocity/joystick.

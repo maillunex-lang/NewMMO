@@ -255,11 +255,12 @@ func (s *Sim) visible(viewer *Entity) []EntityID {
 }
 
 type Snapshot struct {
-	Tick     uint64   `json:"tick"`
-	TickMS   int      `json:"tick_ms"`
-	You      EntityID `json:"you"`
-	Bounds   Rect2    `json:"bounds"`
-	Entities []View   `json:"entities"`
+	AttackReach float64  `json:"attack_reach,omitempty"`
+	Tick        uint64   `json:"tick"`
+	TickMS      int      `json:"tick_ms"`
+	You         EntityID `json:"you"`
+	Bounds      Rect2    `json:"bounds"`
+	Entities    []View   `json:"entities"`
 }
 
 type Rect2 struct {
@@ -284,7 +285,11 @@ func (s *Sim) SnapshotFor(id EntityID) (Snapshot, bool) {
 	}
 	s.views[id] = known
 	b := s.cfg.Bounds
-	return Snapshot{Tick: s.tick, TickMS: 1000 / s.cfg.TickRate, You: id, Bounds: Rect2{b.MinX, b.MinY, b.MaxX, b.MaxY}, Entities: views}, true
+	var attackReach float64
+	if s.combat != nil && v.classID != "" {
+		attackReach = s.skillRange(v.classID)
+	}
+	return Snapshot{AttackReach: attackReach, Tick: s.tick, TickMS: 1000 / s.cfg.TickRate, You: id, Bounds: Rect2{b.MinX, b.MinY, b.MaxX, b.MaxY}, Entities: views}, true
 }
 
 type Delta struct {

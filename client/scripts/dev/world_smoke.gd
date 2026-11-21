@@ -78,12 +78,14 @@ func _run() -> void:
 	var py: float = player.global_position.y
 	_rev = 1
 	ft.inject_text(_s2c("world.snapshot", {
-		"tick": 5, "tick_ms": 100, "you": 1, "zone_id": "ZONE-01-DAWN-VALLEY",
+		"tick": 5, "tick_ms": 100, "you": 1, "zone_id": "ZONE-01-DAWN-VALLEY", "attack_reach": 80,
 		"bounds": {"min_x": 0, "min_y": 0, "max_x": 2048, "max_y": 1400},
 		"entities": [
 			{"id": 1, "kind": "player", "ref": "7", "name": "Hero", "level": 1, "x": px, "y": py, "facing": 2, "moving": false, "hp": 400, "max_hp": 400},
 			{"id": 2, "kind": "enemy", "ref": "ENM-01-004", "name": "Садовый шиповик", "level": 4, "x": px + 60, "y": py, "facing": 4, "moving": false, "hp": 300, "max_hp": 300},
-			{"id": 3, "kind": "player", "ref": "9", "name": "Other", "level": 3, "x": px - 80, "y": py, "facing": 0, "moving": false, "hp": 380, "max_hp": 380},
+			{"id": 3, "kind": "player", "ref": "9", "name": "Other", "level": 3, "x": px + 12, "y": py, "facing": 0, "moving": false, "hp": 380, "max_hp": 380},
+			{"id": 4, "kind": "enemy", "ref": "ENM-01-004", "x": px + 79, "y": py, "hp": 80, "max_hp": 80},
+			{"id": 5, "kind": "enemy", "ref": "ENM-01-004", "x": px + 5, "y": py, "hp": 0, "max_hp": 80, "dead": true},
 		],
 	}))
 	net.poll(0.016)
@@ -91,7 +93,7 @@ func _run() -> void:
 		await process_frame
 	_assert(wc.is_active(), "world controller active after snapshot")
 	_assert(get_nodes_in_group("monsters").is_empty(), "stage-1 local monsters removed online")
-	_assert(get_nodes_in_group("server_enemies").size() == 1 and get_nodes_in_group("server_players").size() == 1, "puppets: 1 enemy, 1 other player")
+	_assert(get_nodes_in_group("server_enemies").size() == 3 and get_nodes_in_group("server_players").size() == 1, "puppets: 3 enemies, 1 other player")
 	var hud := get_nodes_in_group("hud")
 	_assert(hud.size() == 1, "HUD in group")
 	var skills_box = hud[0].get_node("SafeArea/Chrome/Skills")
@@ -105,6 +107,15 @@ func _run() -> void:
 	_assert(not cast.is_empty(), "cast request sent")
 	_assert(str(cast.get("payload", {}).get("skill_id")) == "CLS-01-SK01" and int(cast.get("payload", {}).get("target_id", 0)) == 2, "cast payload skill+target")
 	_assert(str(cast.get("request_id", "")) != "", "cast carries request_id")
+
+	# Updated server positions are outside the advertised radius even while the puppets interpolate.
+	ft.inject_text(_s2c("world.delta", {"tick": 6, "ack_seq": 0, "upsert": [
+		{"id": 2, "kind": "enemy", "x": px + 81, "y": py, "hp": 300},
+		{"id": 4, "kind": "enemy", "x": px + 83, "y": py, "hp": 80},
+	]}))
+	net.poll(0.016)
+	player.use_skill(0)
+	_assert(_find(_outbound(ft), "world.cast.request").is_empty(), "manual cast requires a living enemy within server reach")
 
 	# Server events: damage number + telegraph + self state (cooldown label).
 	ft.inject_text(_s2c("world.event", {"tick": 6, "events": [

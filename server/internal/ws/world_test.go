@@ -83,6 +83,9 @@ func TestWorldJoinMoveDeltaAndDisconnect(t *testing.T) {
 
 	send(t, c, "world.join.request", "", map[string]any{"zone_id": "ZONE-01-DAWN-VALLEY"})
 	snap := expect(t, c, "world.snapshot")
+	if got := string(snap.Payload["attack_reach"]); got != "112" {
+		t.Fatalf("Guard effective attack reach = %s, want 112", got)
+	}
 	var entities []struct {
 		Kind string  `json:"kind"`
 		X    float64 `json:"x"`

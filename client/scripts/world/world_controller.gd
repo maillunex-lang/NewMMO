@@ -13,6 +13,9 @@ const PUPPET_SCENE := preload("res://scenes/world/server_puppet.tscn")
 const TELEGRAPH := preload("res://scripts/world/telegraph.gd")
 const SEND_INTERVAL := 0.1
 const CAST_REACH := 420.0
+# Compatibility with servers that predate the attack_reach snapshot field.
+const LEGACY_MELEE_REACH := 112.0
+const LEGACY_RANGED_REACH := 320.0
 const SUPPORTED := {"damage": ["enemy"], "shield": ["self"], "heal": ["ally", "self"]}
 # canon enemy id → [sheet, frame px, sprite offset y, hp bar y]
 const ENEMY_ART := {
@@ -45,6 +48,8 @@ var _all_skills: Dictionary = {}
 var _class_id := ""
 var _level := 1
 var _self_state: Dictionary = {}
+var _server_position := Vector2.ZERO
+var _attack_reach := 0.0
 
 func _ready() -> void:
 	add_to_group("world_controller")
@@ -111,6 +116,8 @@ func _on_snapshot(p: Dictionary) -> void:
 func _reset_stream(p: Dictionary) -> void:
 	_clear_boss_marker()
 	_you = int(p.get("you", 0))
+	var legacy_reach := LEGACY_MELEE_REACH if _class_id in ["CLS-01", "CLS-02"] else LEGACY_RANGED_REACH
+	_attack_reach = float(p.get("attack_reach", legacy_reach))
 	_last_target = Vector2.INF
 	_sent_move = false
 	_self_state.clear()
@@ -174,13 +181,13 @@ func _apply_you(v: Dictionary) -> void:
 	pl.hp = float(v.get("hp", pl.hp))
 	pl.hp_changed.emit(pl.hp, pl.max_hp)
 	pl.set("online_dead", bool(v.get("dead", false)))
-	var server_pos := Vector2(float(v.get("x", pl.global_position.x)), float(v.get("y", pl.global_position.y)))
-	var drift := pl.global_position.distance_to(server_pos)
+	_server_position = Vector2(float(v.get("x", pl.global_position.x)), float(v.get("y", pl.global_position.y)))
+	var drift := pl.global_position.distance_to(_server_position)
 	if drift > 160.0 or bool(v.get("dead", false)):
-		pl.global_position = server_pos        # respawn / correction after a long stall
+		pl.global_position = _server_position        # respawn / correction after a long stall
 		pl.tap_active = false
 	elif drift > 40.0:
-		pl.global_position = pl.global_position.lerp(server_pos, 0.15)
+		pl.global_position = pl.global_position.lerp(_server_position, 0.15)
 
 func _apply_self(s: Dictionary) -> void:
 	_self_state = s
@@ -323,18 +330,20 @@ func _refresh_cooldown_labels() -> void:
 		var ms := int(cds.get(str(_skills[i].get("id", "")), 0))
 		b.text = str(_skills[i].get("name", "?")) + ("\n%.1f" % (ms / 1000.0) if ms > 0 else "")
 
-func nearest_enemy(max_dist: float = CAST_REACH):
+func nearest_enemy(max_dist: float = CAST_REACH, use_server_positions: bool = false):
 	var pl := _get_player()
 	if pl == null:
 		return null
+	var origin := _server_position if use_server_positions else pl.global_position
 	var best = null
 	var best_d := max_dist
 	for id in _entities.keys():
 		var pup = _entities[id]
 		if not is_instance_valid(pup) or str(pup.get("kind")) != "enemy" or not pup.is_alive():
 			continue
-		var d := pl.global_position.distance_to(pup.global_position)
-		if d < best_d:
+		var position: Vector2 = pup.target_pos if use_server_positions else pup.global_position
+		var d := origin.distance_to(position)
+		if d < best_d or (d == best_d and best == null):
 			best_d = d
 			best = pup
 	return best
@@ -348,11 +357,14 @@ func cast_slot(slot: int) -> void:
 	var skill: Dictionary = _skills[slot]
 	var target_id := 0
 	if str(skill.get("target", "")) == "enemy":
-		var e = nearest_enemy()
+		var manual: bool = not pl.auto_combat
+		var e = nearest_enemy(_attack_reach if manual else CAST_REACH, manual)
 		if e == null:
 			_hint(tr("world.hint.no_target"))
 			return
 		target_id = int(e.get("entity_id"))
+		if manual:
+			pl.animator.set_direction_from_vector(e.global_position - pl.global_position)
 	_net.request_world_cast(str(skill.get("id", "")), target_id, _encounter)
 	pl.animator.play_attack()  # visual only; the result is the server's
 
