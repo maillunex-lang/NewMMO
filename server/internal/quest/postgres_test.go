@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"net/netip"
 	"os"
 	"strconv"
 	"sync"
@@ -19,11 +18,7 @@ func TestQuestHappyPathPostgres(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	t.Cleanup(cancel)
 
-	appURL := os.Getenv("NEWMMO_TEST_APP_DATABASE_URL")
-	if appURL == "" {
-		if os.Getenv("NEWMMO_REQUIRE_ROLE_URLS") == "1" {
-			t.Fatal("NEWMMO_TEST_APP_DATABASE_URL required")
-		}
+	if os.Getenv("NEWMMO_REQUIRE_ROLE_URLS") != "1" && os.Getenv("NEWMMO_TEST_APP_DATABASE_URL") == "" {
 		t.Skip("set NEWMMO_TEST_APP_DATABASE_URL for quest integration")
 	}
 	for _, name := range []string{"NEWMMO_TEST_DATABASE_URL", "NEWMMO_TEST_MIGRATE_DATABASE_URL", "NEWMMO_TEST_APP_DATABASE_URL"} {
@@ -32,7 +27,13 @@ func TestQuestHappyPathPostgres(t *testing.T) {
 		}
 	}
 
-	pool, err := pgxpool.New(ctx, appURL)
+	migrator, err := pgxpool.New(ctx, os.Getenv("NEWMMO_TEST_MIGRATE_DATABASE_URL"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(migrator.Close)
+
+	pool, err := pgxpool.New(ctx, os.Getenv("NEWMMO_TEST_APP_DATABASE_URL"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +53,7 @@ func TestQuestHappyPathPostgres(t *testing.T) {
 	}
 	engine := NewEngine(pool, cat, RegionConfig{})
 
-	store, err := auth.Open(ctx, auth.Config{DatabaseURL: appURL})
+	store, err := auth.Open(ctx, auth.Config{DatabaseURL: os.Getenv("NEWMMO_TEST_APP_DATABASE_URL")})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,11 +61,14 @@ func TestQuestHappyPathPostgres(t *testing.T) {
 
 	var rnd [8]byte
 	_, _ = rand.Read(rnd[:])
-	login := "q_" + hex.EncodeToString(rnd[:])
-	accountID, err := store.Register(ctx, login, "Quest-phrase-12345", netip.MustParseAddr("127.0.0.1"))
-	if err != nil {
-		t.Fatal(err)
+	var accountID string
+	// Fixture via migrator (avoid Register PBKDF2 + zero Limits OFFSET bug). CI DB is ephemeral;
+	// append-only reward tables prevent full character cleanup after turn-in.
+	if err := migrator.QueryRow(ctx, `INSERT INTO public.accounts (login, password_hash) VALUES ($1, 'fixture')
+		RETURNING account_id::text`, "q_"+hex.EncodeToString(rnd[:])).Scan(&accountID); err != nil {
+		t.Fatal("account fixture:", err)
 	}
+
 	var nameBytes [10]byte
 	_, _ = rand.Read(nameBytes[:])
 	for i := range nameBytes {
@@ -89,7 +93,6 @@ func TestQuestHappyPathPostgres(t *testing.T) {
 		"550e8400-e29b-41d4-a716-446655440007",
 	}
 
-	// REGION_CLOSED before accept when region gated.
 	closed := NewEngine(pool, cat, RegionConfig{
 		OpenAt: map[string]time.Time{"REG-01": time.Date(2099, 1, 1, 0, 0, 0, 0, time.UTC)},
 	})
@@ -137,7 +140,6 @@ func TestQuestHappyPathPostgres(t *testing.T) {
 		t.Fatalf("expected ready after 3 objectives, got %#v", last)
 	}
 
-	// Concurrent double turn-in: exactly one claim.
 	start := make(chan struct{})
 	var wg sync.WaitGroup
 	results := make(chan error, 2)
