@@ -19,7 +19,8 @@ SKIP_PREFIX = ("http://", "https://", "mailto:", "#", "res://", "user://", "buil
 SKIP_DIRS = (os.sep + ".git" + os.sep, os.sep + ".godot" + os.sep, os.sep + "build" + os.sep, os.sep + "node_modules" + os.sep)
 
 
-GENERATED = {"crossrefs.json", "validation-report.json", "declarations.json", "content.manifest.json"}
+GENERATED = {"crossrefs.json", "validation-report.json", "declarations.json", "content.manifest.json",
+             "manifest.json", "entities.jsonl", "BUILD_ID"}  # generated artifacts (not tracked files)
 
 
 def check(root, allow=()):

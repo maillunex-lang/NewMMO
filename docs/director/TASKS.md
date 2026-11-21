@@ -48,3 +48,4 @@ First parallel batch (different lanes, no dependencies, disjoint files): **T-001
 | 2026-11-21 | T-007 reviewed and merged; T-008 issued to Cursor |
 | 2026-11-21 | Owner approved coder/websocket v1.8.15 + JSON; D-003 contract published (EX-P04 prerequisite) |
 | 2026-11-21 | T-010 merged; contracts rev 1.1 (R-01…R-13), exporter manifest = raw bytes + BUILD_ID; T-009 amendment issued |
+| 2026-11-21 | Codex reported T-009 blocker (R-04: line_sha256 digest bypass) → contract decision: SQL-computed `ingest_digest`, no `line_sha256`; docs-links generated names fixed; T-009 amendment 2 (finish order, push WIP) |

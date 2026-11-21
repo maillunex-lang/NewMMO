@@ -16,7 +16,7 @@ content_builds(
   minimum_client_version text NOT NULL,
   manifest_sha256 text NOT NULL CHECK (manifest_sha256 ~ '^[0-9a-f]{64}$' AND manifest_sha256 = build_id),
   entity_count integer NOT NULL CHECK (entity_count > 0),
-  ingest_digest text NOT NULL CHECK (ingest_digest ~ '^[0-9a-f]{64}$'),   -- see §3 Stage
+  ingest_digest text NOT NULL CHECK (ingest_digest ~ '^[0-9a-f]{64}$'),   -- SQL-computed storage fingerprint, see §3 Stage
   manifest jsonb NOT NULL CHECK (jsonb_typeof(manifest) = 'object'),
   status text NOT NULL CHECK (status IN ('staged','published','retired')),
   created_at timestamptz NOT NULL DEFAULT now(),
@@ -29,7 +29,6 @@ content_entities(
   kind text NOT NULL,
   region_id text CHECK (region_id IS NULL OR region_id ~ '^REG-0[1-6]$'),
   source_file text NOT NULL, source_line integer NOT NULL CHECK (source_line > 0),
-  line_sha256 text NOT NULL CHECK (line_sha256 ~ '^[0-9a-f]{64}$'),      -- sha256 of the exact JSONL line bytes (without LF)
   payload jsonb NOT NULL CHECK (jsonb_typeof(payload) = 'object'),
   PRIMARY KEY (build_id, entity_id) )      -- + indexes (build_id, kind), (build_id, region_id)
 
@@ -49,6 +48,17 @@ content_audit(
   details jsonb NOT NULL DEFAULT '{}'::jsonb )     -- structured error code/class; never secrets
 ```
 
+### `ingest_digest` (T-010 R-04; decision 2026-11-21)
+Computed **by PostgreSQL from the stored rows, after insert**, never from client-supplied values: `jsonb` normalizes representation, so a digest of the original line bytes cannot be re-derived from the DB. Formula (one statement):
+
+```
+encode(sha256(convert_to(string_agg(
+   entity_id || E'\x1f' || kind || E'\x1f' || coalesce(region_id,'') || E'\x1f' ||
+   source_file || E'\x1f' || source_line::text || E'\x1f' || payload::text,
+   E'\x1e' ORDER BY kind, entity_id), 'UTF8')), 'hex')
+```
+(`payload::text` is the deterministic jsonb text form.) It is stored at Stage and **recomputed at Publish and on re-Stage**: any change to any stored column of any row (payload included) between stage and publish makes the digests differ ⇒ reject. Binding to the bundle bytes is done at ingest by the bundle verification (`entities_sha256`) before rows are inserted. There is no per-row `line_sha256` column.
+
 ### Integrity enforcement (T-010 R-02, R-09)
 1. **Row guards (triggers):** `content_entities`: `UPDATE`/`DELETE` allowed only while the parent build is `staged`. `content_builds`: `DELETE` only while `staged`; `UPDATE` may change **only** `status`, `published_at`, `retired_at`, and **only** along the allowed transitions `staged→published`, `published→retired`, `retired→published`; never anything→`staged`; `build_id`, `manifest*`, `entity_count`, `ingest_digest`, `schema_version`, `created_at` are immutable after insert.
 2. **`TRUNCATE`** on `content_builds`, `content_entities`, `content_active`, `content_audit` is rejected by statement-level triggers (defense in depth) and not granted.
@@ -61,7 +71,7 @@ All pointer mutations follow **one lock order (T-010 R-03):** (1) `SELECT … FR
 
 | Operation | Rules |
 |-----------|-------|
-| **Stage(bundle)** | Verify the bundle first (`content-export.md` §4). Take `pg_advisory_xact_lock(hashtext(build_id))` (single writer per build). If the build exists: `published`/`retired` ⇒ **no-op** (audit note) after checking `manifest_sha256`; `staged` ⇒ recompute `ingest_digest` from stored rows (below): equal ⇒ no-op, different ⇒ delete the staged rows and re-ingest inside the same tx. New build: insert `content_builds` (`staged`) + all entities (`COPY`/batched, benchmark both; bounded memory), compute `line_sha256` per line and `ingest_digest = sha256( concat(line_sha256 in (kind, entity_id) order) )`, recount in SQL (`count(*)`, per-kind), audit `stage`. Staged builds older than **7 days** with no activity may be removed by an audited cleanup job (never a non-staged build). |
+| **Stage(bundle)** | Verify the bundle first (`content-export.md` §4 — this is what ties the data to the exact bundle bytes). Take `pg_advisory_xact_lock(hashtext(build_id))` (single writer per build). If the build exists: `published`/`retired` ⇒ **no-op** (audit note) after checking `manifest_sha256`; `staged` ⇒ recompute `ingest_digest` **in SQL** (below): equal ⇒ no-op, different ⇒ delete the staged rows and re-ingest inside the same tx. New build: insert `content_builds` (`staged`) + all entities (`COPY`/batched, benchmark both; bounded memory), recount in SQL (`count(*)`, per-kind), then compute **`ingest_digest` in SQL from the stored rows** (formula below) and store it; audit `stage`. Staged builds older than **7 days** with no activity may be removed by an audited cleanup job (never a non-staged build). |
 | **Publish(build_id, expected_current)** | Tx: lock pointer; require `content_active.build_id IS NOT DISTINCT FROM expected_current` (`NULL` = nothing published) else `CONFLICT`; lock target build; require target `staged` or `retired`; for `staged` **recompute `ingest_digest` and per-kind counts from the DB rows and compare** with the stored values (fails ⇒ reject, audit `reject`); set target `published` (+`published_at`), previous active → `retired` (+`retired_at`), update pointer (`previous_build_id`, `switched_by`), audit `publish`. Two simultaneous *first* publishes: both lock the seeded pointer row ⇒ serialized; the second sees `build_id` ≠ its `expected_current` (`NULL`) ⇒ `CONFLICT` (not success). |
 | **Rollback(to_build_id, expected_current)** | Same lock order and `expected_current` check (no blind overwrite of a newer publish); target must be `retired` with complete entities; swap statuses, pointer, audit `rollback`. **Content rollback = pointer switch; never run schema DOWN to undo content.** Before the flip, target `schema_version` must be supported by the running server. |
 | **Read** | One query for the active `build_id`, then every query filters by that explicit `build_id`; running instances keep their `content_build_id` (no mid-instance switch). Runtime uses `newmmo_app` (SELECT only). |
@@ -85,9 +95,9 @@ No network/CDN calls inside transactions.
 Isolated Compose stack for local/dev lives under `deploy/newmmo/` (own project name, own network/volume, loopback-bound port, no shared volumes/DBs/Caddy).
 
 ## 6. Acceptance for the loader (server lane, T-009)
-Clean `up → down → up` (isolated empty DB); stage the real bundle (4925 entities) and read back counts per kind; reject tampered manifest/entities/crossrefs, duplicate JSON keys, invalid UTF-8, oversize line, wrong counts, missing/extra entity; publish; double-publish rejected; **two simultaneous first publishes ⇒ exactly one wins, the other gets `CONFLICT`**; publish vs rollback and stage vs publish races (no deadlock, bounded retries); rollback with stale `expected_current` rejected; rollback restores previous pointer; **forbidden direct DML as `newmmo_app`** (UPDATE/DELETE/TRUNCATE/pointer to a staged build) fails; parent transition guard (published→staged rejected, immutable columns rejected); idempotent re-stage; tampered **staged** rows detected at publish by `ingest_digest`; failure mid-stage leaves no partial build visible; two simultaneous migration runners do not corrupt the schema.
+Clean `up → down → up` (isolated empty DB); stage the real bundle (4925 entities) and read back counts per kind; reject tampered manifest/entities/crossrefs, duplicate JSON keys, invalid UTF-8, oversize line, wrong counts, missing/extra entity; publish; double-publish rejected; **two simultaneous first publishes ⇒ exactly one wins, the other gets `CONFLICT`**; publish vs rollback and stage vs publish races (no deadlock, bounded retries); rollback with stale `expected_current` rejected; rollback restores previous pointer; **forbidden direct DML as `newmmo_app`** (UPDATE/DELETE/TRUNCATE/pointer to a staged build) fails; parent transition guard (published→staged rejected, immutable columns rejected); idempotent re-stage; tampered **staged** rows (including a modified `payload`, with counts unchanged) detected at publish by `ingest_digest`; failure mid-stage leaves no partial build visible; two simultaneous migration runners do not corrupt the schema.
 
 ## 7. Review log (T-010, `docs/reviews/T-010-contracts-review.md`)
-R-01 seeded singleton + `expected_current` (§2, §3) · R-02 transition/immutable-column guards, TRUNCATE triggers, roles (§2) · R-03 lock order + retries (§3) · R-04 `ingest_digest`, advisory lock, staged TTL (§2–3) ·
+R-01 seeded singleton + `expected_current` (§2, §3) · R-02 transition/immutable-column guards, TRUNCATE triggers, roles (§2) · R-03 lock order + retries (§3) · R-04 SQL-computed `ingest_digest` over all stored columns incl. payload (§2), advisory lock, staged TTL (§3) ·
 R-05 strict parsing and bounds (`content-export.md` §4) · R-06 global-namespace invariant (`content-export.md` §5) · R-07 canon §14 mapping (`content-export.md` §5) · R-08 FK/retention rule (§3) · R-09 pointer guard (§2) ·
 R-10 text+CHECK hashes, jsonb type checks (§2); COPY-vs-INSERT left to a benchmark in T-009 · R-11 separate goose toolchain, single migration job, no Down on live data (§4) · R-12 manifest hashed as raw bytes — no cross-language canonicalization (`content-export.md` §2) · R-13 error codes + best-effort audit (§3).
