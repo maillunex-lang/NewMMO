@@ -122,7 +122,7 @@ func (s *Store) Stage(ctx context.Context, dir string) (Summary, error) {
 var entityColumns = []string{"build_id", "entity_id", "kind", "region_id", "source_file", "source_line", "payload"}
 
 func (s *Store) reject(ctx context.Context, action, buildID string, original error) error {
-	auditCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+	auditCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 2*time.Second)
 	defer cancel()
 	code := ErrorCode(original)
 	details := map[string]any{"code": code, "operation": action}
@@ -322,28 +322,38 @@ type RegistryStatus struct {
 
 func (s *Store) Status(ctx context.Context) (RegistryStatus, error) {
 	result := RegistryStatus{Builds: []BuildStatus{}}
-	rows, err := s.pool.Query(ctx, `
-		SELECT b.build_id, b.entity_count, b.status, a.build_id, a.previous_build_id
-		FROM public.content_builds b
-		LEFT JOIN public.content_active a ON a.id = 1 AND a.build_id = b.build_id
-		ORDER BY b.created_at, b.build_id`)
+	// Both reads must describe the same publication snapshot.
+	err := pgx.BeginTxFunc(ctx, s.pool, pgx.TxOptions{
+		IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadOnly,
+	}, func(tx pgx.Tx) error {
+		err := tx.QueryRow(ctx, `SELECT build_id, previous_build_id FROM public.content_active WHERE id = 1`).
+			Scan(&result.ActiveBuildID, &result.PreviousBuildID)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return failure(DBError, "read content status: content_active singleton is missing")
+		}
+		if err != nil {
+			return err
+		}
+
+		rows, err := tx.Query(ctx, `SELECT build_id, entity_count, status
+			FROM public.content_builds ORDER BY created_at, build_id`)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var build BuildStatus
+			if err := rows.Scan(&build.BuildID, &build.EntityCount, &build.Status); err != nil {
+				return err
+			}
+			result.Builds = append(result.Builds, build)
+		}
+		return rows.Err()
+	})
 	if err != nil {
 		return RegistryStatus{}, safeDBError("read content status", err)
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var build BuildStatus
-		var active, previous *string
-		if err := rows.Scan(&build.BuildID, &build.EntityCount, &build.Status, &active, &previous); err != nil {
-			return RegistryStatus{}, safeDBError("read content status", err)
-		}
-		if active != nil {
-			result.ActiveBuildID = active
-			result.PreviousBuildID = previous
-		}
-		result.Builds = append(result.Builds, build)
-	}
-	return result, safeDBError("read content status", rows.Err())
+	return result, nil
 }
 
 // Do not return raw pgx errors to callers that may log them. Connection

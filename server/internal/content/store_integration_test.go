@@ -469,6 +469,13 @@ func TestContentRegistryPostgres(t *testing.T) {
 		assertActive(t, ctx, store, base)
 	})
 
+	t.Run("golden_ingest_digest", func(t *testing.T) {
+		testGoldenIngestDigest(t, ctx, store, token)
+	})
+	t.Run("status_requires_singleton", func(t *testing.T) {
+		testStatusRequiresSingleton(t, ctx, store, owner)
+	})
+
 }
 
 func stageExport(t *testing.T, ctx context.Context, store *Store, dir string) Summary {
