@@ -100,7 +100,7 @@ func run(ctx context.Context, args []string, getenv func(string) string, out io.
 	case "publish":
 		err = store.Publish(ctx, args[1], expectedPrevious)
 	case "rollback":
-		err = store.Rollback(ctx, args[1])
+		err = store.Rollback(ctx, args[1], expectedPrevious)
 	}
 	if err != nil {
 		return err

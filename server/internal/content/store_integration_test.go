@@ -90,7 +90,7 @@ func TestContentRegistryPostgres(t *testing.T) {
 			assertActive(t, ctx, store, original)
 		})
 	}
-	assertAuditCount(t, ctx, store, `action = 'reject' AND details @> '{"reason":"verification_failed"}'`, 3)
+	assertAuditCount(t, ctx, store, `action = 'reject' AND details @> '{"code":"HASH_MISMATCH","operation":"stage"}'`, 3)
 
 	t.Run("copy_failure_leaves_no_build", func(t *testing.T) {
 		lines := bytes.Split(bytes.TrimSuffix(entities, []byte("\n")), []byte("\n"))
@@ -119,7 +119,7 @@ func TestContentRegistryPostgres(t *testing.T) {
 		if builds != 0 || rows != 0 || err != nil {
 			t.Fatalf("failed stage left %d builds, %d rows; error %v", builds, rows, err)
 		}
-		assertAuditCount(t, ctx, store, `action = 'reject' AND build_id = $2 AND details @> '{"reason":"stage_transaction_failed"}'`, 1, summary.BuildID)
+		assertAuditCount(t, ctx, store, `action = 'reject' AND build_id = $2 AND details @> '{"code":"DB_ERROR","operation":"stage"}'`, 1, summary.BuildID)
 		assertActive(t, ctx, store, original)
 	})
 
@@ -139,14 +139,14 @@ func TestContentRegistryPostgres(t *testing.T) {
 		assertActive(t, ctx, store, current)
 	}
 	base := variant("base")
-	if err := store.Rollback(ctx, base); !errors.Is(err, ErrBuildState) {
+	if err := store.Rollback(ctx, base, current); ErrorCode(err) != InvalidState {
 		t.Fatalf("rollback to staged build returned %v", err)
 	}
 	if err := store.Publish(ctx, base, current); err != nil {
 		t.Fatal(err)
 	}
 	assertActive(t, ctx, store, base)
-	if err := store.Publish(ctx, base, base); !errors.Is(err, ErrAlreadyActive) {
+	if err := store.Publish(ctx, base, base); ErrorCode(err) != InvalidState {
 		t.Fatalf("repeat publish returned %v", err)
 	}
 	assertAuditCount(t, ctx, store, `action = 'publish' AND build_id = $2 AND previous_build_id = $3`, 1, base, current)
@@ -154,7 +154,7 @@ func TestContentRegistryPostgres(t *testing.T) {
 	winner := racePublish(t, ctx, store, base, variant("first"), variant("second"))
 	assertActive(t, ctx, store, winner)
 	assertAuditCount(t, ctx, store, `action = 'publish' AND previous_build_id = $2`, 1, base)
-	if err := store.Rollback(ctx, base); err != nil {
+	if err := store.Rollback(ctx, base, winner); err != nil {
 		t.Fatal(err)
 	}
 	assertActive(t, ctx, store, base)
@@ -241,7 +241,7 @@ func racePublish(t *testing.T, ctx context.Context, store *Store, previous strin
 				t.Fatalf("both concurrent publishes won: %q and %q", winner, res.id)
 			}
 			winner = res.id
-		} else if !errors.Is(res.err, ErrActiveChanged) {
+		} else if ErrorCode(res.err) != Conflict {
 			t.Fatalf("unexpected concurrent publish error: %v", res.err)
 		}
 	}

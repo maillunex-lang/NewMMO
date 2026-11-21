@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"maps"
+	"os"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -12,32 +14,24 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var (
-	ErrBuildNotFound   = errors.New("content build not found")
-	ErrAlreadyActive   = errors.New("content build is already active")
-	ErrActiveChanged   = errors.New("active build differs from expected previous build")
-	ErrBuildState      = errors.New("content build has an invalid status for this operation")
-	ErrIncompleteBuild = errors.New("database entity counts do not match the content build")
-	ErrInvalidBuildID  = errors.New("build ID must be 64 lowercase hexadecimal characters")
-)
-
 type Store struct {
-	pool  *pgxpool.Pool
-	actor string
+	pool        *pgxpool.Pool
+	actor       string
+	auditLogger *slog.Logger
 }
 
 // Open validates the URL and opens a lazy pool. Stage verifies its files
 // before the first database operation.
 func Open(ctx context.Context, databaseURL, actor string) (*Store, error) {
 	if databaseURL == "" {
-		return nil, errors.New("content database URL is required")
+		return nil, failure(DBError, "content database URL is required")
 	}
 	if actor == "" {
-		return nil, errors.New("content audit actor is required")
+		return nil, failure(DBError, "content audit actor is required")
 	}
 	config, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {
-		return nil, errors.New("invalid content database URL")
+		return nil, failure(DBError, "invalid content database URL")
 	}
 	config.MinConns = 0
 	config.MinIdleConns = 0
@@ -45,7 +39,7 @@ func Open(ctx context.Context, databaseURL, actor string) (*Store, error) {
 	if err != nil {
 		return nil, safeDBError("open content database", err)
 	}
-	return &Store{pool: pool, actor: actor}, nil
+	return &Store{pool: pool, actor: actor, auditLogger: slog.New(slog.NewJSONHandler(os.Stderr, nil))}, nil
 }
 
 func (s *Store) Close() { s.pool.Close() }
@@ -53,26 +47,45 @@ func (s *Store) Close() { s.pool.Close() }
 func (s *Store) Stage(ctx context.Context, dir string) (Summary, error) {
 	b, err := loadBundle(dir)
 	if err != nil {
-		return Summary{}, s.rejectStage(ctx, "", "verification_failed", err)
+		return Summary{}, s.reject(ctx, "stage", "", err)
 	}
 
-	err = pgx.BeginTxFunc(ctx, s.pool, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) error {
-		m := b.manifest
-		tag, err := tx.Exec(ctx, `
-			INSERT INTO public.content_builds
-				(build_id, schema_version, minimum_client_version, manifest_sha256, entity_count, manifest, status)
-			VALUES ($1, $2, $3, $4, $5, $6, 'staged')
-			ON CONFLICT (build_id) DO NOTHING`,
-			m.BuildID, m.SchemaVersion, m.MinimumClientVersion, m.ManifestSHA256, m.EntityCount, b.manifestJSON)
+	m := b.manifest
+	err = s.transact(ctx, func(tx pgx.Tx) error {
+		if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtext($1))`, m.BuildID); err != nil {
+			return err
+		}
+		existing, err := lockBuilds(ctx, tx, m.BuildID)
 		if err != nil {
 			return err
 		}
-		if tag.RowsAffected() == 0 {
-			return s.audit(ctx, tx, "stage", m.BuildID, "", map[string]any{"already_exists": true})
+		target, exists := existing[m.BuildID]
+		if exists {
+			if target.manifestHash != m.ManifestSHA256 {
+				return failure(HashMismatch, "existing build manifest digest differs")
+			}
+			if target.status != "staged" {
+				return s.audit(ctx, tx, "stage", m.BuildID, "", map[string]any{"already_exists": true})
+			}
+			state, err := readStoredEntities(ctx, tx, m.BuildID)
+			if err != nil {
+				return err
+			}
+			if state.digest == target.digest && state.matches(m.EntityCount, m.Counts) {
+				return s.audit(ctx, tx, "stage", m.BuildID, "", map[string]any{"already_exists": true})
+			}
+			if _, err := tx.Exec(ctx, `DELETE FROM public.content_entities WHERE build_id = $1`, m.BuildID); err != nil {
+				return err
+			}
+		} else {
+			// Store the immutable digest with the first parent INSERT. The
+			// deferred FK still verifies that the parent exists at commit.
+			if _, err := tx.Exec(ctx, `SET CONSTRAINTS public.content_entities_build_fk DEFERRED`); err != nil {
+				return err
+			}
 		}
 
-		written, err := tx.CopyFrom(ctx, pgx.Identifier{"public", "content_entities"},
-			[]string{"build_id", "entity_id", "kind", "region_id", "source_file", "source_line", "payload"},
+		written, err := tx.CopyFrom(ctx, pgx.Identifier{"public", "content_entities"}, entityColumns,
 			pgx.CopyFromSlice(len(b.entities), func(i int) ([]any, error) {
 				e := b.entities[i]
 				return []any{m.BuildID, e.ID, e.Kind, e.RegionID, e.Source, e.Line, e.Payload}, nil
@@ -80,144 +93,194 @@ func (s *Store) Stage(ctx context.Context, dir string) (Summary, error) {
 		if err != nil {
 			return err
 		}
-		if written != int64(m.EntityCount) {
-			return ErrIncompleteBuild
-		}
-		if err := checkCounts(ctx, tx, m.BuildID, m.EntityCount, m.Counts); err != nil {
+		state, err := readStoredEntities(ctx, tx, m.BuildID)
+		if err != nil {
 			return err
 		}
-		return s.audit(ctx, tx, "stage", m.BuildID, "", map[string]any{"entity_count": m.EntityCount})
+		if written != int64(m.EntityCount) || !state.matches(m.EntityCount, m.Counts) {
+			return failure(CountMismatch, "stored entity counts differ from the bundle")
+		}
+		if exists {
+			if state.digest != target.digest {
+				return failure(HashMismatch, "re-ingested entities differ from the recorded digest")
+			}
+		} else if _, err := tx.Exec(ctx, `
+			INSERT INTO public.content_builds
+				(build_id, schema_version, minimum_client_version, manifest_sha256, entity_count, ingest_digest, manifest, status)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, 'staged')`,
+			m.BuildID, m.SchemaVersion, m.MinimumClientVersion, m.ManifestSHA256, m.EntityCount, state.digest, b.manifestJSON); err != nil {
+			return err
+		}
+		return s.audit(ctx, tx, "stage", m.BuildID, "", map[string]any{"entity_count": m.EntityCount, "reingested": exists})
 	})
 	if err != nil {
-		return Summary{}, s.rejectStage(ctx, b.manifest.BuildID, "stage_transaction_failed", safeDBError("stage content", err))
+		return Summary{}, s.reject(ctx, "stage", m.BuildID, safeDBError("stage content", err))
 	}
 	return b.summary(), nil
 }
 
-func (s *Store) rejectStage(ctx context.Context, buildID, reason string, failure error) error {
-	// The rejected build has no committed transaction. Audit independently
-	// even when the original request was cancelled.
+var entityColumns = []string{"build_id", "entity_id", "kind", "region_id", "source_file", "source_line", "payload"}
+
+func (s *Store) reject(ctx context.Context, action, buildID string, original error) error {
 	auditCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 	defer cancel()
-	if err := s.audit(auditCtx, s.pool, "reject", buildID, "", map[string]any{"reason": reason}); err != nil {
-		return errors.Join(failure, safeDBError("write reject audit", err))
+	code := ErrorCode(original)
+	details := map[string]any{"code": code, "operation": action}
+	if err := s.audit(auditCtx, s.pool, "reject", buildID, "", details); err != nil {
+		s.auditLogger.ErrorContext(auditCtx, "content reject audit failed", "operation", action,
+			"build_id", buildID, "code", code, "audit_code", DBError)
 	}
-	return failure
+	return original
 }
 
-func (s *Store) Publish(ctx context.Context, buildID, expectedPrevious string) error {
-	if expectedPrevious != "" && !hashPattern.MatchString(expectedPrevious) {
-		return ErrInvalidBuildID
-	}
-	return s.switchBuild(ctx, "publish", buildID, expectedPrevious)
+func (s *Store) Publish(ctx context.Context, buildID, expectedCurrent string) error {
+	return s.switchBuild(ctx, "publish", buildID, expectedCurrent)
 }
 
-func (s *Store) Rollback(ctx context.Context, buildID string) error {
-	return s.switchBuild(ctx, "rollback", buildID, "")
+func (s *Store) Rollback(ctx context.Context, buildID, expectedCurrent string) error {
+	return s.switchBuild(ctx, "rollback", buildID, expectedCurrent)
 }
 
-func (s *Store) switchBuild(ctx context.Context, action, buildID, expectedPrevious string) error {
-	if !hashPattern.MatchString(buildID) {
-		return ErrInvalidBuildID
+func (s *Store) switchBuild(ctx context.Context, action, buildID, expectedCurrent string) error {
+	if !hashPattern.MatchString(buildID) || (expectedCurrent != "" && !hashPattern.MatchString(expectedCurrent)) {
+		return s.reject(ctx, action, "", failure(BundleInvalid, "build IDs must be 64 lowercase hexadecimal characters"))
 	}
-	err := pgx.BeginTxFunc(ctx, s.pool, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) error {
+	err := s.transact(ctx, func(tx pgx.Tx) error {
 		var current string
-		err := tx.QueryRow(ctx, `SELECT build_id FROM public.content_active WHERE id = 1 FOR UPDATE`).Scan(&current)
-		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		if err := tx.QueryRow(ctx, `SELECT coalesce(build_id, '') FROM public.content_active WHERE id = 1 FOR UPDATE`).Scan(&current); err != nil {
 			return err
 		}
-		if current == buildID {
-			return ErrAlreadyActive
+		if current != expectedCurrent {
+			return failure(Conflict, "active build differs from expected current build")
 		}
-		if action == "publish" && current != expectedPrevious {
-			return ErrActiveChanged
+		if current == buildID {
+			return failure(InvalidState, "content build is already active")
 		}
 
-		var targetStatus string
-		var entityCount int
-		var counts map[string]int
-		err = tx.QueryRow(ctx, `
-			SELECT status, entity_count, manifest -> 'counts'
-			FROM public.content_builds WHERE build_id = $1 FOR NO KEY UPDATE`, buildID).
-			Scan(&targetStatus, &entityCount, &counts)
-		if errors.Is(err, pgx.ErrNoRows) {
-			return ErrBuildNotFound
-		}
+		builds, err := lockBuilds(ctx, tx, buildID, current)
 		if err != nil {
 			return err
 		}
-
-		if current == "" {
-			// There is no row to lock on the first switch. Competing inserts
-			// contend on the singleton key and only the winner may commit.
-			tag, err := tx.Exec(ctx, `
-				INSERT INTO public.content_active (id, build_id, switched_by)
-				VALUES (1, $1, $2) ON CONFLICT (id) DO NOTHING`, buildID, s.actor)
-			if err != nil {
-				return err
-			}
-			if tag.RowsAffected() != 1 {
-				return ErrActiveChanged
-			}
+		target, ok := builds[buildID]
+		if !ok {
+			return failure(NotFound, "content build not found")
+		}
+		if action == "rollback" && target.version != schemaVersion {
+			return failure(SchemaUnsupported, "rollback target uses an unsupported schema version")
+		}
+		if target.status != "retired" && (action == "rollback" || target.status != "staged") {
+			return failure(InvalidState, "target build has an invalid status for this operation")
 		}
 
-		if action == "rollback" {
-			if targetStatus != "retired" && targetStatus != "published" {
-				return ErrBuildState
-			}
-			if err := checkCounts(ctx, tx, buildID, entityCount, counts); err != nil {
-				return err
-			}
-		} else if targetStatus != "staged" && targetStatus != "retired" {
-			return ErrBuildState
+		state, err := readStoredEntities(ctx, tx, buildID)
+		if err != nil {
+			return err
+		}
+		if !state.matches(target.count, target.counts) {
+			return failure(CountMismatch, "stored entity counts differ from the manifest")
+		}
+		if state.digest != target.digest {
+			return failure(HashMismatch, "stored entity digest differs from the staged build")
 		}
 
+		if _, err := tx.Exec(ctx, `UPDATE public.content_builds SET status = 'published', published_at = now()
+			WHERE build_id = $1`, buildID); err != nil {
+			return err
+		}
 		if current != "" {
 			if _, err := tx.Exec(ctx, `UPDATE public.content_builds SET status = 'retired', retired_at = now()
 				WHERE build_id = $1`, current); err != nil {
 				return err
 			}
 		}
-		if _, err := tx.Exec(ctx, `UPDATE public.content_builds SET status = 'published', published_at = now()
-			WHERE build_id = $1`, buildID); err != nil {
+		if _, err := tx.Exec(ctx, `UPDATE public.content_active
+			SET build_id = $1, previous_build_id = NULLIF($2, ''), switched_at = now(), switched_by = $3 WHERE id = 1`,
+			buildID, current, s.actor); err != nil {
 			return err
 		}
-		if current != "" {
-			if _, err := tx.Exec(ctx, `UPDATE public.content_active
-				SET build_id = $1, previous_build_id = $2, switched_at = now(), switched_by = $3 WHERE id = 1`,
-				buildID, current, s.actor); err != nil {
-				return err
-			}
-		}
-		return s.audit(ctx, tx, action, buildID, current, map[string]any{})
+		return s.audit(ctx, tx, action, buildID, current, nil)
 	})
-	return safeDBError(action+" content", err)
-}
-
-func checkCounts(ctx context.Context, tx pgx.Tx, buildID string, wantTotal int, want map[string]int) error {
-	rows, err := tx.Query(ctx, `SELECT kind, count(*) FROM public.content_entities WHERE build_id = $1 GROUP BY kind`, buildID)
 	if err != nil {
-		return err
-	}
-	defer rows.Close()
-	counts := make(map[string]int, len(want))
-	var total int
-	for rows.Next() {
-		var kind string
-		var count int
-		if err := rows.Scan(&kind, &count); err != nil {
-			return err
-		}
-		counts[kind] = count
-		total += count
-	}
-	if err := rows.Err(); err != nil {
-		return err
-	}
-	if total != wantTotal || !maps.Equal(counts, want) {
-		return ErrIncompleteBuild
+		return s.reject(ctx, action, buildID, safeDBError(action+" content", err))
 	}
 	return nil
+}
+
+type lockedBuild struct {
+	status       string
+	manifestHash string
+	digest       string
+	version      int
+	count        int
+	counts       map[string]int
+}
+
+func lockBuilds(ctx context.Context, tx pgx.Tx, ids ...string) (map[string]lockedBuild, error) {
+	rows, err := tx.Query(ctx, `SELECT build_id, status, manifest_sha256, ingest_digest, schema_version,
+			entity_count, manifest -> 'counts'
+		FROM public.content_builds WHERE build_id = ANY($1) ORDER BY build_id FOR UPDATE`, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	builds := make(map[string]lockedBuild, len(ids))
+	for rows.Next() {
+		var id string
+		var b lockedBuild
+		if err := rows.Scan(&id, &b.status, &b.manifestHash, &b.digest, &b.version, &b.count, &b.counts); err != nil {
+			return nil, err
+		}
+		builds[id] = b
+	}
+	return builds, rows.Err()
+}
+
+type storedEntities struct {
+	count  int
+	counts map[string]int
+	digest string
+}
+
+func (s storedEntities) matches(count int, byKind map[string]int) bool {
+	return s.count == count && maps.Equal(s.counts, byKind)
+}
+
+func readStoredEntities(ctx context.Context, tx pgx.Tx, buildID string) (storedEntities, error) {
+	var state storedEntities
+	err := tx.QueryRow(ctx, `
+		WITH entities AS MATERIALIZED (
+			SELECT entity_id, kind, region_id, source_file, source_line, payload
+			FROM public.content_entities WHERE build_id = $1
+		)
+		SELECT count(*),
+			(SELECT coalesce(jsonb_object_agg(kind, total), '{}'::jsonb)
+				FROM (SELECT kind, count(*) AS total FROM entities GROUP BY kind) AS kinds),
+			coalesce(encode(sha256(convert_to(string_agg(
+				entity_id || E'\x1f' || kind || E'\x1f' || coalesce(region_id, '') || E'\x1f' ||
+				source_file || E'\x1f' || source_line::text || E'\x1f' || payload::text,
+				E'\x1e' ORDER BY kind, entity_id), 'UTF8')), 'hex'), '')
+		FROM entities`, buildID).Scan(&state.count, &state.counts, &state.digest)
+	return state, err
+}
+
+func (s *Store) transact(ctx context.Context, operation func(pgx.Tx) error) error {
+	for retry := 0; ; retry++ {
+		err := pgx.BeginTxFunc(ctx, s.pool, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, operation)
+		var pgErr *pgconn.PgError
+		if !errors.As(err, &pgErr) || (pgErr.Code != "40P01" && pgErr.Code != "40001") {
+			return err
+		}
+		if retry == 3 {
+			return failure(Conflict, "transaction retries exhausted")
+		}
+		delay := time.NewTimer((10 << retry) * time.Millisecond)
+		select {
+		case <-ctx.Done():
+			delay.Stop()
+			return ctx.Err()
+		case <-delay.C:
+		}
+	}
 }
 
 type auditExecutor interface {
@@ -225,6 +288,9 @@ type auditExecutor interface {
 }
 
 func (s *Store) audit(ctx context.Context, db auditExecutor, action, buildID, previous string, details map[string]any) error {
+	if details == nil {
+		details = map[string]any{}
+	}
 	_, err := db.Exec(ctx, `
 		INSERT INTO public.content_audit (action, build_id, previous_build_id, actor, details)
 		VALUES ($1, NULLIF($2, ''), NULLIF($3, ''), $4, $5)`, action, buildID, previous, s.actor, details)
@@ -233,16 +299,13 @@ func (s *Store) audit(ctx context.Context, db auditExecutor, action, buildID, pr
 
 func (s *Store) ActiveBuildID(ctx context.Context) (string, error) {
 	var id string
-	err := s.pool.QueryRow(ctx, `SELECT build_id FROM public.content_active WHERE id = 1`).Scan(&id)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return "", nil
-	}
+	err := s.pool.QueryRow(ctx, `SELECT coalesce(build_id, '') FROM public.content_active WHERE id = 1`).Scan(&id)
 	return id, safeDBError("read active build", err)
 }
 
 func (s *Store) Entities(ctx context.Context, buildID string) ([]Entity, error) {
 	if !hashPattern.MatchString(buildID) {
-		return nil, ErrInvalidBuildID
+		return nil, failure(BundleInvalid, "build ID must be 64 lowercase hexadecimal characters")
 	}
 	rows, err := s.pool.Query(ctx, `SELECT entity_id, kind, region_id, source_file, source_line, payload
 		FROM public.content_entities WHERE build_id = $1 ORDER BY kind, entity_id`, buildID)
@@ -300,15 +363,16 @@ func safeDBError(op string, err error) error {
 	if err == nil {
 		return nil
 	}
-	for _, safe := range []error{ErrBuildNotFound, ErrAlreadyActive, ErrActiveChanged, ErrBuildState, ErrIncompleteBuild,
-		context.Canceled, context.DeadlineExceeded} {
-		if errors.Is(err, safe) {
-			return fmt.Errorf("%s: %w", op, safe)
-		}
+	var known *RegistryError
+	if errors.As(err, &known) {
+		return known
 	}
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
-		return fmt.Errorf("%s: database operation failed (SQLSTATE %s)", op, pgErr.Code)
+		return failure(DBError, fmt.Sprintf("%s: database operation failed (SQLSTATE %s)", op, pgErr.Code))
 	}
-	return fmt.Errorf("%s: database operation failed", op)
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return failure(DBError, op+": cancelled or deadline exceeded")
+	}
+	return failure(DBError, op+": database operation failed")
 }
