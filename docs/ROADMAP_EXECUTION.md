@@ -6,7 +6,7 @@
 **Главный канон-оркестратор:** `docs/content/14_CONTENT_INTEGRATION.md`  
 **Канон контента:** `docs/content/01_WORLD.md` … `14_CONTENT_INTEGRATION.md`  
 **Процесс:** `AGENTS.md`, `.cursor/rules/open-source-research.mdc`  
-**Обновлено:** 2026-11-21 · EX-P00…P07 [x]; EX-P08 [~] (T-029/T-030 DONE; loot/equip remain); EX-W01 v1 [x]; EX-P09 в работе (T-038a–e DONE; T-038f осталось); директор временно = ChatGPT Codex (`CODEX_HANDOFF.md`); Claude = директор + исполнитель (`CLAUDE_HANDOFF.md`).
+**Обновлено:** 2026-11-21 · EX-P00…P07 [x]; EX-P08 [~] (T-029/T-030 DONE; loot/equip remain); EX-W01 v1 [x]; EX-P09 в работе (T-038a–e DONE; T-038f частично: tick + snapshot benchmarks; RAM/Android остаются); директор временно = ChatGPT Codex (`CODEX_HANDOFF.md`); Claude = директор + исполнитель (`CLAUDE_HANDOFF.md`).
 
 ---
 

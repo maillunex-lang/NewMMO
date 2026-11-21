@@ -31,3 +31,36 @@ func BenchmarkZoneTick(b *testing.B) {
 		})
 	}
 }
+
+// BenchmarkZoneSnapshot isolates interest-filtered full snapshots from tick cost.
+// All entities are deliberately inside the observer's interest radius.
+func BenchmarkZoneSnapshot(b *testing.B) {
+	for _, players := range []int{1, 10, 50} {
+		b.Run(fmt.Sprintf("players_%d_enemies_50", players), func(b *testing.B) {
+			cfg := testCfg()
+			cfg.Bounds = Rect{0, 0, 10000, 10000}
+			cfg.InterestRadius = 10000
+			sim := New(cfg)
+			for i := 0; i < 50; i++ {
+				sim.AddEnemy(fmt.Sprintf("spawn-%d", i), "ENM-01-001", "Enemy", 1, 1000, Vec{X: float64(i%10)*100 + 100, Y: float64(i/10)*100 + 100})
+			}
+			var observer EntityID
+			for i := 0; i < players; i++ {
+				id := sim.AddPlayer(fmt.Sprintf("player-%d", i), "Player", 60, 2000)
+				if i == 0 {
+					observer = id
+				}
+			}
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				_, ok := sim.SnapshotFor(observer)
+				if !ok {
+					b.Fatal("observer missing")
+				}
+			}
+			b.StopTimer()
+			runtime.KeepAlive(sim)
+		})
+	}
+}
