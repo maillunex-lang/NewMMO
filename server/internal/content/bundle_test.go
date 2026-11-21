@@ -3,7 +3,6 @@ package content
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -31,18 +30,16 @@ func writeFixture(t *testing.T, m manifest, entities, crossrefs []byte) (string,
 	t.Helper()
 	m.EntitiesSHA256 = digest(entities)
 	m.CrossrefsSHA256 = digest(crossrefs)
-	body, err := canonicalManifest(m.manifestBody)
-	if err != nil {
+	var raw bytes.Buffer
+	encoder := json.NewEncoder(&raw)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(m.manifestBody); err != nil {
 		t.Fatal(err)
 	}
-	m.ManifestSHA256 = digest(body)
-	m.BuildID = m.ManifestSHA256
-	raw, err := json.MarshalIndent(m, "", "  ")
-	if err != nil {
-		t.Fatal(err)
-	}
+	m.BuildID = digest(raw.Bytes())
 	dir := t.TempDir()
-	writeFile(t, dir, "manifest.json", raw)
+	writeFile(t, dir, "manifest.json", raw.Bytes())
+	writeFile(t, dir, "BUILD_ID", []byte(m.BuildID+"\n"))
 	writeFile(t, dir, "entities.jsonl", entities)
 	writeFile(t, dir, "crossrefs.json", crossrefs)
 	return dir, Summary{BuildID: m.BuildID, EntityCount: m.EntityCount}
@@ -80,16 +77,20 @@ func TestVerifyBundle(t *testing.T) {
 	}
 }
 
-func TestCanonicalManifestUnicode(t *testing.T) {
-	body := fixtureManifest().manifestBody
-	body.MinimumClientVersion = "é<&>\u2028\u2029" + `\u2028`
-	raw, err := canonicalManifest(body)
-	if err != nil {
-		t.Fatal(err)
+func TestVerifyHashesExactManifestBytes(t *testing.T) {
+	m := fixtureManifest()
+	m.MinimumClientVersion = "é<&>\u2028\u2029"
+	dir, original := writeFixture(t, m, []byte(fixtureEntities), []byte("{}\n"))
+	raw := readFile(t, dir, "manifest.json")
+	raw = bytes.ReplaceAll(raw, []byte(`\u2028\u2029`), []byte("\u2028\u2029"))
+	id := digest(raw)
+	if id == original.BuildID {
+		t.Fatal("test did not change the manifest bytes")
 	}
-	want := `"minimum_client_version":"é<&>` + "\u2028\u2029" + `\\u2028"`
-	if !bytes.Contains(raw, []byte(want)) || !bytes.HasPrefix(raw, []byte(`{"counts":{"class":1,"location":1},`)) {
-		t.Fatalf("unexpected canonical bytes: %q", raw)
+	writeFile(t, dir, "manifest.json", raw)
+	writeFile(t, dir, "BUILD_ID", []byte(id+"\n"))
+	if summary, err := Verify(dir); err != nil || summary.BuildID != id {
+		t.Fatalf("raw Unicode manifest returned %+v, %v", summary, err)
 	}
 }
 
@@ -97,7 +98,7 @@ func TestVerifyTamperedHashes(t *testing.T) {
 	for _, tc := range []struct {
 		file, old, new, reason string
 	}{
-		{"manifest.json", "0.0.1", "0.0.2", "manifest_sha256 or build_id mismatch"},
+		{"manifest.json", "0.0.1", "0.0.2", "SHA-256 differs"},
 		{"entities.jsonl", "Страж", "Подмена", "SHA-256 mismatch"},
 		{"crossrefs.json", "{}", "{ }", "SHA-256 mismatch"},
 	} {
@@ -116,7 +117,7 @@ func TestVerifyRejectsInvalidManifestAndEntities(t *testing.T) {
 		change func(*manifest, string) string
 		reason string
 	}{
-		{"manifest schema", func(m *manifest, s string) string { m.SchemaVersion++; return s }, "unsupported format or schema"},
+		{"manifest schema", func(m *manifest, s string) string { m.SchemaVersion++; return s }, "unsupported schema"},
 		{"lint errors", func(m *manifest, s string) string { m.Lint.Errors++; return s }, "lint must have zero errors"},
 		{"wrong count sum", func(m *manifest, s string) string { m.EntityCount++; return s }, "do not sum"},
 		{"wrong line count", func(m *manifest, s string) string { m.EntityCount++; m.Counts["class"]++; return s }, "line count"},
@@ -156,7 +157,62 @@ func TestVerifyRejectsInvalidManifestAndEntities(t *testing.T) {
 func assertInvalidBundle(t *testing.T, dir, reason string) {
 	t.Helper()
 	_, err := Verify(dir)
-	if !errors.Is(err, ErrInvalidBundle) || !strings.Contains(err.Error(), reason) {
+	if err == nil || !strings.Contains(err.Error(), reason) {
 		t.Fatalf("Verify error = %v, want %q", err, reason)
 	}
+}
+
+func TestStrictParsingAndLimits(t *testing.T) {
+	for _, tc := range []struct {
+		name, from, to string
+		code           Code
+	}{
+		{"UTF-8", "Страж", "\xff", BundleInvalid},
+		{"BOM", `{"id"`, "\xef\xbb\xbf{\"id\"", BundleInvalid},
+		{"duplicate nested key", `"name":"Страж <&>"`, `"name":1,"name":2`, BundleInvalid},
+		{"NaN", `"Страж <&>"`, "NaN", BundleInvalid},
+		{"Infinity", `"Страж <&>"`, "Infinity", BundleInvalid},
+		{"negative infinity", `"Страж <&>"`, "-Infinity", BundleInvalid},
+		{"array instead of payload", `{"name":"Страж <&>"}`, "[]", BundleInvalid},
+		{"array instead of line", strings.Split(fixtureEntities, "\n")[0], "[]", BundleInvalid},
+		{"CRLF", "\n", "\r\n", BundleInvalid},
+		{"depth", `"Страж <&>"`, strings.Repeat("[", 15) + "0" + strings.Repeat("]", 15), BundleInvalid},
+		{"oversize line", "Страж", strings.Repeat("x", maxLineBytes), BundleTooLarge},
+		{"missing entity", strings.Split(fixtureEntities, "\n")[0] + "\n", "", CountMismatch},
+		{"extra key", `"region_id":null`, `"region_id":null,"extra":1`, BundleInvalid},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			data := strings.Replace(fixtureEntities, tc.from, tc.to, 1)
+			dir, _ := writeFixture(t, fixtureManifest(), []byte(data), []byte("{}\n"))
+			if _, err := Verify(dir); err == nil || ErrorCode(err) != tc.code {
+				t.Fatalf("Verify error = %v; want %s", err, tc.code)
+			}
+		})
+	}
+	t.Run("bundle too large", func(t *testing.T) {
+		dir, _ := writeFixture(t, fixtureManifest(), []byte(fixtureEntities), []byte("{}\n"))
+		if err := os.Truncate(filepath.Join(dir, "crossrefs.json"), maxBundleBytes); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := Verify(dir); err == nil || ErrorCode(err) != BundleTooLarge {
+			t.Fatalf("Verify error = %v; want %s", err, BundleTooLarge)
+		}
+	})
+	t.Run("entity count limit", func(t *testing.T) {
+		m := fixtureManifest()
+		m.EntityCount, m.Counts["class"] = maxEntities+1, maxEntities
+		dir, _ := writeFixture(t, m, []byte(fixtureEntities), []byte("{}\n"))
+		if _, err := Verify(dir); err == nil || ErrorCode(err) != BundleTooLarge {
+			t.Fatalf("Verify error = %v; want %s", err, BundleTooLarge)
+		}
+	})
+	t.Run("manifest one line and LF", func(t *testing.T) {
+		dir, _ := writeFixture(t, fixtureManifest(), []byte(fixtureEntities), []byte("{}\n"))
+		raw := append(readFile(t, dir, "manifest.json"), '\n')
+		writeFile(t, dir, "manifest.json", raw)
+		writeFile(t, dir, "BUILD_ID", []byte(digest(raw)+"\n"))
+		if _, err := Verify(dir); err == nil || ErrorCode(err) != BundleInvalid {
+			t.Fatalf("Verify error = %v; want %s", err, BundleInvalid)
+		}
+	})
 }

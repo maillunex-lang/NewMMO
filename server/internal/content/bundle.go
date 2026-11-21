@@ -2,6 +2,7 @@
 package content
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
@@ -13,21 +14,24 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"unicode/utf8"
 )
 
 const (
-	exportFormat  = "newmmo.content.export"
-	schemaVersion = 1
+	exportFormat   = "newmmo.content.export"
+	schemaVersion  = 1
+	maxBundleBytes = 64 << 20
+	maxLineBytes   = 1 << 20
+	maxEntities    = 100_000
+	maxJSONDepth   = 16
 )
 
 var (
-	ErrInvalidBundle = errors.New("invalid content bundle")
-	hashPattern      = regexp.MustCompile(`^[0-9a-f]{64}$`)
-	regionPattern    = regexp.MustCompile(`^REG-[0-9]{2}$`)
+	hashPattern   = regexp.MustCompile(`^[0-9a-f]{64}$`)
+	regionPattern = regexp.MustCompile(`^REG-0[1-6]$`)
 )
 
-// Manifest body fields (including nested objects) are ordered by JSON key.
 type manifestBody struct {
 	Counts               map[string]int `json:"counts"`
 	CrossrefsSHA256      string         `json:"crossrefs_sha256"`
@@ -52,8 +56,8 @@ type sourceFile struct {
 
 type manifest struct {
 	manifestBody
-	BuildID        string `json:"build_id"`
-	ManifestSHA256 string `json:"manifest_sha256"`
+	BuildID        string `json:"-"`
+	ManifestSHA256 string `json:"-"`
 }
 
 type Entity struct {
@@ -90,182 +94,214 @@ func Verify(dir string) (Summary, error) {
 }
 
 func loadBundle(dir string) (bundle, error) {
-	b, err := readBundle(dir)
-	if err != nil {
-		return bundle{}, fmt.Errorf("%w: %v", ErrInvalidBundle, err)
+	input := bundleInput{dir: dir, remaining: maxBundleBytes}
+	var buildID string
+	if err := input.read("BUILD_ID", func(r io.Reader) error {
+		raw, err := io.ReadAll(io.LimitReader(r, 66))
+		if err != nil {
+			return err
+		}
+		if len(raw) != 65 || raw[64] != '\n' || !hashPattern.Match(raw[:64]) {
+			return failure(BundleInvalid, "BUILD_ID must contain 64 lowercase hex characters and LF")
+		}
+		buildID = string(raw[:64])
+		return nil
+	}); err != nil {
+		return bundle{}, err
 	}
-	return b, nil
+
+	var result bundle
+	if err := input.read("manifest.json", func(r io.Reader) error {
+		raw, err := io.ReadAll(r)
+		if err != nil {
+			return err
+		}
+		if digest(raw) != buildID {
+			return failure(HashMismatch, "manifest.json SHA-256 differs from BUILD_ID")
+		}
+		if len(raw) < 2 || raw[len(raw)-1] != '\n' || bytes.ContainsAny(raw[:len(raw)-1], "\r\n") {
+			return failure(BundleInvalid, "manifest.json must be one JSON line followed by LF")
+		}
+		m, err := readManifest(raw)
+		if err != nil {
+			return err
+		}
+		m.BuildID, m.ManifestSHA256 = buildID, buildID
+		result.manifest, result.manifestJSON = m, raw
+		return nil
+	}); err != nil {
+		return bundle{}, err
+	}
+
+	if err := input.read("entities.jsonl", func(r io.Reader) error {
+		var err error
+		result.entities, err = readEntities(r, result.manifest)
+		return err
+	}); err != nil {
+		return bundle{}, err
+	}
+	if err := input.read("crossrefs.json", func(r io.Reader) error {
+		hash := sha256.New()
+		if _, err := io.Copy(hash, r); err != nil {
+			return err
+		}
+		if hex.EncodeToString(hash.Sum(nil)) != result.manifest.CrossrefsSHA256 {
+			return failure(HashMismatch, "crossrefs.json SHA-256 mismatch")
+		}
+		return nil
+	}); err != nil {
+		return bundle{}, err
+	}
+	return result, nil
 }
 
-func readBundle(dir string) (bundle, error) {
-	raw, err := os.ReadFile(filepath.Join(dir, "manifest.json"))
+type bundleInput struct {
+	dir       string
+	remaining int64
+}
+
+func (in *bundleInput) read(name string, read func(io.Reader) error) error {
+	file, err := os.Open(filepath.Join(in.dir, name))
 	if err != nil {
-		return bundle{}, fmt.Errorf("read manifest.json: %w", err)
+		return failure(BundleInvalid, "cannot open "+name)
 	}
-	m, err := readManifest(raw)
+	defer file.Close()
+	info, err := file.Stat()
+	if err != nil || !info.Mode().IsRegular() {
+		return failure(BundleInvalid, name+" must be a regular file")
+	}
+	if info.Size() > in.remaining {
+		return failure(BundleTooLarge, "bundle exceeds 64 MiB")
+	}
+	limit := &io.LimitedReader{R: file, N: in.remaining + 1}
+	err = read(limit)
+	if limit.N == 0 {
+		return failure(BundleTooLarge, "bundle exceeds 64 MiB")
+	}
+	in.remaining = limit.N - 1
 	if err != nil {
-		return bundle{}, err
+		var registryError *RegistryError
+		if errors.As(err, &registryError) {
+			return err
+		}
+		return failure(BundleInvalid, "cannot read "+name)
 	}
-	entities, err := readHashedFile(dir, "entities.jsonl", m.EntitiesSHA256)
-	if err != nil {
-		return bundle{}, err
-	}
-	if _, err := readHashedFile(dir, "crossrefs.json", m.CrossrefsSHA256); err != nil {
-		return bundle{}, err
-	}
-	rows, err := readEntities(entities, m)
-	if err != nil {
-		return bundle{}, err
-	}
-	return bundle{manifest: m, manifestJSON: raw, entities: rows}, nil
+	return nil
 }
 
 func readManifest(raw []byte) (manifest, error) {
 	fields, err := objectFields(raw)
-	if err != nil || !exactKeys(fields, "build_id", "counts", "crossrefs_sha256", "entities_sha256",
-		"entity_count", "format", "lint", "manifest_sha256", "minimum_client_version", "schema_version", "source_files") {
-		return manifest{}, errors.New("manifest.json: invalid object or fields")
+	if err != nil || !exactKeys(fields, "counts", "crossrefs_sha256", "entities_sha256",
+		"entity_count", "format", "lint", "minimum_client_version", "schema_version", "source_files") {
+		return manifest{}, failure(BundleInvalid, "manifest.json: invalid object or fields")
 	}
 	lint, err := objectFields(fields["lint"])
 	if err != nil || !exactKeys(lint, "errors", "warnings") || isNull(lint["errors"]) || isNull(lint["warnings"]) {
-		return manifest{}, errors.New("manifest.json: invalid lint summary")
+		return manifest{}, failure(BundleInvalid, "manifest.json: invalid lint summary")
 	}
 	counts, err := objectFields(fields["counts"])
 	if err != nil || len(counts) == 0 {
-		return manifest{}, errors.New("manifest.json: invalid counts")
+		return manifest{}, failure(BundleInvalid, "manifest.json: invalid counts")
 	}
 	var sources []json.RawMessage
 	if err := json.Unmarshal(fields["source_files"], &sources); err != nil || len(sources) != 14 {
-		return manifest{}, errors.New("manifest.json: expected 14 source files")
+		return manifest{}, failure(BundleInvalid, "manifest.json: expected 14 source files")
 	}
 	for _, src := range sources {
 		fields, err := objectFields(src)
 		if err != nil || !exactKeys(fields, "file", "sha256") {
-			return manifest{}, errors.New("manifest.json: invalid source file fields")
+			return manifest{}, failure(BundleInvalid, "manifest.json: invalid source file fields")
 		}
 	}
 
 	var m manifest
 	if err := json.Unmarshal(raw, &m); err != nil {
-		return manifest{}, errors.New("manifest.json: invalid field types")
+		return manifest{}, failure(BundleInvalid, "manifest.json: invalid field types")
 	}
-	if m.Format != exportFormat || m.SchemaVersion != schemaVersion {
-		return manifest{}, errors.New("manifest.json: unsupported format or schema version")
+	if m.Format != exportFormat {
+		return manifest{}, failure(BundleInvalid, "manifest.json: unsupported format")
+	}
+	if m.SchemaVersion != schemaVersion {
+		return manifest{}, failure(SchemaUnsupported, "manifest.json: unsupported schema version")
+	}
+	if m.EntityCount > maxEntities {
+		return manifest{}, failure(BundleTooLarge, "manifest.json: more than 100000 entities")
 	}
 	if m.Lint.Errors != 0 || m.Lint.Warnings < 0 {
-		return manifest{}, errors.New("manifest.json: lint must have zero errors and nonnegative warnings")
+		return manifest{}, failure(BundleInvalid, "manifest.json: lint must have zero errors and nonnegative warnings")
 	}
 	if m.MinimumClientVersion == "" || m.EntityCount <= 0 ||
 		!hashPattern.MatchString(m.EntitiesSHA256) || !hashPattern.MatchString(m.CrossrefsSHA256) {
-		return manifest{}, errors.New("manifest.json: invalid client version, entity count or file hashes")
+		return manifest{}, failure(BundleInvalid, "manifest.json: invalid client version, entity count or file hashes")
 	}
 	files := make(map[string]bool, len(m.SourceFiles))
 	for _, src := range m.SourceFiles {
 		if src.File == "" || files[src.File] || !hashPattern.MatchString(src.SHA256) {
-			return manifest{}, errors.New("manifest.json: invalid or duplicate source file")
+			return manifest{}, failure(BundleInvalid, "manifest.json: invalid or duplicate source file")
 		}
 		files[src.File] = true
 	}
 	remaining := m.EntityCount
 	for kind, count := range m.Counts {
 		if kind == "" || count <= 0 || count > remaining {
-			return manifest{}, errors.New("manifest.json: invalid per-kind counts")
+			return manifest{}, failure(CountMismatch, "manifest.json: invalid per-kind counts")
 		}
 		remaining -= count
 	}
 	if remaining != 0 {
-		return manifest{}, errors.New("manifest.json: per-kind counts do not sum to entity_count")
-	}
-	canonical, err := canonicalManifest(m.manifestBody)
-	if err != nil {
-		return manifest{}, fmt.Errorf("encode canonical manifest: %w", err)
-	}
-	if m.ManifestSHA256 != digest(canonical) || m.BuildID != m.ManifestSHA256 {
-		return manifest{}, errors.New("manifest.json: manifest_sha256 or build_id mismatch")
+		return manifest{}, failure(CountMismatch, "manifest.json: per-kind counts do not sum to entity_count")
 	}
 	return m, nil
 }
 
-func canonicalManifest(body manifestBody) ([]byte, error) {
-	var buf bytes.Buffer
-	encoder := json.NewEncoder(&buf)
-	encoder.SetEscapeHTML(false)
-	if err := encoder.Encode(body); err != nil {
-		return nil, err
-	}
-
-	// encoding/json always escapes these separators. The exporter writes
-	// them as UTF-8. Skip escaped backslashes so literal text stays intact.
-	raw := bytes.TrimSuffix(buf.Bytes(), []byte("\n"))
-	canonical := make([]byte, 0, len(raw))
-	for i := 0; i < len(raw); i++ {
-		if raw[i] == '\\' {
-			switch {
-			case bytes.HasPrefix(raw[i:], []byte(`\u2028`)):
-				canonical = append(canonical, "\u2028"...)
-				i += 5
-				continue
-			case bytes.HasPrefix(raw[i:], []byte(`\u2029`)):
-				canonical = append(canonical, "\u2029"...)
-				i += 5
-				continue
-			default:
-				canonical = append(canonical, raw[i], raw[i+1])
-				i++
-				continue
-			}
-		}
-		canonical = append(canonical, raw[i])
-	}
-	return canonical, nil
-}
-
-func readHashedFile(dir, name, want string) ([]byte, error) {
-	data, err := os.ReadFile(filepath.Join(dir, name))
-	if err != nil {
-		return nil, fmt.Errorf("read %s: %w", name, err)
-	}
-	if digest(data) != want {
-		return nil, fmt.Errorf("%s: SHA-256 mismatch", name)
-	}
-	return data, nil
-}
-
-func readEntities(raw []byte, m manifest) ([]Entity, error) {
-	if !bytes.HasSuffix(raw, []byte("\n")) || bytes.Contains(raw, []byte("\r")) {
-		return nil, errors.New("entities.jsonl: expected LF line endings and a trailing newline")
-	}
-	lines := bytes.Split(raw[:len(raw)-1], []byte("\n"))
-	if len(lines) != m.EntityCount {
-		return nil, errors.New("entities.jsonl: line count does not match entity_count")
-	}
-
-	rows := make([]Entity, 0, len(lines))
-	ids := make(map[string]bool, len(lines))
+func readEntities(input io.Reader, m manifest) ([]Entity, error) {
+	hash := sha256.New()
+	reader := bufio.NewReaderSize(io.TeeReader(input, hash), maxLineBytes+1)
+	rows := make([]Entity, 0, m.EntityCount)
+	ids := make(map[string]bool, m.EntityCount)
 	counts := make(map[string]int, len(m.Counts))
-	for i, line := range lines {
-		entity, err := readEntity(line)
+	for {
+		line, err := reader.ReadSlice('\n')
+		if err == io.EOF && len(line) == 0 {
+			break
+		}
+		if err == bufio.ErrBufferFull {
+			return nil, failure(BundleTooLarge, "entities.jsonl: line exceeds 1 MiB")
+		}
+		if err != nil || bytes.IndexByte(line, '\r') >= 0 {
+			return nil, failure(BundleInvalid, "entities.jsonl: expected LF line endings and a trailing newline")
+		}
+		if len(rows) == maxEntities {
+			return nil, failure(BundleTooLarge, "entities.jsonl: more than 100000 entities")
+		}
+		entity, err := readEntity(line[:len(line)-1])
 		if err != nil {
-			return nil, fmt.Errorf("entities.jsonl:%d: %w", i+1, err)
+			return nil, fmt.Errorf("entities.jsonl:%d: %w", len(rows)+1, err)
 		}
-		if ids[entity.ID] {
-			return nil, fmt.Errorf("entities.jsonl:%d: duplicate id", i+1)
+		switch {
+		case ids[entity.ID]:
+			return nil, failure(BundleInvalid, "entities.jsonl: duplicate id")
+		case m.Counts[entity.Kind] == 0:
+			return nil, failure(CountMismatch, "entities.jsonl: kind missing from manifest counts")
 		}
-		if _, ok := m.Counts[entity.Kind]; !ok {
-			return nil, fmt.Errorf("entities.jsonl:%d: kind missing from manifest counts", i+1)
-		}
-		if i > 0 {
-			prev := rows[i-1]
+		if len(rows) > 0 {
+			prev := rows[len(rows)-1]
 			if prev.Kind > entity.Kind || (prev.Kind == entity.Kind && prev.ID > entity.ID) {
-				return nil, fmt.Errorf("entities.jsonl:%d: lines are not sorted by kind and id", i+1)
+				return nil, failure(BundleInvalid, "entities.jsonl: lines are not sorted by kind and id")
 			}
 		}
 		ids[entity.ID] = true
 		counts[entity.Kind]++
 		rows = append(rows, entity)
 	}
+	if hex.EncodeToString(hash.Sum(nil)) != m.EntitiesSHA256 {
+		return nil, failure(HashMismatch, "entities.jsonl SHA-256 mismatch")
+	}
+	if len(rows) != m.EntityCount {
+		return nil, failure(CountMismatch, "entities.jsonl: line count does not match entity_count")
+	}
 	if !maps.Equal(counts, m.Counts) {
-		return nil, errors.New("entities.jsonl: per-kind counts do not match the manifest")
+		return nil, failure(CountMismatch, "entities.jsonl: per-kind counts do not match the manifest")
 	}
 	return rows, nil
 }
@@ -273,53 +309,77 @@ func readEntities(raw []byte, m manifest) ([]Entity, error) {
 func readEntity(line []byte) (Entity, error) {
 	fields, err := objectFields(line)
 	if err != nil || !exactKeys(fields, "id", "kind", "payload", "region_id", "schema_version", "source_file", "source_line") {
-		return Entity{}, errors.New("expected exactly the seven entity keys")
+		return Entity{}, failure(BundleInvalid, "expected exactly the seven entity keys in a strict JSON object")
 	}
 	var version int
 	if err := json.Unmarshal(fields["schema_version"], &version); err != nil || version != schemaVersion {
-		return Entity{}, errors.New("unsupported entity schema_version")
+		return Entity{}, failure(SchemaUnsupported, "unsupported entity schema_version")
 	}
 	var entity Entity
 	if err := json.Unmarshal(line, &entity); err != nil || entity.ID == "" || entity.Kind == "" ||
 		entity.Source == "" || entity.Line <= 0 || (entity.RegionID != nil && !regionPattern.MatchString(*entity.RegionID)) ||
-		len(entity.Payload) == 0 || entity.Payload[0] != '{' {
-		return Entity{}, errors.New("invalid entity fields")
+		len(entity.Payload) == 0 || entity.Payload[0] != '{' ||
+		strings.ContainsAny(entity.ID+entity.Kind+entity.Source, "\x1e\x1f") {
+		return Entity{}, failure(BundleInvalid, "invalid entity fields")
 	}
 	return entity, nil
 }
 
 func objectFields(raw []byte) (map[string]json.RawMessage, error) {
-	if !utf8.Valid(raw) {
-		return nil, errors.New("invalid UTF-8")
+	if !utf8.Valid(raw) || bytes.HasPrefix(raw, []byte{0xef, 0xbb, 0xbf}) {
+		return nil, errors.New("expected UTF-8 without BOM")
 	}
 	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.UseNumber()
 	start, err := decoder.Token()
 	if err != nil || start != json.Delim('{') {
 		return nil, errors.New("expected JSON object")
 	}
-	fields := make(map[string]json.RawMessage)
-	for decoder.More() {
-		token, err := decoder.Token()
-		key, ok := token.(string)
-		if err != nil || !ok {
-			return nil, errors.New("invalid object key")
-		}
-		if _, exists := fields[key]; exists {
-			return nil, errors.New("duplicate object key")
-		}
-		var value json.RawMessage
-		if err := decoder.Decode(&value); err != nil {
-			return nil, err
-		}
-		fields[key] = value
-	}
-	if _, err := decoder.Token(); err != nil {
+	if err := checkJSONValue(decoder, start, 1); err != nil {
 		return nil, err
 	}
 	if _, err := decoder.Token(); err != io.EOF {
 		return nil, errors.New("unexpected data after object")
 	}
-	return fields, nil
+	var fields map[string]json.RawMessage
+	err = json.Unmarshal(raw, &fields)
+	return fields, err
+}
+
+func checkJSONValue(decoder *json.Decoder, token json.Token, depth int) error {
+	delim, ok := token.(json.Delim)
+	if !ok {
+		return nil
+	}
+	if depth > maxJSONDepth {
+		return errors.New("JSON nesting exceeds 16")
+	}
+	var keys map[string]struct{}
+	if delim == '{' {
+		keys = make(map[string]struct{})
+	}
+	for decoder.More() {
+		if keys != nil {
+			token, err := decoder.Token()
+			key, ok := token.(string)
+			if err != nil || !ok {
+				return errors.New("invalid object key")
+			}
+			if _, exists := keys[key]; exists {
+				return errors.New("duplicate object key")
+			}
+			keys[key] = struct{}{}
+		}
+		value, err := decoder.Token()
+		if err != nil {
+			return err
+		}
+		if err := checkJSONValue(decoder, value, depth+1); err != nil {
+			return err
+		}
+	}
+	_, err := decoder.Token()
+	return err
 }
 
 func exactKeys(fields map[string]json.RawMessage, keys ...string) bool {

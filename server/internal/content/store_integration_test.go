@@ -84,7 +84,7 @@ func TestContentRegistryPostgres(t *testing.T) {
 				raw = append(raw, ' ')
 			}
 			writeFile(t, corrupt, file, raw)
-			if _, err := store.Stage(ctx, corrupt); !errors.Is(err, ErrInvalidBundle) {
+			if _, err := store.Stage(ctx, corrupt); ErrorCode(err) != HashMismatch {
 				t.Fatalf("tampered export returned %v", err)
 			}
 			assertActive(t, ctx, store, original)
