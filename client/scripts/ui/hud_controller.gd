@@ -13,7 +13,7 @@ extends Control
 @onready var bag_btn: Button = $SafeArea/Chrome/BagBtn
 @onready var credits_btn: Button = $SafeArea/Chrome/CreditsBtn
 @onready var joystick: Control = $SafeArea/Chrome/Joystick
-@onready var skills: HBoxContainer = $SafeArea/Chrome/Skills
+@onready var skills: Control = $SafeArea/Chrome/Skills
 
 @export var player_name_placeholder := "…"
 
