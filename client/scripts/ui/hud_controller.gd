@@ -10,6 +10,7 @@ extends Control
 @onready var journal_btn: Button = $SafeArea/Chrome/JournalBtn
 @onready var locale_btn: OptionButton = $SafeArea/Chrome/LocaleBtn
 @onready var bag_btn: Button = $SafeArea/Chrome/BagBtn
+@onready var credits_btn: Button = $SafeArea/Chrome/CreditsBtn
 @onready var joystick: Control = $SafeArea/Chrome/Joystick
 @onready var skills: HBoxContainer = $SafeArea/Chrome/Skills
 
@@ -37,6 +38,8 @@ func _ready() -> void:
 		journal_btn.pressed.connect(_on_journal)
 	if bag_btn:
 		bag_btn.pressed.connect(_on_bag)
+	if credits_btn:
+		credits_btn.pressed.connect(_on_credits)
 	if locale_btn:
 		_setup_locale_btn()
 	if joystick and joystick.has_signal("direction_changed"):
@@ -58,6 +61,8 @@ func _apply_chrome_labels() -> void:
 		journal_btn.text = tr("ui.journal")
 	if bag_btn:
 		bag_btn.text = tr("ui.inventory")
+	if credits_btn:
+		credits_btn.text = tr("ui.credits")
 
 func _setup_locale_btn() -> void:
 	var current := LocaleSettings.load_locale()
@@ -142,6 +147,11 @@ func _on_journal() -> void:
 		_journal = get_tree().get_first_node_in_group("quest_journal")
 	if _journal and _journal.has_method("toggle"):
 		_journal.toggle()
+
+func _on_credits() -> void:
+	var c := get_tree().get_first_node_in_group("credits_ui")
+	if c != null and c.has_method("toggle"):
+		c.toggle()
 
 func _on_bag() -> void:
 	if _inventory == null:

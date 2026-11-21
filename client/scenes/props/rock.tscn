@@ -14,7 +14,7 @@ y_sort_enabled = true
 
 [node name="Sprite" type="Sprite2D" parent="."]
 texture = ExtResource("2")
-offset = Vector2(0, -12)
+offset = Vector2(0, -20)
 
 [node name="Collision" type="CollisionShape2D" parent="."]
 position = Vector2(0, 4)

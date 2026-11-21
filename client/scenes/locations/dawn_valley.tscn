@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/env/dawn_valley_ground.png" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/props/tree.tscn" id="2"]
@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" path="res://scenes/monsters/bandit.tscn" id="11"]
 [ext_resource type="PackedScene" path="res://scenes/npc/ilra_venn.tscn" id="12"]
 [ext_resource type="PackedScene" path="res://scenes/world/interactable.tscn" id="13"]
+[ext_resource type="PackedScene" path="res://scenes/props/tree_pine.tscn" id="40"]
 
 [node name="DawnValley" type="Node2D"]
 y_sort_enabled = true
@@ -40,7 +41,7 @@ position = Vector2(280, 420)
 [node name="Oak02" parent="Vegetation" instance=ExtResource("2")]
 position = Vector2(190, 880)
 
-[node name="Oak03" parent="Vegetation" instance=ExtResource("2")]
+[node name="Oak03" parent="Vegetation" instance=ExtResource("40")]
 position = Vector2(860, 500)
 
 [node name="Oak04" parent="Vegetation" instance=ExtResource("2")]
@@ -49,7 +50,7 @@ position = Vector2(1180, 640)
 [node name="Oak05" parent="Vegetation" instance=ExtResource("2")]
 position = Vector2(1420, 420)
 
-[node name="Oak06" parent="Vegetation" instance=ExtResource("2")]
+[node name="Oak06" parent="Vegetation" instance=ExtResource("40")]
 position = Vector2(1560, 900)
 
 [node name="Oak07" parent="Vegetation" instance=ExtResource("2")]
@@ -58,7 +59,7 @@ position = Vector2(980, 980)
 [node name="Oak08" parent="Vegetation" instance=ExtResource("2")]
 position = Vector2(420, 1100)
 
-[node name="Oak09" parent="Vegetation" instance=ExtResource("2")]
+[node name="Oak09" parent="Vegetation" instance=ExtResource("40")]
 position = Vector2(1680, 620)
 
 [node name="Oak10" parent="Vegetation" instance=ExtResource("2")]
