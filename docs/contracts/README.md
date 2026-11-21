@@ -13,5 +13,6 @@ Director-owned. Implementation lanes build against these files; they change only
 | `quest-engine.md` | quest states, interactions, exactly-once rewards, snapshots | **v1 published** (D-004) |
 | `content/interactables/reg-01.json` | interaction registry: objective → event/target/instances → canon POI/LOC (stub ids kept) | **v1 published** (D-002), checked by `check_client_sync.py` |
 | `loot-engine.md` | combat loot: server-rolled drops, kill-report interim (R-KILL), ledger, messages | **v1 published** (T-034) |
+| `dungeon-engine.md` | dungeon instance state machine, puzzle, checkpoints, personal reward (solo slice DNG-01-001) | **v1 published** (T-036) |
 
 See `docs/director/DIRECTOR.md` §7.
