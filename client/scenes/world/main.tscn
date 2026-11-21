@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/game_world.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/locations/dawn_valley.tscn" id="2"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/quest_journal.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://scenes/ui/inventory.tscn" id="8"]
 [ext_resource type="Script" path="res://scripts/dungeon/dungeon_controller.gd" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/ui/credits.tscn" id="10"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1")
@@ -36,4 +37,7 @@ visible = false
 visible = false
 
 [node name="Inventory" parent="CanvasLayer" instance=ExtResource("8")]
+visible = false
+
+[node name="Credits" parent="CanvasLayer" instance=ExtResource("10")]
 visible = false

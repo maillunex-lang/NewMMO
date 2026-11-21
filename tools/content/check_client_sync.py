@@ -149,6 +149,20 @@ def run(root, content_dir):
         for d in decl.values():
             if d["kind"] == "npc" and d["id"] not in names:
                 add("ERROR", "CS_NAME_MISSING", f"names.json: canon NPC {d['id']} missing")
+    # CC-BY (attribution) sources listed in assets/LICENSES.md must be credited in client/data/credits.txt
+    lic_path = os.path.join(root, "client", "assets", "LICENSES.md")
+    cred_path = os.path.join(root, "client", "data", "credits.txt")
+    if os.path.exists(lic_path):
+        credits = open(cred_path, encoding="utf-8").read() if os.path.exists(cred_path) else ""
+        for line in open(lic_path, encoding="utf-8"):
+            if line.startswith("|") and "CC-BY" in line:
+                urls = re.findall(r"https://[^\s|)`]+", line)
+                src = [u for u in urls if "creativecommons.org" not in u]
+                if not src:
+                    add("ERROR", "CS_CREDITS", f"LICENSES.md CC-BY row without source URL: {line[:60]}")
+                for u in src:
+                    if u.rstrip(".,") not in credits:
+                        add("ERROR", "CS_CREDITS", f"CC-BY source {u} is not credited in client/data/credits.txt")
     # canonical IDs mentioned in client code/scenes
     for path in glob.glob(os.path.join(root, "client", "**", "*"), recursive=True):
         if not path.endswith((".gd", ".tscn", ".tres", ".cfg")) or os.sep + ".godot" + os.sep in path:

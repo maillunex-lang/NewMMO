@@ -4,7 +4,7 @@ Stage 1 art was **generated for this repository** by `tools/spritegen/generate_s
 
 | Path | Author | License | Notes |
 |------|--------|---------|-------|
-| `client/assets/env/{grass_tile,path_tile,shadow,lantern,crystal}.png` | Lunex / NewMMO procedural generator | Project-owned original | Replace with licensed Blender/Meshy pipeline renders for release |
+| `client/assets/env/{grass_tile,path_tile,shadow}.png` (unused leftovers) | Lunex / NewMMO procedural generator | Project-owned original | Replace with licensed Blender/Meshy pipeline renders for release |
 | `client/assets/ui/*` | Lunex procedural generator | Project-owned original | Portraits / icons |
 | `client/assets/vfx/*` | Lunex procedural generator | Project-owned original | Simple hit spark |
 
@@ -14,7 +14,7 @@ No third-party sprites, fonts, music, or Meshy/Blender exports are bundled yet. 
 
 | `client/assets/env/dawn_valley_ground.png`, `dungeon/floor_stone.png` | «Isometric Ground Tiles» — **Drummyfish** (OpenGameArt) | **CC0** | https://opengameart.org/content/isometric-ground-tiles · tessellated by `tools/spritegen/make_valley_ground.py` (road follows `valley_road_mask.png`) |
 | `client/assets/env/{tree_oak,tree_pine}.png` | «Free Isometric Plants Pack» — **Dread Knight** (OpenGameArt) | **CC0** | https://opengameart.org/content/free-isometric-plants-pack · trimmed/scaled by `tools/spritegen/make_valley_props.py` |
-| `client/assets/env/cottage.png` | «Western European Medieval Houses (isometric 2.5D)» (OpenGameArt) | **CC0** (as shown on the page) | https://opengameart.org/content/western-european-medieval-houses-isometric-25d · trimmed/scaled; author name not shown on the page — re-check before release |
-| `client/assets/env/{rock,fence}.png` | Lunex / NewMMO (`make_valley_props.py`, generated) | Project-owned original | Simple generated props |
+| `client/assets/env/cottage.png` | «Western European Medieval Houses (isometric 2.5D)» (OpenGameArt) | **Public domain / CC0** (page: published in the public domain by the Feudal Wars developers) | https://opengameart.org/content/western-european-medieval-houses-isometric-25d · trimmed/scaled; no named author on the page |
+| `client/assets/env/{rock,fence,lantern,crystal}.png` | Lunex / NewMMO (`make_valley_props.py`, generated) | Project-owned original | Simple generated props |
 
 Other candidate packs verified as CC0 on their pages but **not used yet** (also: Isometric Medieval Buildings 1/2 by Snabisch / edwill chavez, 300 Isometric Overworld Tiles by Screaming Brain Studios, Isometric Trees by mold) (see `docs/research/T-040-art-assets.md`): Kenney Isometric Landscape / City / Buildings / Prototype / Library, Tiny Tactics Battle Kit I (food_please), Isometric Classic Hero + Tiles 32x32 (GrafxKid).
