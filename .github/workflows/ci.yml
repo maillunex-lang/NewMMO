@@ -143,17 +143,23 @@ jobs:
         run: python3 -W error -m unittest discover -s tools/director/tests -v
       - name: Lane gate (trailers + write lanes)
         run: |
+          set -euo pipefail
+          git fetch origin main:refs/remotes/origin/main 2>/dev/null || true
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             RANGE="${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
-          else
+          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
             BEFORE="${{ github.event.before }}"
-            if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
-              git fetch origin main:refs/remotes/origin/main 2>/dev/null || true
-              BEFORE="$(git merge-base origin/main ${{ github.sha }} || true)"
-              [ -n "$BEFORE" ] || { echo "no base; skip"; exit 0; }
+            if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+              BEFORE="$(git rev-parse "${{ github.sha }}~1")"
             fi
             RANGE="$BEFORE..${{ github.sha }}"
+          else
+            # agent/* branch: everything on the branch that is not on main (robust to force-pushes/rebases)
+            BEFORE="$(git merge-base origin/main ${{ github.sha }} || true)"
+            [ -n "$BEFORE" ] || { echo "no merge base with main; skip"; exit 0; }
+            RANGE="$BEFORE..${{ github.sha }}"
           fi
+          echo "lane range: $RANGE"
           python3 tools/director/lane_check.py --range "$RANGE"
 
   client-scripts:
