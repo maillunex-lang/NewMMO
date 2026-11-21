@@ -119,7 +119,10 @@ def icons():
     n = 0
     for _cls, skills in data.items():
         for s in skills:
-            icon(s).save(os.path.join(out, s["id"] + ".png"), optimize=True)
+            path = os.path.join(out, s["id"] + ".png")
+            if os.path.exists(path) and os.path.getsize(path) > 20000:   # Meshy-generated art: keep (tools/meshy/make_icons.py)
+                continue
+            icon(s).save(path, optimize=True)
             n += 1
     return n
 
