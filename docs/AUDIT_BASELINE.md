@@ -1,7 +1,7 @@
 # AUDIT_BASELINE — EX-P00 (read-only)
 
 **Repo:** `maillunex-lang/NewMMO`  
-**Branch / commit:** `main` @ `e12d517` (audit time; update SHA when closing EX-P00)  
+**Branch / commit:** `main` @ `7567a54` (audit body; tip may include stamp commits)  
 **Canon orchestrator:** `docs/content/14_CONTENT_INTEGRATION.md`  
 **Execution map:** `docs/ROADMAP_EXECUTION.md`  
 **Date:** 2026-11-21  
