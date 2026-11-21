@@ -1,8 +1,9 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene format=3]
 
 [ext_resource type="Texture2D" path="res://assets/env/dawn_valley_ground.png" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/props/tree.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/props/rock.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/editor/placeable_prop.gd" id="3_u37rl"]
 [ext_resource type="PackedScene" path="res://scenes/props/crystal.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://scenes/props/cottage.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/props/lantern.tscn" id="6"]
@@ -11,257 +12,2300 @@
 [ext_resource type="PackedScene" path="res://scenes/monsters/slime.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://scenes/monsters/wolf.tscn" id="10"]
 [ext_resource type="PackedScene" path="res://scenes/monsters/bandit.tscn" id="11"]
+[ext_resource type="Script" path="res://scripts/actors/npc_actor.gd" id="11_g3b6e"]
 [ext_resource type="PackedScene" path="res://scenes/npc/ilra_venn.tscn" id="12"]
 [ext_resource type="PackedScene" path="res://scenes/world/interactable.tscn" id="13"]
+[ext_resource type="Script" path="res://scripts/world/interactable.gd" id="14_k0hko"]
+[ext_resource type="Script" path="res://scripts/actors/monster_actor.gd" id="16_h2wxw"]
 [ext_resource type="PackedScene" path="res://scenes/props/tree_pine.tscn" id="40"]
 
-[node name="DawnValley" type="Node2D"]
+[node name="DawnValley" type="Node2D" unique_id=556233842]
 y_sort_enabled = true
 metadata/loc_ids = PackedStringArray("LOC-01-001", "LOC-01-002", "LOC-01-003")
 metadata/region = "REG-01"
+metadata/lunex_bounds = [0, 0, 2048, 1400]
+metadata/lunex_spawn = [620, 720]
+metadata/lunex_gen = {
+"rocks": 40,
+"seed": 7,
+"trees": 150
+}
 
-[node name="Ground" type="Node2D" parent="."]
+[node name="Ground" type="Node2D" parent="." unique_id=350670812]
 
-[node name="Terrain" type="Sprite2D" parent="Ground"]
+[node name="Terrain" type="Sprite2D" parent="Ground" unique_id=38390453]
 z_index = -1000
 texture = ExtResource("1")
 centered = false
 
-[node name="Paths" type="Node2D" parent="."]
+[node name="Paths" type="Node2D" parent="." unique_id=1071585016]
 
-[node name="PathNote" type="Node2D" parent="Paths"]
+[node name="PathNote" type="Node2D" parent="Paths" unique_id=743720709]
 position = Vector2(640, 760)
 
-[node name="Vegetation" type="Node2D" parent="."]
+[node name="Generated" type="Node2D" parent="Paths" unique_id=596167620]
 y_sort_enabled = true
 
-[node name="Oak01" parent="Vegetation" instance=ExtResource("2")]
+[node name="Gen_Path_000" type="Line2D" parent="Paths/Generated" unique_id=1796248822]
+z_index = -400
+points = PackedVector2Array(620, 720, 584, 744, 600, 720)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-0"
+
+[node name="Gen_Path_001" type="Line2D" parent="Paths/Generated" unique_id=1453251335]
+z_index = -400
+points = PackedVector2Array(620, 720, 600, 744, 648, 744, 660, 680)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-1"
+
+[node name="Gen_Path_002" type="Line2D" parent="Paths/Generated" unique_id=682791850]
+z_index = -400
+points = PackedVector2Array(660, 680, 700, 700)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-2"
+
+[node name="Gen_Path_003" type="Line2D" parent="Paths/Generated" unique_id=1201473302]
+z_index = -400
+points = PackedVector2Array(660, 680, 620, 640)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-3"
+
+[node name="Gen_Path_004" type="Line2D" parent="Paths/Generated" unique_id=1924402612]
+z_index = -400
+points = PackedVector2Array(620, 640, 584, 664, 560, 660)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-4"
+
+[node name="Gen_Path_005" type="Line2D" parent="Paths/Generated" unique_id=979736975]
+z_index = -400
+points = PackedVector2Array(560, 660, 648, 664, 648, 744, 456, 760, 480, 720)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-5"
+
+[node name="Gen_Path_006" type="Line2D" parent="Paths/Generated" unique_id=1468124400]
+z_index = -400
+points = PackedVector2Array(700, 700, 728, 696, 820, 740)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-6"
+
+[node name="Gen_Path_007" type="Line2D" parent="Paths/Generated" unique_id=251777371]
+z_index = -400
+points = PackedVector2Array(820, 740, 888, 808, 900, 860)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-7"
+
+[node name="Gen_Path_008" type="Line2D" parent="Paths/Generated" unique_id=2134545460]
+z_index = -400
+points = PackedVector2Array(900, 860, 940, 840)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-8"
+
+[node name="Gen_Path_009" type="Line2D" parent="Paths/Generated" unique_id=448585525]
+z_index = -400
+points = PackedVector2Array(940, 840, 968, 888, 960, 900)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-9"
+
+[node name="Gen_Path_010" type="Line2D" parent="Paths/Generated" unique_id=589108186]
+z_index = -400
+points = PackedVector2Array(960, 900, 984, 904, 1020, 880)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-10"
+
+[node name="Gen_Path_011" type="Line2D" parent="Paths/Generated" unique_id=820673138]
+z_index = -400
+points = PackedVector2Array(1020, 880, 1048, 840, 1040, 820)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-11"
+
+[node name="Gen_Path_012" type="Line2D" parent="Paths/Generated" unique_id=1412354578]
+z_index = -400
+points = PackedVector2Array(1040, 820, 1064, 776, 1120, 780)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-12"
+
+[node name="Gen_Path_013" type="Line2D" parent="Paths/Generated" unique_id=960262632]
+z_index = -400
+points = PackedVector2Array(1120, 780, 1240, 780)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-13"
+
+[node name="Gen_Path_014" type="Line2D" parent="Paths/Generated" unique_id=1516938801]
+z_index = -400
+points = PackedVector2Array(1240, 780, 1304, 840, 1300, 860)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-14"
+
+[node name="Gen_Path_015" type="Line2D" parent="Paths/Generated" unique_id=1034615855]
+z_index = -400
+points = PackedVector2Array(1240, 780, 1340, 740)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-15"
+
+[node name="Gen_Path_016" type="Line2D" parent="Paths/Generated" unique_id=145821468]
+z_index = -400
+points = PackedVector2Array(1300, 860, 1304, 952, 1280, 980)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-16"
+
+[node name="Gen_Path_017" type="Line2D" parent="Paths/Generated" unique_id=1990011315]
+z_index = -400
+points = PackedVector2Array(1040, 820, 980, 700)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-17"
+
+[node name="Gen_Path_018" type="Line2D" parent="Paths/Generated" unique_id=1473764631]
+z_index = -400
+points = PackedVector2Array(1280, 980, 1320, 1016, 1400, 1040)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-18"
+
+[node name="Gen_Path_019" type="Line2D" parent="Paths/Generated" unique_id=1650965885]
+z_index = -400
+points = PackedVector2Array(600, 720, 584, 744, 584, 808, 540, 900)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-19"
+
+[node name="Gen_Path_020" type="Line2D" parent="Paths/Generated" unique_id=113076595]
+z_index = -400
+points = PackedVector2Array(540, 900, 536, 952, 568, 1000, 560, 1020)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-20"
+
+[node name="Gen_Path_021" type="Line2D" parent="Paths/Generated" unique_id=572029153]
+z_index = -400
+points = PackedVector2Array(560, 1020, 520, 1080)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-21"
+
+[node name="Gen_Path_022" type="Line2D" parent="Paths/Generated" unique_id=402541600]
+z_index = -400
+points = PackedVector2Array(520, 1080, 460, 1040)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-22"
+
+[node name="Gen_Path_023" type="Line2D" parent="Paths/Generated" unique_id=19273643]
+z_index = -400
+points = PackedVector2Array(460, 1040, 400, 1000)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-23"
+
+[node name="Gen_Path_024" type="Line2D" parent="Paths/Generated" unique_id=179296902]
+z_index = -400
+points = PackedVector2Array(1340, 740, 1384, 696, 1384, 648, 1500, 520)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-24"
+
+[node name="Gen_Path_025" type="Line2D" parent="Paths/Generated" unique_id=832157592]
+z_index = -400
+points = PackedVector2Array(1500, 520, 1480, 504, 1480, 480)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-25"
+
+[node name="Gen_Path_026" type="Line2D" parent="Paths/Generated" unique_id=229550312]
+z_index = -400
+points = PackedVector2Array(1500, 520, 1528, 520, 1608, 568, 1620, 560)
+width = 34.0
+default_color = Color(0.5, 0.37, 0.25, 0.92)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+metadata/gen_id = "path-26"
+
+[node name="Vegetation" type="Node2D" parent="." unique_id=1794235401]
+y_sort_enabled = true
+
+[node name="Oak01" type="StaticBody2D" parent="Vegetation" unique_id=532559093 instance=ExtResource("2")]
+y_sort_enabled = true
 position = Vector2(280, 420)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
 
-[node name="Oak02" parent="Vegetation" instance=ExtResource("2")]
+[node name="Oak02" type="StaticBody2D" parent="Vegetation" unique_id=1472499639 instance=ExtResource("2")]
+y_sort_enabled = true
 position = Vector2(190, 880)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
 
-[node name="Oak03" parent="Vegetation" instance=ExtResource("40")]
+[node name="Oak03" type="StaticBody2D" parent="Vegetation" unique_id=1826700228 instance=ExtResource("40")]
+y_sort_enabled = true
 position = Vector2(860, 500)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
 
-[node name="Oak04" parent="Vegetation" instance=ExtResource("2")]
+[node name="Oak04" type="StaticBody2D" parent="Vegetation" unique_id=1463719536 instance=ExtResource("2")]
+y_sort_enabled = true
 position = Vector2(1180, 640)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
 
-[node name="Oak05" parent="Vegetation" instance=ExtResource("2")]
+[node name="Oak05" type="StaticBody2D" parent="Vegetation" unique_id=760780560 instance=ExtResource("2")]
+y_sort_enabled = true
 position = Vector2(1420, 420)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
 
-[node name="Oak06" parent="Vegetation" instance=ExtResource("40")]
+[node name="Oak06" type="StaticBody2D" parent="Vegetation" unique_id=1465274643 instance=ExtResource("40")]
+y_sort_enabled = true
 position = Vector2(1560, 900)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
 
-[node name="Oak07" parent="Vegetation" instance=ExtResource("2")]
+[node name="Oak07" type="StaticBody2D" parent="Vegetation" unique_id=1805424208 instance=ExtResource("2")]
+y_sort_enabled = true
 position = Vector2(980, 980)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
 
-[node name="Oak08" parent="Vegetation" instance=ExtResource("2")]
+[node name="Oak08" type="StaticBody2D" parent="Vegetation" unique_id=985362558 instance=ExtResource("2")]
+y_sort_enabled = true
 position = Vector2(420, 1100)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
 
-[node name="Oak09" parent="Vegetation" instance=ExtResource("40")]
+[node name="Oak09" type="StaticBody2D" parent="Vegetation" unique_id=1273746206 instance=ExtResource("40")]
+y_sort_enabled = true
 position = Vector2(1680, 620)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
 
-[node name="Oak10" parent="Vegetation" instance=ExtResource("2")]
+[node name="Oak10" type="StaticBody2D" parent="Vegetation" unique_id=2032781954 instance=ExtResource("2")]
+y_sort_enabled = true
 position = Vector2(720, 360)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
 
-[node name="Buildings" type="Node2D" parent="."]
+[node name="Generated" type="Node2D" parent="Vegetation" unique_id=1140019391]
 y_sort_enabled = true
 
-[node name="Cottage01" parent="Buildings" instance=ExtResource("5")]
+[node name="Gen_Oak_0001" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1915030412 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(796.55206, 132.17836)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-1"
+
+[node name="Gen_Oak_0002" type="StaticBody2D" parent="Vegetation/Generated" unique_id=527968031 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(797.81134, 945.8652)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-2"
+
+[node name="Gen_Oak_0003" type="StaticBody2D" parent="Vegetation/Generated" unique_id=672010127 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1885.3445, 1119.7294)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-3"
+
+[node name="Gen_Oak_0004" type="StaticBody2D" parent="Vegetation/Generated" unique_id=2049964777 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1246.3945, 1260.5962)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-4"
+
+[node name="Gen_Oak_0005" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1597400681 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1620.0178, 137.24103)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-5"
+
+[node name="Gen_Oak_0006" type="StaticBody2D" parent="Vegetation/Generated" unique_id=2107956280 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1921.284, 253.22507)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-6"
+
+[node name="Gen_Oak_0007" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1559409824 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(366.2054, 1305.7826)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-7"
+
+[node name="Gen_Oak_0008" type="StaticBody2D" parent="Vegetation/Generated" unique_id=488292421 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(247.35721, 484.084)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-8"
+
+[node name="Gen_Oak_0009" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1098162495 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(161.15207, 156.27771)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-9"
+
+[node name="Gen_Oak_0010" type="StaticBody2D" parent="Vegetation/Generated" unique_id=2043540352 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(130.75858, 1009.02826)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-10"
+
+[node name="Gen_Oak_0011" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1506365050 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1070.6033, 1066.5442)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-11"
+
+[node name="Gen_Oak_0012" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1119417694 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1268.6298, 584.3795)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-12"
+
+[node name="Gen_Oak_0013" type="StaticBody2D" parent="Vegetation/Generated" unique_id=614189951 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(125.95373, 87.016014)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-13"
+
+[node name="Gen_Oak_0014" type="StaticBody2D" parent="Vegetation/Generated" unique_id=925950072 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(104.12461, 1343.1422)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-14"
+
+[node name="Gen_Oak_0015" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1186734715 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1136.519, 84.11237)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-15"
+
+[node name="Gen_Oak_0016" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1179792573 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1421.3584, 354.95425)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-16"
+
+[node name="Gen_Oak_0017" type="StaticBody2D" parent="Vegetation/Generated" unique_id=947913116 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(64.05211, 195.44803)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-17"
+
+[node name="Gen_Oak_0018" type="StaticBody2D" parent="Vegetation/Generated" unique_id=655590492 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1431.2131, 1224.374)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-18"
+
+[node name="Gen_Oak_0019" type="StaticBody2D" parent="Vegetation/Generated" unique_id=788472379 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1565.0054, 1180.3245)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-19"
+
+[node name="Gen_Oak_0020" type="StaticBody2D" parent="Vegetation/Generated" unique_id=547181971 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(97.34148, 852.14453)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-20"
+
+[node name="Gen_Oak_0021" type="StaticBody2D" parent="Vegetation/Generated" unique_id=770763705 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(227.60765, 720.1224)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-21"
+
+[node name="Gen_Oak_0022" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1789497288 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(811.1067, 557.9337)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-22"
+
+[node name="Gen_Oak_0023" type="StaticBody2D" parent="Vegetation/Generated" unique_id=365634975 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1782.9688, 268.22717)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-23"
+
+[node name="Gen_Oak_0024" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1401234599 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(360.0013, 277.07965)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-24"
+
+[node name="Gen_Oak_0025" type="StaticBody2D" parent="Vegetation/Generated" unique_id=180260848 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(487.2025, 434.89963)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-25"
+
+[node name="Gen_Oak_0026" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1435890212 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(667.7291, 1237.5298)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-26"
+
+[node name="Gen_Oak_0027" type="StaticBody2D" parent="Vegetation/Generated" unique_id=2045567804 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(931.6917, 1032.1155)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-27"
+
+[node name="Gen_Oak_0028" type="StaticBody2D" parent="Vegetation/Generated" unique_id=108209153 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(847.9276, 1032.3037)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-28"
+
+[node name="Gen_Oak_0029" type="StaticBody2D" parent="Vegetation/Generated" unique_id=139413697 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1050.5148, 394.1213)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-29"
+
+[node name="Gen_Oak_0030" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1621316600 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1505.7292, 371.55853)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-30"
+
+[node name="Gen_Oak_0031" type="StaticBody2D" parent="Vegetation/Generated" unique_id=790942273 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1167.859, 177.85974)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-31"
+
+[node name="Gen_Oak_0032" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1343969301 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1850.5371, 874.0016)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-32"
+
+[node name="Gen_Oak_0033" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1384244061 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(429.81, 500.0906)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-33"
+
+[node name="Gen_Oak_0034" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1925401668 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1719.1735, 1291.7659)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-34"
+
+[node name="Gen_Oak_0035" type="StaticBody2D" parent="Vegetation/Generated" unique_id=282223550 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(539.7742, 190.21658)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-35"
+
+[node name="Gen_Oak_0036" type="StaticBody2D" parent="Vegetation/Generated" unique_id=541990000 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1821.9104, 634.49335)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-36"
+
+[node name="Gen_Oak_0037" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1709219099 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1912.8737, 916.1384)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-37"
+
+[node name="Gen_Oak_0038" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1008490000 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1154.4312, 1290.5177)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-38"
+
+[node name="Gen_Oak_0039" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1049479676 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(638.69586, 408.77032)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-39"
+
+[node name="Gen_Oak_0040" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1059266127 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(70.67964, 530.8268)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-40"
+
+[node name="Gen_Oak_0041" type="StaticBody2D" parent="Vegetation/Generated" unique_id=825518915 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(253.18637, 325.45908)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-41"
+
+[node name="Gen_Oak_0042" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1992072934 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(299.5933, 1150.9491)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-42"
+
+[node name="Gen_Oak_0043" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1529220810 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(799.8314, 1198.5576)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-43"
+
+[node name="Gen_Oak_0044" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1409355678 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(754.9463, 498.39093)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-44"
+
+[node name="Gen_Oak_0045" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1889556703 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1835.8052, 433.19186)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-45"
+
+[node name="Gen_Oak_0046" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1792796528 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1153.9287, 367.21622)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-46"
+
+[node name="Gen_Oak_0047" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1548707108 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1130.0748, 1144.771)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-47"
+
+[node name="Gen_Oak_0048" type="StaticBody2D" parent="Vegetation/Generated" unique_id=515033309 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1226.4117, 397.85434)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-48"
+
+[node name="Gen_Oak_0049" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1668714210 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1627.523, 1073.3531)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-49"
+
+[node name="Gen_Oak_0050" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1220177851 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1320.4395, 527.3417)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-50"
+
+[node name="Gen_Oak_0051" type="StaticBody2D" parent="Vegetation/Generated" unique_id=641852333 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(275.7038, 591.0492)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-51"
+
+[node name="Gen_Oak_0052" type="StaticBody2D" parent="Vegetation/Generated" unique_id=126573868 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(582.18005, 1358.9344)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-52"
+
+[node name="Gen_Oak_0053" type="StaticBody2D" parent="Vegetation/Generated" unique_id=2014102492 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(551.4954, 82.422264)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-53"
+
+[node name="Gen_Oak_0054" type="StaticBody2D" parent="Vegetation/Generated" unique_id=584814744 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(937.5973, 1321.0304)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-54"
+
+[node name="Gen_Oak_0055" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1555531503 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(441.12772, 269.80057)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-55"
+
+[node name="Gen_Oak_0056" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1371001081 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(992.1091, 1167.3534)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-56"
+
+[node name="Gen_Oak_0057" type="StaticBody2D" parent="Vegetation/Generated" unique_id=529839431 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(936.4392, 328.02466)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-57"
+
+[node name="Gen_Oak_0058" type="StaticBody2D" parent="Vegetation/Generated" unique_id=716016780 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(402.40918, 425.2179)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-58"
+
+[node name="Gen_Oak_0059" type="StaticBody2D" parent="Vegetation/Generated" unique_id=761989538 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1773.2332, 484.0509)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-59"
+
+[node name="Gen_Oak_0060" type="StaticBody2D" parent="Vegetation/Generated" unique_id=2090114871 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(642.916, 180.39616)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-60"
+
+[node name="Gen_Oak_0061" type="StaticBody2D" parent="Vegetation/Generated" unique_id=505228893 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1951.649, 502.43036)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-61"
+
+[node name="Gen_Oak_0062" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1110459002 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(686.2106, 263.43585)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-62"
+
+[node name="Gen_Oak_0063" type="StaticBody2D" parent="Vegetation/Generated" unique_id=471953844 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(443.1774, 824.9136)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-63"
+
+[node name="Gen_Oak_0064" type="StaticBody2D" parent="Vegetation/Generated" unique_id=166942936 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1471.533, 1289.9463)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-64"
+
+[node name="Gen_Oak_0065" type="StaticBody2D" parent="Vegetation/Generated" unique_id=301863512 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1960.9083, 133.43512)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-65"
+
+[node name="Gen_Oak_0066" type="StaticBody2D" parent="Vegetation/Generated" unique_id=2098064066 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(316.2284, 719.71716)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-66"
+
+[node name="Gen_Oak_0067" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1267483911 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1591.7102, 674.6468)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-67"
+
+[node name="Gen_Oak_0068" type="StaticBody2D" parent="Vegetation/Generated" unique_id=90541417 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1201.1549, 468.3828)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-68"
+
+[node name="Gen_Oak_0069" type="StaticBody2D" parent="Vegetation/Generated" unique_id=445150669 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1639.5184, 276.01276)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-69"
+
+[node name="Gen_Oak_0070" type="StaticBody2D" parent="Vegetation/Generated" unique_id=767766955 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(720.068, 583.22174)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-70"
+
+[node name="Gen_Oak_0071" type="StaticBody2D" parent="Vegetation/Generated" unique_id=546306975 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1588.8705, 1276.6328)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-71"
+
+[node name="Gen_Oak_0072" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1313697933 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1313.9835, 393.3468)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-72"
+
+[node name="Gen_Oak_0073" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1033237805 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1048.1255, 1296.4773)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-73"
+
+[node name="Gen_Oak_0074" type="StaticBody2D" parent="Vegetation/Generated" unique_id=999898196 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1967.8853, 403.9231)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-74"
+
+[node name="Gen_Oak_0075" type="StaticBody2D" parent="Vegetation/Generated" unique_id=840594602 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(786.92645, 281.8189)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-75"
+
+[node name="Gen_Oak_0076" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1842263996 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1696.3386, 1189.0267)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-76"
+
+[node name="Gen_Oak_0077" type="StaticBody2D" parent="Vegetation/Generated" unique_id=306332335 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(382.56216, 352.23526)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-77"
+
+[node name="Gen_Oak_0078" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1991776597 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(463.689, 1183.4537)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-78"
+
+[node name="Gen_Oak_0079" type="StaticBody2D" parent="Vegetation/Generated" unique_id=399687972 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(118.24103, 723.9332)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-79"
+
+[node name="Gen_Oak_0080" type="StaticBody2D" parent="Vegetation/Generated" unique_id=876884258 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1697.5614, 811.9611)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-80"
+
+[node name="Gen_Oak_0081" type="StaticBody2D" parent="Vegetation/Generated" unique_id=26914430 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(916.943, 460.82288)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-81"
+
+[node name="Gen_Oak_0082" type="StaticBody2D" parent="Vegetation/Generated" unique_id=336567427 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(133.05493, 1256.7402)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-82"
+
+[node name="Gen_Oak_0083" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1934132567 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(582.1766, 292.6179)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-83"
+
+[node name="Gen_Oak_0084" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1327426919 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1504.7811, 639.86334)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-84"
+
+[node name="Gen_Oak_0085" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1544379913 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1052.8943, 190.0518)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-85"
+
+[node name="Gen_Oak_0086" type="StaticBody2D" parent="Vegetation/Generated" unique_id=265413746 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1891.2664, 726.9428)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-86"
+
+[node name="Gen_Oak_0087" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1839702945 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1349.8188, 288.89688)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-87"
+
+[node name="Gen_Oak_0088" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1261751473 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(98.74958, 932.31506)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-88"
+
+[node name="Gen_Oak_0089" type="StaticBody2D" parent="Vegetation/Generated" unique_id=431774026 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1709.3436, 967.174)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-89"
+
+[node name="Gen_Oak_0090" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1956369066 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(368.62918, 1190.9631)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-90"
+
+[node name="Gen_Oak_0091" type="StaticBody2D" parent="Vegetation/Generated" unique_id=546329628 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1888.4341, 176.71541)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-91"
+
+[node name="Gen_Oak_0092" type="StaticBody2D" parent="Vegetation/Generated" unique_id=698409273 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(180.41501, 390.33643)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-92"
+
+[node name="Gen_Oak_0093" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1954790281 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1349.8547, 1312.5255)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-93"
+
+[node name="Gen_Oak_0094" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1163742950 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1932.9232, 1336.1353)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-94"
+
+[node name="Gen_Oak_0095" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1008135011 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(669.1063, 485.65472)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-95"
+
+[node name="Gen_Oak_0096" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1731258196 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1076.3386, 506.22583)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-96"
+
+[node name="Gen_Oak_0097" type="StaticBody2D" parent="Vegetation/Generated" unique_id=883248240 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1969.321, 1129.7218)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-97"
+
+[node name="Gen_Oak_0098" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1631454129 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1339.751, 1212.478)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-98"
+
+[node name="Gen_Oak_0099" type="StaticBody2D" parent="Vegetation/Generated" unique_id=615432036 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(101.33685, 1121.9392)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-99"
+
+[node name="Gen_Oak_0100" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1691825768 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1795.2474, 764.0665)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-100"
+
+[node name="Gen_Oak_0101" type="StaticBody2D" parent="Vegetation/Generated" unique_id=468940018 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(719.67676, 1013.4728)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-101"
+
+[node name="Gen_Oak_0102" type="StaticBody2D" parent="Vegetation/Generated" unique_id=567120044 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(441.6025, 158.85027)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-102"
+
+[node name="Gen_Oak_0103" type="StaticBody2D" parent="Vegetation/Generated" unique_id=773127820 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(1439.9972, 844.9564)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-103"
+
+[node name="Gen_Oak_0104" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1272932696 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(404.50928, 92.5986)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-104"
+
+[node name="Gen_Oak_0105" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1233696417 instance=ExtResource("2")]
+y_sort_enabled = true
+position = Vector2(837.5338, 1128.208)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Oak Tree"
+metadata/gen_id = "oak-105"
+
+[node name="Gen_Pine_0001" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1666378443 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(180.30472, 596.8081)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-1"
+
+[node name="Gen_Pine_0002" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1199905327 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(638.00446, 1166.2043)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-2"
+
+[node name="Gen_Pine_0003" type="StaticBody2D" parent="Vegetation/Generated" unique_id=139509335 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(169.39662, 811.62286)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-3"
+
+[node name="Gen_Pine_0004" type="StaticBody2D" parent="Vegetation/Generated" unique_id=713103941 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(658.3731, 100.81226)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-4"
+
+[node name="Gen_Pine_0005" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1656163995 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1064.7201, 280.65063)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-5"
+
+[node name="Gen_Pine_0006" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1670598798 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1245.2646, 1139.397)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-6"
+
+[node name="Gen_Pine_0007" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1305758532 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(177.72304, 528.5874)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-7"
+
+[node name="Gen_Pine_0008" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1345565451 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1167.9468, 540.29846)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-8"
+
+[node name="Gen_Pine_0009" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1358606021 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1791.8236, 1087.6003)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-9"
+
+[node name="Gen_Pine_0010" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1567586587 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(855.4479, 241.07281)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-10"
+
+[node name="Gen_Pine_0011" type="StaticBody2D" parent="Vegetation/Generated" unique_id=292708355 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1733.7838, 198.01904)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-11"
+
+[node name="Gen_Pine_0012" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1304631307 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(570.5363, 371.7962)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-12"
+
+[node name="Gen_Pine_0013" type="StaticBody2D" parent="Vegetation/Generated" unique_id=2010638739 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1452.9232, 699.3781)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-13"
+
+[node name="Gen_Pine_0014" type="StaticBody2D" parent="Vegetation/Generated" unique_id=676472242 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(867.53827, 631.3647)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-14"
+
+[node name="Gen_Pine_0015" type="StaticBody2D" parent="Vegetation/Generated" unique_id=898926220 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1866.4235, 525.9721)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-15"
+
+[node name="Gen_Pine_0016" type="StaticBody2D" parent="Vegetation/Generated" unique_id=418960308 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(72.95966, 610.10645)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-16"
+
+[node name="Gen_Pine_0017" type="StaticBody2D" parent="Vegetation/Generated" unique_id=2049098147 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1737.6674, 898.7424)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-17"
+
+[node name="Gen_Pine_0018" type="StaticBody2D" parent="Vegetation/Generated" unique_id=987790268 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1869.4213, 308.80396)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-18"
+
+[node name="Gen_Pine_0019" type="StaticBody2D" parent="Vegetation/Generated" unique_id=800077211 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(853.6584, 1332.9432)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-19"
+
+[node name="Gen_Pine_0020" type="StaticBody2D" parent="Vegetation/Generated" unique_id=229104660 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(996.4099, 488.67892)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-20"
+
+[node name="Gen_Pine_0021" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1682356375 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1203.0348, 1354.8044)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-21"
+
+[node name="Gen_Pine_0022" type="StaticBody2D" parent="Vegetation/Generated" unique_id=850315068 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(104.451935, 464.0592)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-22"
+
+[node name="Gen_Pine_0023" type="StaticBody2D" parent="Vegetation/Generated" unique_id=492404171 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1213.7188, 321.2838)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-23"
+
+[node name="Gen_Pine_0024" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1289631678 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1638.2211, 857.947)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-24"
+
+[node name="Gen_Pine_0025" type="StaticBody2D" parent="Vegetation/Generated" unique_id=549698228 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1984.5457, 1230.314)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-25"
+
+[node name="Gen_Pine_0026" type="StaticBody2D" parent="Vegetation/Generated" unique_id=370410359 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1250.2726, 264.99664)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-26"
+
+[node name="Gen_Pine_0027" type="StaticBody2D" parent="Vegetation/Generated" unique_id=824961393 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1873.0294, 1201.0975)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-27"
+
+[node name="Gen_Pine_0028" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1069058103 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1105.7482, 650.2323)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-28"
+
+[node name="Gen_Pine_0029" type="StaticBody2D" parent="Vegetation/Generated" unique_id=818219342 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1623.4902, 404.26093)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-29"
+
+[node name="Gen_Pine_0030" type="StaticBody2D" parent="Vegetation/Generated" unique_id=99694487 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1694.265, 459.9362)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-30"
+
+[node name="Gen_Pine_0031" type="StaticBody2D" parent="Vegetation/Generated" unique_id=76971599 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(192.42174, 1164.637)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-31"
+
+[node name="Gen_Pine_0032" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1185436246 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1547.8646, 1038.2003)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-32"
+
+[node name="Gen_Pine_0033" type="StaticBody2D" parent="Vegetation/Generated" unique_id=222384654 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(541.978, 538.62427)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-33"
+
+[node name="Gen_Pine_0034" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1945171570 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1047.1841, 993.1522)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-34"
+
+[node name="Gen_Pine_0035" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1738575133 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1886.184, 99.84038)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-35"
+
+[node name="Gen_Pine_0036" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1763764346 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(276.6601, 863.397)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-36"
+
+[node name="Gen_Pine_0037" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1950629079 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(521.46216, 1306.6587)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-37"
+
+[node name="Gen_Pine_0038" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1382411374 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(302.52942, 1346.0126)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-38"
+
+[node name="Gen_Pine_0039" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1558817952 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1734.2386, 342.55994)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-39"
+
+[node name="Gen_Pine_0040" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1803761841 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1531.9725, 230.78432)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-40"
+
+[node name="Gen_Pine_0041" type="StaticBody2D" parent="Vegetation/Generated" unique_id=2036148621 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1593.8903, 988.6726)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-41"
+
+[node name="Gen_Pine_0042" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1096620615 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(661.54193, 919.65796)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-42"
+
+[node name="Gen_Pine_0043" type="StaticBody2D" parent="Vegetation/Generated" unique_id=1085559545 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1955.708, 628.8565)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-43"
+
+[node name="Gen_Pine_0044" type="StaticBody2D" parent="Vegetation/Generated" unique_id=426143912 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(1771.3983, 564.00464)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-44"
+
+[node name="Gen_Pine_0045" type="StaticBody2D" parent="Vegetation/Generated" unique_id=2089911070 instance=ExtResource("40")]
+y_sort_enabled = true
+position = Vector2(987.8762, 227.75214)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Pine Tree"
+metadata/gen_id = "pine-45"
+
+[node name="Buildings" type="Node2D" parent="." unique_id=924121582]
+y_sort_enabled = true
+
+[node name="Cottage01" type="StaticBody2D" parent="Buildings" unique_id=588092598 instance=ExtResource("5")]
+y_sort_enabled = true
 position = Vector2(500, 640)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Cottage"
 
-[node name="Fence01" parent="Buildings" instance=ExtResource("7")]
+[node name="Fence01" type="StaticBody2D" parent="Buildings" unique_id=639988901 instance=ExtResource("7")]
+y_sort_enabled = true
 position = Vector2(420, 700)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Fence"
 
-[node name="Fence02" parent="Buildings" instance=ExtResource("7")]
+[node name="Fence02" type="StaticBody2D" parent="Buildings" unique_id=2106481368 instance=ExtResource("7")]
+y_sort_enabled = true
 position = Vector2(500, 720)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Fence"
 
-[node name="Fence03" parent="Buildings" instance=ExtResource("7")]
+[node name="Fence03" type="StaticBody2D" parent="Buildings" unique_id=539699180 instance=ExtResource("7")]
+y_sort_enabled = true
 position = Vector2(580, 700)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Fence"
 
-[node name="Decorations" type="Node2D" parent="."]
+[node name="Decorations" type="Node2D" parent="." unique_id=1219183764]
 y_sort_enabled = true
 
-[node name="Rock01" parent="Decorations" instance=ExtResource("3")]
+[node name="Rock01" type="StaticBody2D" parent="Decorations" unique_id=1075168738 instance=ExtResource("3")]
+y_sort_enabled = true
 position = Vector2(340, 560)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
 
-[node name="Rock02" parent="Decorations" instance=ExtResource("3")]
+[node name="Rock02" type="StaticBody2D" parent="Decorations" unique_id=1717560028 instance=ExtResource("3")]
+y_sort_enabled = true
 position = Vector2(1100, 820)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
 
-[node name="Rock03" parent="Decorations" instance=ExtResource("3")]
+[node name="Rock03" type="StaticBody2D" parent="Decorations" unique_id=1965888294 instance=ExtResource("3")]
+y_sort_enabled = true
 position = Vector2(1500, 740)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
 
-[node name="Crystal01" parent="Decorations" instance=ExtResource("4")]
+[node name="Crystal01" type="Node2D" parent="Decorations" unique_id=231848019 instance=ExtResource("4")]
+y_sort_enabled = true
 position = Vector2(760, 820)
+script = ExtResource("3_u37rl")
+display_name = "Crystal"
 
-[node name="Crystal02" parent="Decorations" instance=ExtResource("4")]
+[node name="Crystal02" type="Node2D" parent="Decorations" unique_id=348536683 instance=ExtResource("4")]
+y_sort_enabled = true
 position = Vector2(1320, 520)
+script = ExtResource("3_u37rl")
+display_name = "Crystal"
 
-[node name="Lantern01" parent="Decorations" instance=ExtResource("6")]
+[node name="Lantern01" type="Node2D" parent="Decorations" unique_id=1246281097 instance=ExtResource("6")]
+y_sort_enabled = true
 position = Vector2(560, 680)
+script = ExtResource("3_u37rl")
+display_name = "Lantern"
 
-[node name="Lantern02" parent="Decorations" instance=ExtResource("6")]
+[node name="Lantern02" type="Node2D" parent="Decorations" unique_id=1199627629 instance=ExtResource("6")]
+y_sort_enabled = true
 position = Vector2(900, 760)
+script = ExtResource("3_u37rl")
+display_name = "Lantern"
 
-[node name="NPCSpawns" type="Node2D" parent="."]
+[node name="Generated" type="Node2D" parent="Decorations" unique_id=1700393302]
 y_sort_enabled = true
 
-[node name="FeiraNiss" parent="NPCSpawns" instance=ExtResource("8")]
+[node name="Gen_Rock_0001" type="StaticBody2D" parent="Decorations/Generated" unique_id=1621068121 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(702.18384, 828.26624)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-1"
+
+[node name="Gen_Rock_0002" type="StaticBody2D" parent="Decorations/Generated" unique_id=2075315547 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(664.5273, 1083.444)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-2"
+
+[node name="Gen_Rock_0003" type="StaticBody2D" parent="Decorations/Generated" unique_id=651371011 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(819.08374, 397.2291)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-3"
+
+[node name="Gen_Rock_0004" type="StaticBody2D" parent="Decorations/Generated" unique_id=51860980 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(461.90433, 1269.918)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-4"
+
+[node name="Gen_Rock_0005" type="StaticBody2D" parent="Decorations/Generated" unique_id=1770757279 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(145.4763, 284.11072)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-5"
+
+[node name="Gen_Rock_0006" type="StaticBody2D" parent="Decorations/Generated" unique_id=773835839 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1740.8579, 123.24273)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-6"
+
+[node name="Gen_Rock_0007" type="StaticBody2D" parent="Decorations/Generated" unique_id=894944354 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(889.4315, 564.2567)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-7"
+
+[node name="Gen_Rock_0008" type="StaticBody2D" parent="Decorations/Generated" unique_id=1632942464 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(297.9146, 1063.6707)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-8"
+
+[node name="Gen_Rock_0009" type="StaticBody2D" parent="Decorations/Generated" unique_id=1189696694 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1409.3069, 924.10535)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-9"
+
+[node name="Gen_Rock_0010" type="StaticBody2D" parent="Decorations/Generated" unique_id=601226781 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(503.49237, 351.54193)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-10"
+
+[node name="Gen_Rock_0011" type="StaticBody2D" parent="Decorations/Generated" unique_id=421491210 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1118.552, 998.3816)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-11"
+
+[node name="Gen_Rock_0012" type="StaticBody2D" parent="Decorations/Generated" unique_id=1639982901 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1031.8191, 82.07105)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-12"
+
+[node name="Gen_Rock_0013" type="StaticBody2D" parent="Decorations/Generated" unique_id=139112819 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1395.5106, 214.76056)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-13"
+
+[node name="Gen_Rock_0014" type="StaticBody2D" parent="Decorations/Generated" unique_id=1390869937 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1477.6273, 125.56966)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-14"
+
+[node name="Gen_Rock_0015" type="StaticBody2D" parent="Decorations/Generated" unique_id=129717391 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(722.77454, 1118.7314)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-15"
+
+[node name="Gen_Rock_0016" type="StaticBody2D" parent="Decorations/Generated" unique_id=616964622 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1864.965, 1017.8998)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-16"
+
+[node name="Gen_Rock_0017" type="StaticBody2D" parent="Decorations/Generated" unique_id=309802748 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1453.963, 287.04166)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-17"
+
+[node name="Gen_Rock_0018" type="StaticBody2D" parent="Decorations/Generated" unique_id=1232433534 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(892.5909, 135.34402)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-18"
+
+[node name="Gen_Rock_0019" type="StaticBody2D" parent="Decorations/Generated" unique_id=116735878 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(365.8758, 186.2395)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-19"
+
+[node name="Gen_Rock_0020" type="StaticBody2D" parent="Decorations/Generated" unique_id=247891741 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1831.0316, 1284.7792)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-20"
+
+[node name="Gen_Rock_0021" type="StaticBody2D" parent="Decorations/Generated" unique_id=249816463 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1524.3944, 1343.1226)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-21"
+
+[node name="Gen_Rock_0022" type="StaticBody2D" parent="Decorations/Generated" unique_id=1589613343 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1789.8229, 964.36365)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-22"
+
+[node name="Gen_Rock_0023" type="StaticBody2D" parent="Decorations/Generated" unique_id=483115849 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(762.83685, 1320.9357)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-23"
+
+[node name="Gen_Rock_0024" type="StaticBody2D" parent="Decorations/Generated" unique_id=1826623087 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1152.9333, 262.5609)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-24"
+
+[node name="Gen_Rock_0025" type="StaticBody2D" parent="Decorations/Generated" unique_id=1943393744 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(978.078, 566.9308)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-25"
+
+[node name="Gen_Rock_0026" type="StaticBody2D" parent="Decorations/Generated" unique_id=813753391 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1357.75, 88.38158)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-26"
+
+[node name="Gen_Rock_0027" type="StaticBody2D" parent="Decorations/Generated" unique_id=983970846 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1144.989, 912.727)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-27"
+
+[node name="Gen_Rock_0028" type="StaticBody2D" parent="Decorations/Generated" unique_id=816366546 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1271.0262, 127.70302)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-28"
+
+[node name="Gen_Rock_0029" type="StaticBody2D" parent="Decorations/Generated" unique_id=1586623555 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(989.5402, 133.69379)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-29"
+
+[node name="Gen_Rock_0030" type="StaticBody2D" parent="Decorations/Generated" unique_id=861345385 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1985.5234, 1002.3567)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-30"
+
+[node name="Gen_Rock_0031" type="StaticBody2D" parent="Decorations/Generated" unique_id=894739942 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(260.1156, 136.60654)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-31"
+
+[node name="Gen_Rock_0032" type="StaticBody2D" parent="Decorations/Generated" unique_id=1731713097 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1748.3993, 680.8735)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-32"
+
+[node name="Gen_Rock_0033" type="StaticBody2D" parent="Decorations/Generated" unique_id=1652859998 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(283.60608, 986.11237)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-33"
+
+[node name="Gen_Rock_0034" type="StaticBody2D" parent="Decorations/Generated" unique_id=1293881682 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(68.78416, 281.93814)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-34"
+
+[node name="Gen_Rock_0035" type="StaticBody2D" parent="Decorations/Generated" unique_id=490792714 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(921.0645, 1203.2144)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-35"
+
+[node name="Gen_Rock_0036" type="StaticBody2D" parent="Decorations/Generated" unique_id=331124717 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(369.55438, 858.702)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-36"
+
+[node name="Gen_Rock_0037" type="StaticBody2D" parent="Decorations/Generated" unique_id=558297222 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(597.5877, 1276.9918)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-37"
+
+[node name="Gen_Rock_0038" type="StaticBody2D" parent="Decorations/Generated" unique_id=220244350 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1811.5364, 357.30045)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-38"
+
+[node name="Gen_Rock_0039" type="StaticBody2D" parent="Decorations/Generated" unique_id=899049473 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1481.0975, 931.4231)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-39"
+
+[node name="Gen_Rock_0040" type="StaticBody2D" parent="Decorations/Generated" unique_id=577042515 instance=ExtResource("3")]
+y_sort_enabled = true
+position = Vector2(1542.4839, 821.00433)
+script = ExtResource("3_u37rl")
+blocks_movement = true
+display_name = "Rock"
+metadata/gen_id = "rock-40"
+
+[node name="NPCSpawns" type="Node2D" parent="." unique_id=1378060493]
+y_sort_enabled = true
+
+[node name="FeiraNiss" type="CharacterBody2D" parent="NPCSpawns" unique_id=256803146 instance=ExtResource("8")]
+y_sort_enabled = true
 position = Vector2(560, 660)
+collision_mask = 0
+script = ExtResource("11_g3b6e")
 
-[node name="IlraVenn" parent="NPCSpawns" instance=ExtResource("12")]
+[node name="IlraVenn" type="CharacterBody2D" parent="NPCSpawns" unique_id=1387809116 instance=ExtResource("12")]
+y_sort_enabled = true
 position = Vector2(820, 740)
+collision_mask = 0
+script = ExtResource("11_g3b6e")
+npc_id = "NPC-102"
+display_name = "Ильра Венн"
 
-[node name="Gameplay" type="Node2D" parent="."]
+[node name="Gameplay" type="Node2D" parent="." unique_id=348328165]
 y_sort_enabled = true
 metadata/editor_layer = "gameplay"
 
-[node name="Board" parent="Gameplay" instance=ExtResource("13")]
+[node name="Board" type="Area2D" parent="Gameplay" unique_id=371430757 instance=ExtResource("13")]
 position = Vector2(620, 640)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-BOARD-01"
 display_name = "Доска поручений"
-event_type = "world_interact"
 
-[node name="AcceptSeal" parent="Gameplay" instance=ExtResource("13")]
+[node name="AcceptSeal" type="Area2D" parent="Gameplay" unique_id=1852476423 instance=ExtResource("13")]
 position = Vector2(660, 680)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-ACCEPT-01"
 display_name = "Опечатанное поручение"
-event_type = "world_interact"
 important = true
 
-[node name="WitnessA" parent="Gameplay" instance=ExtResource("13")]
+[node name="WitnessA" type="Area2D" parent="Gameplay" unique_id=38968588 instance=ExtResource("13")]
 position = Vector2(480, 720)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-WITNESS-A"
 display_name = "Свидетель A"
 event_type = "npc_interact"
 
-[node name="WitnessB" parent="Gameplay" instance=ExtResource("13")]
+[node name="WitnessB" type="Area2D" parent="Gameplay" unique_id=328685367 instance=ExtResource("13")]
 position = Vector2(700, 700)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-WITNESS-B"
 display_name = "Свидетель B"
 event_type = "npc_interact"
 
-[node name="EvidenceTable" parent="Gameplay" instance=ExtResource("13")]
+[node name="EvidenceTable" type="Area2D" parent="Gameplay" unique_id=698344613 instance=ExtResource("13")]
 position = Vector2(600, 720)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-EVIDENCE-TABLE"
 display_name = "Стол улик"
-event_type = "world_interact"
 
-[node name="MarkerA" parent="Gameplay" instance=ExtResource("13")]
+[node name="MarkerA" type="Area2D" parent="Gameplay" unique_id=602535746 instance=ExtResource("13")]
 position = Vector2(980, 700)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-MARKER-A"
 display_name = "Маркер A"
-event_type = "world_interact"
 
-[node name="MarkerB" parent="Gameplay" instance=ExtResource("13")]
+[node name="MarkerB" type="Area2D" parent="Gameplay" unique_id=297702642 instance=ExtResource("13")]
 position = Vector2(1120, 780)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-MARKER-B"
 display_name = "Маркер B"
-event_type = "world_interact"
 
-[node name="MeasureCrystal" parent="Gameplay" instance=ExtResource("13")]
+[node name="MeasureCrystal" type="Area2D" parent="Gameplay" unique_id=176672658 instance=ExtResource("13")]
 position = Vector2(1040, 820)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-MEASURE-CRYSTAL"
 display_name = "Измерительный кристалл"
-event_type = "world_interact"
 important = true
 
-[node name="Resident1" parent="Gameplay" instance=ExtResource("13")]
+[node name="Resident1" type="Area2D" parent="Gameplay" unique_id=703585835 instance=ExtResource("13")]
 position = Vector2(400, 1000)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-RESIDENT-GROUP"
 display_name = "Жители 1"
-event_type = "world_interact"
 
-[node name="Resident2" parent="Gameplay" instance=ExtResource("13")]
+[node name="Resident2" type="Area2D" parent="Gameplay" unique_id=1761770010 instance=ExtResource("13")]
 position = Vector2(520, 1080)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-RESIDENT-GROUP"
 display_name = "Жители 2"
-event_type = "world_interact"
 
-[node name="Stabilize1" parent="Gameplay" instance=ExtResource("13")]
+[node name="Stabilize1" type="Area2D" parent="Gameplay" unique_id=1004926179 instance=ExtResource("13")]
 position = Vector2(460, 1040)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-STABILIZE"
 display_name = "Стабилизация 1"
-event_type = "world_interact"
 
-[node name="Stabilize2" parent="Gameplay" instance=ExtResource("13")]
+[node name="Stabilize2" type="Area2D" parent="Gameplay" unique_id=800516650 instance=ExtResource("13")]
 position = Vector2(560, 1020)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-STABILIZE"
 display_name = "Стабилизация 2"
-event_type = "world_interact"
 
-[node name="Shelter" parent="Gameplay" instance=ExtResource("13")]
+[node name="Shelter" type="Area2D" parent="Gameplay" unique_id=1477695328 instance=ExtResource("13")]
 position = Vector2(540, 900)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-SHELTER"
 display_name = "Укрытие медиков"
 event_type = "escort_checkpoint"
 important = true
 
-[node name="Clue1" parent="Gameplay" instance=ExtResource("13")]
+[node name="Clue1" type="Area2D" parent="Gameplay" unique_id=173752096 instance=ExtResource("13")]
 position = Vector2(900, 860)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-CLUE"
 display_name = "Улика 1"
-event_type = "world_interact"
 instance_id = "POI-CLUE#1"
 
-[node name="Clue2" parent="Gameplay" instance=ExtResource("13")]
+[node name="Clue2" type="Area2D" parent="Gameplay" unique_id=755456463 instance=ExtResource("13")]
 position = Vector2(960, 900)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-CLUE"
 display_name = "Улика 2"
-event_type = "world_interact"
 instance_id = "POI-CLUE#2"
 
-[node name="Clue3" parent="Gameplay" instance=ExtResource("13")]
+[node name="Clue3" type="Area2D" parent="Gameplay" unique_id=1285371649 instance=ExtResource("13")]
 position = Vector2(1020, 880)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-CLUE"
 display_name = "Улика 3"
-event_type = "world_interact"
 instance_id = "POI-CLUE#3"
 
-[node name="ForgeryReject" parent="Gameplay" instance=ExtResource("13")]
+[node name="ForgeryReject" type="Area2D" parent="Gameplay" unique_id=1580856071 instance=ExtResource("13")]
 position = Vector2(940, 840)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-FORGERY-REJECT"
 display_name = "Отбросить подделку"
-event_type = "world_interact"
 important = true
 
-[node name="MonsterSpawns" type="Node2D" parent="."]
-y_sort_enabled = true
-
-[node name="Slime1" parent="MonsterSpawns" instance=ExtResource("9")]
-position = Vector2(1240, 780)
-
-[node name="Slime2" parent="MonsterSpawns" instance=ExtResource("9")]
-position = Vector2(1340, 740)
-
-[node name="Slime3" parent="MonsterSpawns" instance=ExtResource("9")]
-position = Vector2(1300, 860)
-
-[node name="Wolf1" parent="MonsterSpawns" instance=ExtResource("10")]
-position = Vector2(1480, 480)
-
-[node name="Wolf2" parent="MonsterSpawns" instance=ExtResource("10")]
-position = Vector2(1620, 560)
-
-[node name="Bandit1" parent="MonsterSpawns" instance=ExtResource("11")]
-position = Vector2(1280, 980)
-
-[node name="Bandit2" parent="MonsterSpawns" instance=ExtResource("11")]
-position = Vector2(1400, 1040)
-
-[node name="Navigation" type="Node2D" parent="."]
-
-[node name="Effects" type="Node2D" parent="."]
-
-[node name="Manual" type="Node2D" parent="."]
-metadata/editor_layer = "manual"
-
-[node name="Generated" type="Node2D" parent="."]
-metadata/editor_layer = "generated"
-
-[node name="DungeonEntrance" parent="Gameplay" instance=ExtResource("13")]
+[node name="DungeonEntrance" type="Area2D" parent="Gameplay" unique_id=948227218 instance=ExtResource("13")]
 position = Vector2(1500, 520)
+collision_mask = 0
+monitoring = false
+script = ExtResource("14_k0hko")
 interact_id = "POI-01-006"
 display_name = "Склеп Первого Огня"
 dungeon_entry_id = "DNG-01-001"
+
+[node name="MonsterSpawns" type="Node2D" parent="." unique_id=166344189]
+y_sort_enabled = true
+
+[node name="Slime1" type="CharacterBody2D" parent="MonsterSpawns" unique_id=605093503 instance=ExtResource("9")]
+y_sort_enabled = true
+position = Vector2(1240, 780)
+script = ExtResource("16_h2wxw")
+canon_enemy_id = "ENM-01-004"
+max_hp = 36.0
+move_speed = 70.0
+attack_damage = 6.0
+gold_max = 3
+
+[node name="Slime2" type="CharacterBody2D" parent="MonsterSpawns" unique_id=2066287176 instance=ExtResource("9")]
+y_sort_enabled = true
+position = Vector2(1340, 740)
+script = ExtResource("16_h2wxw")
+canon_enemy_id = "ENM-01-004"
+max_hp = 36.0
+move_speed = 70.0
+attack_damage = 6.0
+gold_max = 3
+
+[node name="Slime3" type="CharacterBody2D" parent="MonsterSpawns" unique_id=1322744807 instance=ExtResource("9")]
+y_sort_enabled = true
+position = Vector2(1300, 860)
+script = ExtResource("16_h2wxw")
+canon_enemy_id = "ENM-01-004"
+max_hp = 36.0
+move_speed = 70.0
+attack_damage = 6.0
+gold_max = 3
+
+[node name="Wolf1" type="CharacterBody2D" parent="MonsterSpawns" unique_id=1930528532 instance=ExtResource("10")]
+y_sort_enabled = true
+position = Vector2(1480, 480)
+script = ExtResource("16_h2wxw")
+monster_id = "wolf"
+canon_enemy_id = "ENM-01-003"
+display_name = "Dusk Wolf"
+max_hp = 55.0
+move_speed = 110.0
+aggro_radius = 190.0
+attack_range = 48.0
+attack_damage = 10.0
+gold_min = 2
+gold_max = 6
+loot_item = "wolf_fang"
+loot_chance = 0.6
+
+[node name="Wolf2" type="CharacterBody2D" parent="MonsterSpawns" unique_id=1154286626 instance=ExtResource("10")]
+y_sort_enabled = true
+position = Vector2(1620, 560)
+script = ExtResource("16_h2wxw")
+monster_id = "wolf"
+canon_enemy_id = "ENM-01-003"
+display_name = "Dusk Wolf"
+max_hp = 55.0
+move_speed = 110.0
+aggro_radius = 190.0
+attack_range = 48.0
+attack_damage = 10.0
+gold_min = 2
+gold_max = 6
+loot_item = "wolf_fang"
+loot_chance = 0.6
+
+[node name="Bandit1" type="CharacterBody2D" parent="MonsterSpawns" unique_id=2117250774 instance=ExtResource("11")]
+y_sort_enabled = true
+position = Vector2(1280, 980)
+script = ExtResource("16_h2wxw")
+monster_id = "bandit"
+canon_enemy_id = "ENM-01-001"
+display_name = "Valley Bandit"
+max_hp = 70.0
+move_speed = 100.0
+aggro_radius = 170.0
+attack_range = 52.0
+attack_damage = 12.0
+attack_cooldown = 1.0
+gold_min = 4
+gold_max = 10
+loot_item = "tattered_cloth"
+loot_chance = 0.7
+
+[node name="Bandit2" type="CharacterBody2D" parent="MonsterSpawns" unique_id=368807621 instance=ExtResource("11")]
+y_sort_enabled = true
+position = Vector2(1400, 1040)
+script = ExtResource("16_h2wxw")
+monster_id = "bandit"
+canon_enemy_id = "ENM-01-001"
+display_name = "Valley Bandit"
+max_hp = 70.0
+move_speed = 100.0
+aggro_radius = 170.0
+attack_range = 52.0
+attack_damage = 12.0
+attack_cooldown = 1.0
+gold_min = 4
+gold_max = 10
+loot_item = "tattered_cloth"
+loot_chance = 0.7
+
+[node name="Navigation" type="Node2D" parent="." unique_id=379488901]
+
+[node name="Effects" type="Node2D" parent="." unique_id=786671504]
+
+[node name="Manual" type="Node2D" parent="." unique_id=71560073]
+metadata/editor_layer = "manual"
+
+[node name="Generated" type="Node2D" parent="." unique_id=1036185906]
+metadata/editor_layer = "generated"
