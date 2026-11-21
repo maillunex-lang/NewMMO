@@ -18,6 +18,8 @@ import (
 type peer struct {
 	ctx       context.Context
 	cancel    context.CancelFunc
+	work      context.Context
+	stopWork  context.CancelFunc
 	conn      *websocket.Conn
 	raw       net.Conn
 	cfg       Config
@@ -39,8 +41,9 @@ type packet struct {
 
 func newPeer(ctx context.Context, conn *websocket.Conn, raw net.Conn, cfg Config, logger *slog.Logger) *peer {
 	ctx, cancel := context.WithCancel(ctx)
+	work, stopWork := context.WithCancel(ctx)
 	return &peer{
-		ctx: ctx, cancel: cancel, conn: conn, raw: raw, cfg: cfg, logger: logger,
+		ctx: ctx, cancel: cancel, work: work, stopWork: stopWork, conn: conn, raw: raw, cfg: cfg, logger: logger,
 		queue: make(chan packet, cfg.Queue), closing: make(chan struct{}), done: make(chan struct{}),
 	}
 }
@@ -48,6 +51,7 @@ func newPeer(ctx context.Context, conn *websocket.Conn, raw net.Conn, cfg Config
 func (p *peer) close(code websocket.StatusCode) {
 	p.once.Do(func() {
 		close(p.closing)
+		p.stopWork()
 		p.logger.Debug("websocket closing", "close_code", int(code))
 		go func() {
 			_ = p.conn.Close(code, "")
@@ -60,6 +64,7 @@ func (p *peer) close(code websocket.StatusCode) {
 func (p *peer) finish() {
 	p.once.Do(func() {
 		close(p.closing)
+		p.stopWork()
 		_ = p.raw.Close()
 		close(p.done)
 	})
@@ -254,7 +259,7 @@ func (s *Server) commands(p *peer, owner string, id, revision int64) {
 				}
 				continue
 			}
-			ctx, cancel := context.WithTimeout(p.ctx, s.cfg.WriteTimeout)
+			ctx, cancel := context.WithTimeout(p.work, s.cfg.WriteTimeout)
 			state, err := s.store.LoadWSState(ctx, owner, id)
 			cancel()
 			if err != nil || !validState(state) {

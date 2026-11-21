@@ -3,6 +3,7 @@ package ws
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"net"
@@ -119,7 +120,14 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if status != 0 {
 		if status == http.StatusTooManyRequests {
 			w.Header().Set("Retry-After", strconv.FormatInt(int64((retry-1)/time.Second)+1, 10))
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(status)
+			_ = json.NewEncoder(w).Encode(map[string]any{"error": map[string]any{
+				"code": "RATE_LIMITED", "message_key": "error.rate_limited",
+				"retry_after_ms": int64((retry-1)/time.Millisecond) + 1,
+			}})
 			s.logger.Debug("websocket admission limited", "code", "RATE_LIMITED")
+			return
 		}
 		http.Error(w, http.StatusText(status), status)
 		return
@@ -165,7 +173,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Expiring a Coder Read context would close the transport without
 	// sending the protocol close code. The timer drives Close instead.
-	authCtx, cancelAuth := context.WithTimeout(p.ctx, s.cfg.AuthTimeout)
+	authCtx, cancelAuth := context.WithTimeout(p.work, s.cfg.AuthTimeout)
 	defer cancelAuth()
 	timer := time.AfterFunc(s.cfg.AuthTimeout, func() { p.close(closeAuth) })
 	defer timer.Stop()

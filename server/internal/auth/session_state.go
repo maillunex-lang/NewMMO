@@ -20,9 +20,9 @@ func (s *Store) LoadWSState(ctx context.Context, accountID string, characterID i
 		SELECT c.name, c.class_id, c.xp, c.gold, c.state_revision,
 			coalesce(b.build_id, ''), coalesce(b.minimum_client_version, '')
 		FROM public.characters c
-		CROSS JOIN public.content_active a
+		LEFT JOIN public.content_active a ON a.id = 1
 		LEFT JOIN public.content_builds b ON b.build_id = a.build_id AND b.status = 'published'
-		WHERE a.id = 1 AND c.account_id = $1 AND c.character_id = $2`, accountID, characterID).
+		WHERE c.account_id = $1 AND c.character_id = $2`, accountID, characterID).
 		Scan(&state.Name, &state.ClassID, &state.XP, &state.Gold, &state.Revision,
 			&state.BuildID, &state.MinClientVersion)
 	if err != nil {
