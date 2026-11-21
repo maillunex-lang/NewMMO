@@ -29,6 +29,8 @@ func worldFixture(t *testing.T) (*world.Zone, *world.Handler) {
 			sb.WriteString(`{"id":"AB-` + e.id + `-` + slot + `","kind":"ability","payload":{"enemy":"` + e.id + `","slot":"` + slot + `","coefficient":1,"scale":"AP","cooldown_s":2,"text":"x"},"region_id":"REG-01"}` + "\n")
 		}
 	}
+	sb.WriteString(`{"id":"CLS-01-SK01","kind":"skill","payload":{"class_id":"CLS-01","name":"Удар","level":1,"target":"enemy","cost":0,"cooldown_s":5,"effect_raw":"1.10*AP","effect_kind":"damage","coefficient":1.1,"scale":"AP","rule":"Базовый удар; +10 стойкости"},"region_id":null}` + "\n")
+	sb.WriteString(`{"id":"CLS-01-SK10","kind":"skill","payload":{"class_id":"CLS-01","name":"Снятие","level":1,"target":"self","cost":0,"cooldown_s":1,"effect_raw":"cleanse:1","effect_kind":"cleanse","coefficient":1,"rule":"x"},"region_id":null}` + "\n")
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "entities.jsonl"), []byte(sb.String()), 0o600); err != nil {
 		t.Fatal(err)
@@ -161,5 +163,128 @@ func TestWorldJoinMoveDeltaAndDisconnect(t *testing.T) {
 	waitFor(t, "player removal after disconnect", func() bool { return zone.PlayerCount() == 0 })
 	if logged := log.String(); strings.Contains(logged, `"x":900`) {
 		t.Fatal("world payloads must not be logged")
+	}
+}
+
+func TestWorldCastOverWebSocket(t *testing.T) {
+	store := newMemoryStore()
+	socket, url, _ := testServer(t, DefaultConfig(), store, nil)
+	_, handler := worldFixture(t)
+	socket.SetWorld(handler)
+	c := dial(t, url, nil)
+	login(t, c, store.ticket(t, 88), "0.1.0", fixtureBuild)
+	expectInitial(t, c, "88", "ok")
+	send(t, c, "world.join.request", "", map[string]any{"zone_id": "ZONE-01-DAWN-VALLEY"})
+	snap := expect(t, c, "world.snapshot")
+	var entities []struct {
+		ID   int    `json:"id"`
+		Kind string `json:"kind"`
+		Ref  string `json:"ref"`
+		X    float64
+	}
+	if err := json.Unmarshal(snap.Payload["entities"], &entities); err != nil {
+		t.Fatal(err)
+	}
+	var enemy int
+	for _, e := range entities {
+		if e.Kind == "enemy" && e.Ref == "ENM-01-004" && (enemy == 0 || e.ID < enemy) {
+			enemy = e.ID // ZS-01-001 at (1240,780), the first slime
+		}
+	}
+	if enemy == 0 {
+		t.Fatal("no slime in the snapshot")
+	}
+	const rid = "5b5a7114-59f0-4ab6-b34d-5938cdfbb425"
+	// Too far from the slime at spawn → OUT_OF_RANGE; strict payloads; unsupported and locked skills.
+	send(t, c, "world.cast.request", rid, map[string]any{"skill_id": "CLS-01-SK01", "target_id": enemy})
+	assertCode(t, c, "OUT_OF_RANGE")
+	send(t, c, "world.cast.request", rid, map[string]any{"skill_id": "CLS-01-SK01", "target_id": enemy, "damage": 9999})
+	assertCode(t, c, "BAD_REQUEST")
+	send(t, c, "world.cast.request", "", map[string]any{"skill_id": "CLS-01-SK01", "target_id": enemy})
+	assertCode(t, c, "BAD_REQUEST") // mutation without request_id
+	send(t, c, "world.cast.request", rid, map[string]any{"skill_id": "CLS-01-SK10"})
+	assertCode(t, c, "UNSUPPORTED_SKILL")
+	send(t, c, "world.cast.request", rid, map[string]any{"skill_id": "CLS-03-SK01", "target_id": enemy})
+	assertCode(t, c, "SKILL_LOCKED")
+
+	// Walk next to the slime (1240,780), then cast: result + damage event + self cooldown state.
+	send(t, c, "world.move.request", "", map[string]any{"seq": 1, "x": 1200, "y": 780})
+	deadline := time.Now().Add(8 * time.Second)
+	for {
+		d, err := read(t, c)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if d.Type == "world.delta" {
+			var up []struct {
+				Kind string  `json:"kind"`
+				X    float64 `json:"x"`
+			}
+			_ = json.Unmarshal(d.Payload["upsert"], &up)
+			arrived := false
+			for _, u := range up {
+				if u.Kind == "player" && u.X >= 1195 {
+					arrived = true
+				}
+			}
+			if arrived {
+				break
+			}
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("never arrived next to the slime")
+		}
+	}
+	send(t, c, "world.cast.request", rid, map[string]any{"skill_id": "CLS-01-SK01", "target_id": enemy})
+	var result, event, self bool
+	for i := 0; i < 60 && !(result && event && self); i++ {
+		m, err := read(t, c)
+		if err != nil {
+			t.Fatal(err)
+		}
+		switch m.Type {
+		case "world.cast.result":
+			if m.Request != rid || string(m.Payload["skill_id"]) != `"CLS-01-SK01"` || string(m.Payload["amount"]) == "" {
+				t.Fatalf("cast result: %+v", m.Payload)
+			}
+			result = true
+		case "world.event":
+			event = event || strings.Contains(string(m.Payload["events"]), `"type":"damage"`)
+		case "world.delta":
+			self = self || strings.Contains(string(m.Payload["self"]), "CLS-01-SK01")
+		case "command.error":
+			t.Fatalf("unexpected error: %s", m.Payload["code"])
+		}
+	}
+	if !result || !event || !self {
+		t.Fatalf("result=%v event=%v self=%v", result, event, self)
+	}
+	// The same request id again is replayed (idempotent), a different cast on cooldown is refused.
+	send(t, c, "world.cast.request", rid, map[string]any{"skill_id": "CLS-01-SK01", "target_id": enemy})
+	for {
+		m, err := read(t, c)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if m.Type == "world.cast.result" {
+			break
+		}
+		if m.Type == "command.error" {
+			t.Fatalf("replay must succeed, got %s", m.Payload["code"])
+		}
+	}
+	send(t, c, "world.cast.request", "6b5a7114-59f0-4ab6-b34d-5938cdfbb426", map[string]any{"skill_id": "CLS-01-SK01", "target_id": enemy})
+	for {
+		m, err := read(t, c)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if m.Type == "command.error" {
+			code := string(m.Payload["code"])
+			if code != `"GCD"` && code != `"ON_COOLDOWN"` {
+				t.Fatalf("code %s", code)
+			}
+			break
+		}
 	}
 }

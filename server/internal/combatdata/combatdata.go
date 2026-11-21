@@ -10,12 +10,18 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
+	"strconv"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/maillunex-lang/NewMMO/server/internal/damage"
 )
+
+var durationRe = regexp.MustCompile(`(\d+)\s*с(?:\s|[,;.]|$)`)
+
+var gainRe = regexp.MustCompile(`\+(\d+)\s+(?:стойкости|ярости|фокуса|света)`)
 
 type Ability struct {
 	ID         string
@@ -36,6 +42,7 @@ type Enemy struct {
 	Level     int
 	Category  string // exported `threat`: обычный | элита | мини-босс | босс DNG | мировой босс
 	AI        string
+	Element   string
 	RegionID  string
 	Abilities map[string]Ability // by slot
 }
@@ -52,6 +59,8 @@ type Skill struct {
 	Coef       float64
 	Scale      string
 	Rule       string
+	Gain       int // resource gained on cast, parsed from the rule text ("+10 стойкости")
+	DurationS  int // first "N с" in the rule text (shield/buff duration), 0 if absent
 }
 
 type Catalog struct {
@@ -133,15 +142,16 @@ func (b *builder) add(r row) error {
 	switch r.Kind {
 	case "enemy":
 		var p struct {
-			Name   string `json:"name"`
-			Level  int    `json:"level"`
-			Threat string `json:"threat"`
-			AI     string `json:"ai"`
+			Name    string `json:"name"`
+			Level   int    `json:"level"`
+			Threat  string `json:"threat"`
+			AI      string `json:"ai"`
+			Element string `json:"element"`
 		}
 		if err := json.Unmarshal(r.Payload, &p); err != nil {
 			return err
 		}
-		e := Enemy{ID: r.ID, Name: p.Name, Level: p.Level, Category: p.Threat, AI: p.AI, Abilities: map[string]Ability{}}
+		e := Enemy{ID: r.ID, Name: p.Name, Level: p.Level, Category: p.Threat, AI: p.AI, Element: p.Element, Abilities: map[string]Ability{}}
 		if r.RegionID != nil {
 			e.RegionID = *r.RegionID
 		}
@@ -190,6 +200,12 @@ func (b *builder) add(r row) error {
 			CooldownS: p.CD, EffectKind: p.Kind, Scale: p.Scale, Rule: p.Rule}
 		if p.Coef != nil {
 			s.Coef = *p.Coef
+		}
+		if m := durationRe.FindStringSubmatch(p.Rule); m != nil {
+			s.DurationS, _ = strconv.Atoi(m[1])
+		}
+		if m := gainRe.FindStringSubmatch(p.Rule); m != nil {
+			s.Gain, _ = strconv.Atoi(m[1])
 		}
 		c.Skills[p.ClassID] = append(c.Skills[p.ClassID], s)
 	}

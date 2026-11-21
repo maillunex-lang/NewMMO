@@ -1,6 +1,6 @@
 # Contract: WebSocket protocol v1 (D-003)
 
-**Owner:** director · **Version:** `protocol_version = 1`, contract rev **1.4** (EX-P04 + EX-P08 loot + EX-P09 dungeon + world simulation additions, all additive) · Owner approvals (2026-11-21): **`coder/websocket v1.8.15`**, **JSON text messages**.
+**Owner:** director · **Version:** `protocol_version = 1`, contract rev **1.5** (EX-P04 + EX-P08 loot + EX-P09 dungeon + world simulation additions, all additive) · Owner approvals (2026-11-21): **`coder/websocket v1.8.15`**, **JSON text messages**.
 Basis: canon `14_CONTENT_INTEGRATION.md` §15 (event names and required fields are kept), research `docs/research/go-websocket.md`.
 Implementers (server lane: Go; client lane: Godot `WebSocketPeer`) build against this file; changes only via a director task. Machine-readable envelope: `websocket-envelope.schema.json`.
 
@@ -89,13 +89,15 @@ Canon events keep their names and required fields (§15.2); added fields are mar
 | `world.stop.request` ➕ / `world.leave.request` ➕ | C→S | `seq` / — | stop moving / leave the zone |
 | `world.snapshot` ➕ | S→C | `tick, tick_ms, you, bounds{}, entities[{id,kind,ref,name?,level?,x,y,facing,moving,hp,max_hp}]` | full interest-filtered state on join |
 | `world.delta` ➕ | S→C | `tick, ack_seq, upsert[…], remove[ids]` | per tick, only when something changed; **droppable** under backpressure (the next delta supersedes it); envelope `revision` is 0 and is not part of character-revision tracking |
+| `world.cast.request` ➕ (rev 1.5) | C→S | `skill_id`, opt `target_id` | **mutation** (`request_id`); canon checks, see `combat-engine.md`; answered by `world.cast.result` or `command.error` |
+| `world.cast.result` ➕ / `world.event` ➕ | S→C | `skill_id, target_id?, amount, crit?, target_hp?, self{}` / `tick, events[]` | result of a cast / droppable combat events (cast, damage, heal, shield, death, respawn) |
 | `inventory.delta` | S→C | `inventory_revision, changes[]` | canon; never client-authored |
 | `command.error` ➕ | S→C | `request_id, code, message_key`, opt `retry_after_ms` | correlated error for any rejected C→S message |
 
 **Reserved, not defined in v1** (separate contracts when EX-P08/P09 start): `movement.input`, `world.snapshot`, `world.delta`, `combat.ability.request`, `combat.result`, chat. Servers must reject unknown C→S types with `command.error UNKNOWN_TYPE` (no disconnect) and clients must ignore unknown S→C types (log only).
 
 ### Error codes (`command.error.code`)
-`BAD_REQUEST`, `UNAUTHENTICATED`, `UNKNOWN_TYPE`, `PROTOCOL_UNSUPPORTED`, `RATE_LIMITED` (+`retry_after_ms`), `NOT_FOUND`, `STATE_CONFLICT` (e.g. quest not READY), `PREREQUISITE_NOT_MET`, `OUT_OF_RANGE` (proximity), `CONTENT_MISMATCH`, `IDEMPOTENCY_CONFLICT`, `REGION_CLOSED` (rev 1.1), `INTERNAL`. `message_key` is a localization key (`error.<code>`), never free text.
+`BAD_REQUEST`, `UNAUTHENTICATED`, `UNKNOWN_TYPE`, `PROTOCOL_UNSUPPORTED`, `RATE_LIMITED` (+`retry_after_ms`), `NOT_FOUND`, `STATE_CONFLICT` (e.g. quest not READY), `PREREQUISITE_NOT_MET`, `OUT_OF_RANGE` (proximity), `CONTENT_MISMATCH`, `IDEMPOTENCY_CONFLICT`, `REGION_CLOSED` (rev 1.1), combat (rev 1.5): `ON_COOLDOWN`, `GCD`, `NOT_ENOUGH_RESOURCE`, `SKILL_LOCKED`, `UNSUPPORTED_SKILL`, `DEAD`, `INVALID_TARGET`, `INTERNAL`. `message_key` is a localization key (`error.<code>`), never free text.
 
 ## 6. Revisions and snapshots
 - Envelope `revision` = the **character-state revision**: a per-character monotonic integer incremented by the server for every state change it pushes (quest, inventory, dialogue-choice flags). It is persisted with the state (EX-P04 `revision` columns).

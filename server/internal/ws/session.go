@@ -388,7 +388,7 @@ func (s *Server) commands(p *peer, owner string, id, revision int64) {
 				continue
 			}
 			ctx, cancel := context.WithTimeout(p.work, s.cfg.WriteTimeout)
-			replyType, result, err := s.world.Handle(ctx, owner, id, m.typ, rawPayload(m.payload), p, p.pushDroppable)
+			replyType, result, err := s.world.Handle(ctx, owner, id, m.typ, m.requestID, rawPayload(m.payload), p, p.pushDroppable, p.pushCritical)
 			cancel()
 			if err != nil {
 				if !p.sendError(m.requestID, revision, questErrorCode(err), 0, 0) {
@@ -517,7 +517,8 @@ func questErrorCode(err error) string {
 	switch msg {
 	case "NOT_FOUND", "STATE_CONFLICT", "PREREQUISITE_NOT_MET", "LEVEL_TOO_LOW",
 		"UNSUPPORTED_EVENT", "INVALID_TARGET", "CONTENT_MISMATCH", "IDEMPOTENCY_CONFLICT",
-		"REGION_CLOSED", "RATE_LIMITED", "BAD_REQUEST", "INTERNAL":
+		"REGION_CLOSED", "RATE_LIMITED", "BAD_REQUEST", "INTERNAL",
+		"ON_COOLDOWN", "GCD", "NOT_ENOUGH_RESOURCE", "OUT_OF_RANGE", "SKILL_LOCKED", "UNSUPPORTED_SKILL", "DEAD":
 		return msg
 	default:
 		if u := errors.Unwrap(err); u != nil {
@@ -563,7 +564,7 @@ func isDungeonCommand(typ string) bool {
 
 func isWorldCommand(typ string) bool {
 	switch typ {
-	case "world.join.request", "world.move.request", "world.stop.request", "world.leave.request":
+	case "world.join.request", "world.move.request", "world.stop.request", "world.leave.request", "world.cast.request":
 		return true
 	}
 	return false
@@ -587,4 +588,10 @@ func (p *peer) pushDroppable(typ string, payload any) bool {
 		// Queue full: keep the session, drop this delta. Persistent overload is closed by the write timeout.
 	}
 	return true
+}
+
+// pushCritical queues a server push that must not be lost (async loot result); overload closes the session like
+// every other critical message so the client reconnects and re-syncs.
+func (p *peer) pushCritical(typ string, revision int64, payload any) bool {
+	return p.enqueue(typ, "", revision, payload, 0)
 }

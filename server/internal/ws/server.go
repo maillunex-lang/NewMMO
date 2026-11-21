@@ -65,8 +65,8 @@ type DungeonHandler interface {
 // `owner` identifies the session so a newer session of the same character is not removed by an old disconnect;
 // `push` delivers asynchronous world.delta messages (droppable under backpressure).
 type WorldHandler interface {
-	Handle(ctx context.Context, accountID string, characterID int64, typ string, payload map[string]any,
-		owner any, push func(typ string, payload any) bool) (string, any, error)
+	Handle(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any,
+		owner any, push func(typ string, payload any) bool, pushCritical func(typ string, revision int64, payload any) bool) (string, any, error)
 	Disconnect(characterID int64, owner any)
 }
 
