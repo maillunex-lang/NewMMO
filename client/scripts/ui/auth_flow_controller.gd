@@ -45,8 +45,9 @@ signal online_session_started(session: Node)
 @onready var title_create: Label = $SafeArea/Chrome/CharacterCreatePanel/VBox/Title
 
 var auth: RefCounted = null
-## When true (or NEWMMO_ONLINE=1), ticket starts OnlineSession → main scene.
-var enter_online := false
+## Online by default (Android has no environment variables): a ticket starts OnlineSession → main scene.
+## NEWMMO_ONLINE=0 keeps the old ticket-only behaviour for dev/smokes.
+var enter_online := true
 var _characters: Array = []
 var _class_ids: PackedStringArray = PackedStringArray()
 var _busy := false
@@ -54,8 +55,8 @@ var _online_session: Node = null
 
 
 func _ready() -> void:
-	if OS.get_environment("NEWMMO_ONLINE") == "1":
-		enter_online = true
+	if OS.get_environment("NEWMMO_ONLINE") == "0":
+		enter_online = false
 	_ensure_auth()
 	_wire_buttons()
 	_load_classes()

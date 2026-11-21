@@ -423,11 +423,16 @@ func _sync_actors(delta: float) -> void:
 			continue
 		var n: Node2D = e["node"]
 		var v: Node3D = e["view"]
-		var target := _to3(n.global_position)
-		var delta_pos := target - v.position
-		v.position = target
-		var moving := delta_pos.length() > 0.004
 		var kind: String = e["kind"]
+		var target := _to3(n.global_position)
+		var raw_delta := target - v.position
+		# Absorb the physics-tick quantisation of the 2D logic: glide to the target instead of snapping.
+		var snap := raw_delta.length() > 4.0 or kind == "poi"
+		v.position = target if snap else v.position.lerp(target, 1.0 - exp(-28.0 * delta))
+		var delta_pos := raw_delta if raw_delta.length() > 0.0 else Vector3.ZERO
+		if not e.has("ms"):
+			e["ms"] = MoveState.new()
+		var moving: bool = (e["ms"] as MoveState).update(raw_delta.length() / maxf(delta, 0.001), delta) if not snap else false
 		if moving and (kind == "hero" or kind == "enemy"):
 			movers.append([id, Vector2(target.x, target.z)])
 		if kind == "poi":
@@ -436,12 +441,15 @@ func _sync_actors(delta: float) -> void:
 			continue
 		# facing (+Z is the model's front): from motion, else from the 2D node's 8-way direction index
 		var yaw := v.rotation.y
-		if moving:
-			yaw = atan2(delta_pos.x, delta_pos.z)
+		if moving and delta_pos.length() > 0.0005:
+			e["yaw_hold"] = atan2(delta_pos.x, delta_pos.z)
+			yaw = float(e["yaw_hold"])
+		elif moving and e.has("yaw_hold"):
+			yaw = float(e["yaw_hold"])
 		elif n.get("animator") != null and n.get("animator").get("_dir") != null:
 			yaw = PI / 2.0 - float(n.get("animator").get("_dir")) * PI / 4.0
 		v.rotation.y = lerp_angle(v.rotation.y, yaw, 1.0 - exp(-14.0 * delta))
-		var speed := delta_pos.length() / maxf(delta, 0.001)
+		var speed: float = (e["ms"] as MoveState).speed
 		var dead_now := bool(n.get("dead")) if n.get("dead") != null else bool(n.get("online_dead")) if n.get("online_dead") != null else false
 		if e["ap"] != null:
 			_drive_humanoid(e, moving, speed, dead_now, delta)

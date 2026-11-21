@@ -261,7 +261,7 @@ func _test_base_url_from_env() -> void:
 	var client := AuthClient.new()
 	OS.set_environment("NEWMMO_API_URL", "")
 	client.configure(fh)
-	_assert(client.base_url == "http://127.0.0.1:18086", "default API URL")
+	_assert(client.base_url == "https://rikagro.ru/newmmo", "default API URL is the VPS")
 	OS.set_environment("NEWMMO_API_URL", "http://example.test:9")
 	client.configure(fh)
 	_assert(client.base_url == "http://example.test:9", "env API URL")

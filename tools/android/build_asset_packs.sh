@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds the downloadable asset pack(s) for the in-game background downloader (client/scripts/core/asset_pack.gd).
-# The APK ships WITHOUT assets/models and assets/anims (Android preset exclude_filter); this script packs them into
+# The APK ships WITHOUT the world/enemy models (Android preset exclude_filter; hero_*, npc_* and animations stay in the APK); this script packs the rest into
 # build/packs/<name>-<sha8>.pck plus build/packs/manifest.json (sha256 + size). Host the folder at
 # $NEWMMO_ASSETS_URL (default https://rikagro.ru/newmmo/assets/). Needs only Godot (no export templates for packs).
 set -euo pipefail
@@ -14,7 +14,8 @@ trap 'mv -f "$CFG.bak" "$CFG"' EXIT
 python3 - "$ROOT" <<'PY'
 import glob, os, sys
 root = sys.argv[1]
-files = sorted(glob.glob(os.path.join(root, "client/assets/models/*.glb")) + glob.glob(os.path.join(root, "client/assets/anims/**/*.res"), recursive=True))
+# hero_* and npc_* models (and the humanoid animations) stay inside the APK so the login/character flow never waits for a download
+files = sorted(f for f in glob.glob(os.path.join(root, "client/assets/models/*.glb")) if not os.path.basename(f).startswith(("hero_", "npc_")))
 res = ", ".join('"res://' + os.path.relpath(f, os.path.join(root, "client")).replace(os.sep, "/") + '"' for f in files)
 cfg = os.path.join(root, "client/export_presets.cfg")
 n = open(cfg).read().count("[preset.") // 2  # existing presets are [preset.N] and [preset.N.options]; the new one takes the next index
