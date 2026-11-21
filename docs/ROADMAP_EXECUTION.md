@@ -127,7 +127,8 @@
 **Условия Фазы 2 (обязательны до `go get`/скачивания):** точные версии и контрольные суммы фиксируются в `docs/contracts/` (pin-матрица), проверяются LICENSE/SPDX на теге, `go.mod`/дерево зависимостей, GHSA/открытые issues; кандидаты: pgx v5.13.0 (Go 1.25.0), goose v3.30.0 CLI (готовый бинарь/образ, не сборка из исходников); запасной golang-migrate v4.20.1  
 **Приёмка:** миграции из §16 (адаптированные), rollback, content_builds loader  
 **Тесты:** migrate up/down на локальном/Compose Postgres  
-**Статус:** [~] запущен 2026-11-21: контракты D-001 [x], экспортёр `tools/content/export.py` [x] (4925 сущностей, детерминирован), CI `server-db` [x]; миграции + loader — T-009 (Codex) в работе
+**Приёмка факты:** [x] миграции 00001–00005 (goose, up→reset→up, два параллельных запуска), [x] загрузчик (Stage/Publish/Rollback, `expected_current`, SQL-`ingest_digest`, триггер целостности), [x] `contentctl`, [x] изолированный Compose `deploy/newmmo/`, [x] CI `server-db` с живым PostgreSQL 17 без пропусков, [x] две независимые рецензии (T-010 контракты, T-013 код) учтены
+**Статус:** [x] **EX-P03 закрыт 2026-11-21** — `3fb9aa6` (T-009) + T-014 (hardening); отложено в EX-P04: GC/TTL, FK игровых таблиц на `content_builds`, замер пикового RSS
 
 ### EX-P04 — Go quest state machine (authoritative)
 **Зависит от:** EX-P03  
@@ -228,6 +229,7 @@
 | 2026-11-21 | EX-P02 crossrefs + CT-003…009 | `59f5cbd` | unittest 32 OK; lint 0 ERROR | C-ITEMQ-001 найден (36 ITEM-Q без объявления) |
 | 2026-11-21 | C-ITEMQ-001 A (по решению владельца) | `8a61c6b` | unittest 32 OK | 36 `ITEM-Q-*` в `11` §12.1, имена — рабочие |
 | 2026-11-21 | Полная сверка связей: client-sync + docs-links + CI | см. `git log` | unittest 35 OK; client-sync 0 ERR; docs-links 0 | клиент == канон; 1 doc-путь починен (`AUDIT.md`) |
+| 2026-11-21 | T-014 EX-P03 hardening (Codex) | см. `git log` | CI на ветке зелёный (server-db, живой PG 17) | EX-P03 закрыт |
 | 2026-11-21 | T-012 Android debug APK baseline, Godot 4.3 (Cursor) | см. `git log` | executor: build_debug_apk OK, apksigner OK, smoke OK; device unavailable | B-APK: сборка воспроизводима (скрипты + CI workflow `android-debug`); замеры на телефоне 6 ГБ — за владельцем (`tools/android/measure_device.sh`) |
 | 2026-11-21 | T-011 client WebSocket layer per D-003 (Cursor) | см. `git log` | executor: smoke OK incl. NET_SMOKE_OK; artificial fail → exit 1 | клиентская часть EX-P04/P06 готова на FakeTransport; живого сервера ещё нет |
 | 2026-11-21 | T-008 strict smoke + JSON in export filter (Cursor) | см. `git log` | executor: smoke OK, artificial failures fail, PCK contains data JSON | закрыты пробелы смоука и экспорта из T-002; Android APK/keystore dry-run — не сделан (B-APK) |
