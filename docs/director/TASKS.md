@@ -25,7 +25,7 @@ Prompts live in `docs/director/prompts/T-NNN.md`. Protocol: `DIRECTOR.md`.
 | T-018 | server | EX-P04 1/3: accounts, login, characters, WS tickets (REST), migrations 00006…, stdlib PBKDF2 | D-004 ✔ | **ISSUED** (`prompts/T-018.md`) |
 | T-022 | client | Auth UI: login/register/characters screens + REST client, FakeHttp tests, no gameplay wiring | D-004 ✔ | **ISSUED** (`prompts/T-022.md`) |
 | T-019 | server | EX-P04 2/3: WebSocket endpoint (coder/websocket v1.8.15): ticket auth, session lifecycle, heartbeat, limits, shutdown, snapshot skeleton | T-018 | PROPOSED |
-| T-020 | server | EX-P04 3/3: quest engine + reward ledger + idempotency (migrations 00007…), `world.interact.request`, accept/turn-in, snapshots | T-019 | PROPOSED |
+| T-020 | server | EX-P04 3/3: quest engine + reward ledger + idempotency (migrations 00007…), `world.interact.request`, accept/turn-in, snapshots, **region-open gating (`REGION_CLOSED`, config `regions.*`)** | T-019 | PROPOSED |
 | T-021 | research | Security review of EX-P04 auth + tickets + ledger | T-018 (then T-020) | PROPOSED |
 | T-023 | client | Wire net client + journal to the real server (login → ticket → WS → snapshot → accept/interact/turn-in); instance ids for count>1 objectives | T-019, T-020, T-022 | PROPOSED |
 | T-017 | research(+content) | EX-CONTENT-01 pilot: MQ-01-05 + SQ-01-001…005 as drop-in proposals in `docs/content/dialogue_expansion/pilot/` (canon untouched; Extra-Write `docs/content/dialogue_expansion/**`) | plan approved ✔, T-016 ✔ | **ISSUED** to ChatGPT №2 (`prompts/T-017.md`). Director checks with `dialogue_lint.py --proposal-dir … --strict`; integration into `10_DIALOGUES.md` only after owner OK |
@@ -80,3 +80,4 @@ First parallel batch (different lanes, no dependencies, disjoint files): **T-001
 | 2026-11-21 | Owner decided C-CHOICE-001 = C (no branching at MQ-01…05-20; confirmation only); batch MQ-01-20 unblocked |
 | 2026-11-21 | Owner: «делай пилот» → T-017 issued; dialogue_lint.py got --proposal-dir overlay mode |
 | 2026-11-21 | Owner: «делай EX-P04» → contracts D-004/D-002 published (auth-session, db-gameplay, quest-engine, interaction registry); T-018 (Codex) and T-022 (Cursor) issued; T-019…T-021, T-023 queued |
+| 2026-11-21 | Owner pacing decision (regions one by one, ~1 month to L60, rested XP allowed) → `docs/PACING.md`; quest-engine contract gets region-open gating + `REGION_CLOSED` + `rested_xp` field |

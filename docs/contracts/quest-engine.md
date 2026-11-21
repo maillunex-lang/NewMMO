@@ -4,7 +4,7 @@
 
 ## 1. States (per character)
 `LOCKED → AVAILABLE → ACTIVE → READY_TO_TURN_IN → COMPLETED` (canon §15.1). **Only `ACTIVE`, `READY_TO_TURN_IN`, `COMPLETED` are stored** (`character_quest_states`); `LOCKED`/`AVAILABLE` are **derived** from content + the character's rows + flags:
-- `AVAILABLE` ⇔ not stored **and** every quest in `prereqs` is `COMPLETED` (an empty list ⇒ gated only by the flag `TUTORIAL-COMPLETE` for `MQ-01-01`) **and** `level(xp) ≥ min_level` **and** (main quests) no other main quest is `ACTIVE`/`READY_TO_TURN_IN` **and** (side quests) ≤ **5** side quests active.
+- `AVAILABLE` ⇔ not stored **and** the quest's **region is open** (`regions.<REG>.open_at ≤ now` or the account is on the early-access list; `docs/PACING.md` §3, config key `regions.*`) **and** every quest in `prereqs` is `COMPLETED` (an empty list ⇒ gated only by the flag `TUTORIAL-COMPLETE` for `MQ-01-01`) **and** `level(xp) ≥ min_level` **and** (main quests) no other main quest is `ACTIVE`/`READY_TO_TURN_IN` **and** (side quests) ≤ **5** side quests active.
 - Otherwise `LOCKED`. `COMPLETED` never returns to `ACTIVE` (one-shot MQ/SQ). `FAILED/ABANDONED` are **not** implemented in EX-P04.
 
 ## 2. Operations (all idempotent via `request_id`, `db-gameplay.md` §4)
@@ -13,7 +13,7 @@
 | `quest.accept.request {quest_id, content_build_id}` | quest `AVAILABLE`; `content_build_id` equals the server's active build (else `CONTENT_MISMATCH`) | insert state `ACTIVE`, `content_build_id` pinned, empty progress; `QF-…-START`/`SQF-…-ACCEPTED` flag; `state_revision++` | `quest.accept.result {quest_id,state:"ACTIVE",revision,ok:true}` (no per-objective deltas at accept; the client derives zero progress from the result and the snapshot) |
 | `world.interact.request {event, target_id, instance_id?}` (rev 1.1) | exactly one `ACTIVE` quest has the **current** objective matching (§3); `quest` content = the pinned build | record progress (and `quest_objective_instances`); when all objectives complete ⇒ state `READY_TO_TURN_IN` and flag `…-DONE`; `state_revision++` | `quest.progress.delta {quest_id,objective_id,count,revision}`; when ready also `quest.accept.result`-like **`quest.state.changed`** is NOT used — the delta carries `ready:true` (additive field) |
 | `quest.turnin.request {quest_id}` | state `READY_TO_TURN_IN` | **reward transaction (§4)** ⇒ `COMPLETED` | `quest.reward.granted {quest_id, reward_claim_id, inventory_revision, xp_total, gold_total, level, reputation:{FAC-08:n}, evidence:["ITEM-Q-…"]}` (extra fields are additive) |
-Errors (`command.error`): `NOT_FOUND` (unknown quest), `STATE_CONFLICT` (wrong state, e.g. turn-in before READY, accept when not AVAILABLE), `PREREQUISITE_NOT_MET`, `LEVEL_TOO_LOW`, `UNSUPPORTED_EVENT`, `INVALID_TARGET`, `CONTENT_MISMATCH`, `IDEMPOTENCY_CONFLICT`, `RATE_LIMITED`.
+Errors (`command.error`): `REGION_CLOSED` (accept in a region that is not open yet), `NOT_FOUND` (unknown quest), `STATE_CONFLICT` (wrong state, e.g. turn-in before READY, accept when not AVAILABLE), `PREREQUISITE_NOT_MET`, `LEVEL_TOO_LOW`, `UNSUPPORTED_EVENT`, `INVALID_TARGET`, `CONTENT_MISMATCH`, `IDEMPOTENCY_CONFLICT`, `RATE_LIMITED`.
 
 ## 3. Objective rules (server authoritative)
 - Objectives are **ordered**: objective N is current only after N−1 is complete (matches canon `START→OBJ1→OBJ2→OBJ3→TURNIN` and the SQ rule «по порядку»).
@@ -28,7 +28,7 @@ Level is derived: `level = max L (1…60) with Σ_{k=1..L-1} round(100·k^1.6) �
 
 ## 5. Snapshot (`state.snapshot` scopes, additive to protocol v1)
 ```
-scopes.character = {character_id(str), name, class_id, level, xp, gold, reputation:{"FAC-08":20,…}}
+scopes.character = {character_id(str), name, class_id, level, xp, gold, reputation:{"FAC-08":20,…}, rested_xp:0}   -- rested_xp: additive, 0 until EX-P08 (docs/PACING.md §5)
 scopes.quests    = {active:[{quest_id,state,objectives:[{objective_id,have,need}],content_build_id}],
                     completed:[quest_id,…], available:[quest_id,…]}
 ```

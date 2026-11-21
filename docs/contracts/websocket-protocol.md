@@ -82,7 +82,7 @@ Canon events keep their names and required fields (§15.2); added fields are mar
 **Reserved, not defined in v1** (separate contracts when EX-P08/P09 start): `movement.input`, `world.snapshot`, `world.delta`, `combat.ability.request`, `combat.result`, chat. Servers must reject unknown C→S types with `command.error UNKNOWN_TYPE` (no disconnect) and clients must ignore unknown S→C types (log only).
 
 ### Error codes (`command.error.code`)
-`BAD_REQUEST`, `UNAUTHENTICATED`, `UNKNOWN_TYPE`, `PROTOCOL_UNSUPPORTED`, `RATE_LIMITED` (+`retry_after_ms`), `NOT_FOUND`, `STATE_CONFLICT` (e.g. quest not READY), `PREREQUISITE_NOT_MET`, `OUT_OF_RANGE` (proximity), `CONTENT_MISMATCH`, `IDEMPOTENCY_CONFLICT`, `INTERNAL`. `message_key` is a localization key (`error.<code>`), never free text.
+`BAD_REQUEST`, `UNAUTHENTICATED`, `UNKNOWN_TYPE`, `PROTOCOL_UNSUPPORTED`, `RATE_LIMITED` (+`retry_after_ms`), `NOT_FOUND`, `STATE_CONFLICT` (e.g. quest not READY), `PREREQUISITE_NOT_MET`, `OUT_OF_RANGE` (proximity), `CONTENT_MISMATCH`, `IDEMPOTENCY_CONFLICT`, `REGION_CLOSED` (rev 1.1), `INTERNAL`. `message_key` is a localization key (`error.<code>`), never free text.
 
 ## 6. Revisions and snapshots
 - Envelope `revision` = the **character-state revision**: a per-character monotonic integer incremented by the server for every state change it pushes (quest, inventory, dialogue-choice flags). It is persisted with the state (EX-P04 `revision` columns).
