@@ -42,7 +42,7 @@ Recommended start: **after EX-P08 loot/equip is playable enough**, or on owner Â
 
 | ID | Lane | Title |
 |----|------|-------|
-| D-005 | director | Contract `location-generator.md` + ROADMAP checkbox EX-W01 |
+| D-005 | director | Complete draft `docs/contracts/location-generator.md` (stub on main) + keep EX-W01 roadmap accurate |
 | T-031 | research | Re-verify Gaea / WFC / in-house on Godot **4.7.2**; recommend one |
 | T-032 | client | Implement Lunex Generate dock (Generated layers only) |
 | T-033 | client | Manual-survive regen test + Dawn Valley generate pass |

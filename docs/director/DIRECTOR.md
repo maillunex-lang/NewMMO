@@ -1,17 +1,17 @@
 # AI Director protocol — multi-agent work on NewMMO
 
-**Owner** (human) decides canon and priorities. **Director** (Cursor, owner-delegated 2026-11-21) plans, writes prompts,
-guards canon/contracts, reviews and integrates. **Executors** do bounded tasks inside a lane.
+**Owner** (human) decides canon and priorities. **Director** (**Claude**, owner-delegated 2026-11-21 as director + lead implementer) plans, writes prompts,
+guards canon/contracts, reviews, integrates, and may implement personally. **Executors** (optional: Cursor/Codex/ChatGPT) do bounded tasks inside a lane.
 Authority: Owner > Director > Executors. An executor never overrides canon, contracts, lanes or a task's acceptance list.
 
 ## 1. Executors and lanes
 
 | Lane | Executor (assumed) | Writes only | Typical work |
 |------|--------------------|-------------|--------------|
-| `client` | Cursor | `client/**` | Godot scenes/scripts/UI/assets (editable `.tscn`) |
-| `server` | ChatGPT Codex | `server/**`, `deploy/**` | Go server, SQL migrations, isolated `newmmo` compose |
-| `research` | ChatGPT (chat) | `docs/research/**`, `docs/reviews/**` | OSS research reports, reviews, test-case design |
-| `director` | Cursor (or a Cursor subagent acting as director) | everything | canon, schemas, `tools/**`, contracts, roadmap, CI, integration |
+| `client` | Claude or Cursor | `client/**` | Godot scenes/scripts/UI/assets (editable `.tscn`) |
+| `server` | Claude or ChatGPT Codex | `server/**`, `deploy/**` | Go server, SQL migrations, isolated `newmmo` compose |
+| `research` | Claude or ChatGPT | `docs/research/**`, `docs/reviews/**` | OSS research reports, reviews, test-case design |
+| `director` | Claude | everything | canon, schemas, `tools/**`, contracts, roadmap, CI, integration |
 
 Machine-readable: `docs/director/lanes.json`. Protected (director-only): canon `docs/content/**`, `content/**`, `tools/**`,
 `AGENTS.md`, `.github/**`, `docs/contracts/**`, `docs/director/**`, roadmap/audit docs, `client/data/**` (mirrors canon).
@@ -46,9 +46,9 @@ Lane split and git mode were delegated to the director: lanes as above; **branch
 ## 4. Task cycle
 
 1. Director writes a task in `docs/director/TASKS.md` (ID, lane, depends, scope, files, acceptance, tests, out-of-scope) and a prompt `docs/director/prompts/T-NNN.md` (research-first, phases).
-2. Cursor-director dispatches the prompt to an available executor/subagent, or implements the task itself with `Lane: director` and documented tests. Executor researches, (Phase 2 after OK) implements on `agent/<lane>/T-NNN`, commits with trailers, pushes the **branch**, replies with the **report format** (below).
-3. Cursor-director monitors completion without requiring an owner relay. Director fetches the branch, runs gates + `lane_check`, reviews the diff against acceptance, opens the PR and merges it into `main` → task `DONE` (merge SHA); or `REWORK` (precise defects, same branch); a breaking change never reaches `main` (no revert needed).
-4. Only the Cursor-director edits `TASKS.md` / roadmap (single writer → no merge conflicts there).
+2. Claude-director dispatches the prompt to an available executor/subagent, or implements the task itself with `Lane: director` (or the task lane) and documented tests. Executor researches, (Phase 2 after OK) implements on `agent/<lane>/T-NNN` (or Claude’s feature branch), commits with trailers, pushes the **branch**, replies with the **report format** (below).
+3. Claude-director monitors completion without requiring an owner relay. Director fetches the branch, runs gates + `lane_check`, reviews the diff against acceptance, opens the PR and merges it into `main` → task `DONE` (merge SHA); or `REWORK` (precise defects, same branch); a breaking change never reaches `main` (no revert needed).
+4. Only the Claude-director edits `TASKS.md` / roadmap (single writer → no merge conflicts there).
 
 Parallelism rule: two tasks may run simultaneously only if their lanes differ **and** neither depends on an unfinished task's output. Director sequences dependent tasks; contracts are published first, implementations second.
 

@@ -1,12 +1,12 @@
 # ROADMAP_EXECUTION — исполнительная карта NewMMO
 
-**Для:** любого ИИ-исполнителя / Cursor Agent  
+**Для:** Claude (директор + ведущий разработчик) и любых исполнителей  
 **Репозиторий:** `maillunex-lang/NewMMO`  
-**Ветки:** исполнитель `agent/<lane>/T-NNN`; Cursor-директор управляет PR/merge в `main` по `docs/director/DIRECTOR.md`.  
+**Ветки:** исполнитель `agent/<lane>/T-NNN` или feature `cursor/<name>-6dd6`; Claude-директор управляет PR/merge в `main` по `docs/director/DIRECTOR.md`.  
 **Главный канон-оркестратор:** `docs/content/14_CONTENT_INTEGRATION.md`  
 **Канон контента:** `docs/content/01_WORLD.md` … `14_CONTENT_INTEGRATION.md`  
 **Процесс:** `AGENTS.md`, `.cursor/rules/open-source-research.mdc`  
-**Обновлено:** 2026-11-21 · EX-P00/P01/P02/P03 [x]; EX-DIR [x]; EX-P04 [~] (T-018…T-022 DONE, T-023 in review); EX-CONTENT-01 pilot integrated; Cursor назначен автономным директором для уже утверждённых работ.
+**Обновлено:** 2026-11-21 · EX-P00…P07 [x]; EX-P08 [~] (T-029/T-030 DONE; loot/equip remain); EX-W01 scheduled; Claude = директор + исполнитель (`CLAUDE_HANDOFF.md`).
 
 ---
 
@@ -26,9 +26,9 @@
 5. Тесты (unit/smoke/go test по критериям этапа)
 6. Отметить этап `[x]` в **этом файле** (+ коммит SHA, дата, результат тестов)
 7. Актуализировать связанные docs (`AUDIT*`, `docs/content/README.md`, итерационные отчёты)
-8. `git commit` + push task-ветки; Cursor-директор проверяет и сливает через PR в `main`
+8. `git commit` + push task-ветки; Claude-директор проверяет и сливает через PR в `main`
 9. Если работают несколько исполнителей — протокол `docs/director/DIRECTOR.md` (lanes, trailers `Lane:`/`Task:`, `git pull --rebase` перед push)
-10. Короткий отчёт владельцу; Cursor-директор продолжает следующий безопасный утверждённый этап самостоятельно, без отдельной команды «делай»; для новых канонических/архитектурных решений запрашивает согласие.
+10. Короткий отчёт владельцу; Claude-директор продолжает следующий безопасный утверждённый этап самостоятельно; для новых канонических/архитектурных решений запрашивает согласие.
 
 **Запреты:** не переписывать канон 01–14 молча; конфликты → `docs/content/CONFLICTS.md`; не делать все 240 квестов за раз; не выдавать docs за готовую игру; клиент не авторитетен для боя/лута/валюты/квестов.
 
@@ -150,7 +150,7 @@
 
 ### EX-P05 — Go dialogue + choices
 **Зависит от:** EX-P04 ✔  
-**Контракт:** `docs/contracts/dialogue-engine.md` (D-005)  
+**Контракт:** `docs/contracts/dialogue-engine.md`  
 **Задачи:** T-024 (сервер: open/choice, filter, persist, WS)  
 **Приёмка:**
 - [x] серверная фильтрация опций (ACCEPT/TURN_IN/ASK/LATER/CONTINUE) — T-024
@@ -196,7 +196,7 @@
 **План:** `docs/director/LOCATION_GENERATOR_PLAN.md`  
 **Смысл:** seed заполняет `Generated/*`; владелец на ПК в Godot двигает/ставит детали; regen **не** затирает `Manual/*`.  
 **Приёмка:**
-- [ ] контракт слоёв/seed (`location-generator.md`)
+- [~] контракт слоёв/seed — DRAFT stub `docs/contracts/location-generator.md` (дописать в D-005)
 - [ ] выбор инструмента (in-house / WFC / Gaea) — **OSS только после OK владельца**
 - [ ] generate одной локации (Dawn Valley / LOC-01 scale) в `.tscn`
 - [ ] тест: Manual дерево не исчезает после regen; сцена открывается и правится в Godot 4.7.2
@@ -241,7 +241,7 @@
 
 | Регион | MQ | SQ | DNG | EVT | Статус |
 |--------|----|----|-----|-----|--------|
-| REG-01 | 20 | 20 | 2 | 3 | [~] MQ 1–5 local only |
+| REG-01 | 20 | 20 | 2 | 3 | [~] MQ+SQ 001…005 server pilot; rest open |
 | REG-02 | 20 | 20 | 2 | 3 | [ ] |
 | REG-03 | 20 | 20 | 2 | 3 | [ ] |
 | REG-04 | 20 | 20 | 2 | 3 | [ ] |
@@ -294,28 +294,24 @@
 | R-EQ | `EQ-CC-RR-SS-RR` | Typed fields, не слепой regex |
 | R-APK | Нет Android templates в CI VM | Честно блокировать APK stage; **T-012** (2026-11-21): локальная debug-сборка на 4.3 + CI `android-debug`, инструментарий одобрен владельцем |
 | R-PACE | Игру можно пройти слишком быстро | **Решение владельца 2026-11-21:** запуск по регионам (новый каждые ~5 дней), 60 уровень ≈ за месяц, rested XP разрешён — `docs/PACING.md`; региональные ворота и параметры XP — серверный конфиг, подключаются в EX-P04 (T-020: `REGION_CLOSED`) и EX-P08/P09 |
-| R-DEVICE | Нет устройства 6 ГБ для замеров CT-020 | **ПРИНЯТО владельцем 2026-11-21: временно считаем базу Android «ок» без цифр; замеры (`tools/android/measure_device.sh`, 3×3: старт, FPS/p95, peak PSS, падения) — ОБЯЗАТЕЛЬНЫЙ гейт перед релизом/Android RC (EX-P13) и перед апгрейдом на Godot 4.7.2.** До тех пор цифры производительности не заявляются |
+| R-DEVICE | Нет устройства 6 ГБ для замеров CT-020 | **ПРИНЯТО владельцем 2026-11-21: временно база Android «ок» без цифр; Godot уже 4.7.2. Замеры (`tools/android/measure_device.sh`, 3×3) — ОБЯЗАТЕЛЬНЫЙ гейт перед релизом/Android RC (EX-P13).** До тех пор цифры производительности не заявляются |
 | R-VPS | 8GB / 18 events | Caps + staged rollout |
 
 ---
 
-## 6. Следующий этап (предложение)
+## 6. Следующий этап (актуально)
 
-**EX-P00, EX-P01, EX-P02, EX-DIR закрыты.** Что дальше:
+**Закрыто:** EX-P00…P07, EX-DIR, EX-CONTENT-01 pilot.  
+**В работе / остаток:** EX-P08 loot + equip → EX-P09 dungeon → EX-P10…  
+**Запланировано отдельно:** EX-W01 hybrid location generator (`LOCATION_GENERATOR_PLAN.md`) — старт по «делай генератор» или после играбельного loot/equip; OSS только после OK владельца.
 
-1. ~~Владелец отвечает на вопросы~~ — получены.
-2. **Первый параллельный батч (выдан, ждём отчётов)** (разные lanes, без зависимостей): T-001 research БД-миграций (ChatGPT) · T-004 compliance-ревью клиентского UI (Cursor) · T-005 Go-скелет без зависимостей (Codex). Параллельно директор: D-001 (content export contract), D-002 (POI mapping).
-3. **EX-P03** (миграции + loader) — OK владельца получен (goose + pgx, Go ≥1.25). Первый шаг директора: D-001 (контракт экспорта + pin-матрица + имена миграций), затем задача серверной lane. Стартует по команде **«делай»**.
-4. **EX-CONTENT-01** — только после утверждения `docs/CONTENT_EXPANSION_PLAN.md`.
+Не отмечать этапы `[x]` по docs/stubs. Live E2E и R-PROX — честные интеримы.
 
-Не начинать P03+ без команды **«делай»**.
+## Актуальный handoff для Claude-директора (2026-11-21)
 
-
-## Актуальный handoff для Cursor-директора (2026-11-21)
-
-- **Завершено:** EX-P00–P03, T-018 REST auth, T-019 WebSocket (PR #2), T-020 quest engine (PR #3, `4461aa7`), T-022 login UI, T-015 Godot 4.7.2; EX-CONTENT-01 pilot интегрирован.
-- **Текущий этап:** EX-P08 [~]. **Стоп:** T-030 merged (`23fe4cc`). **Далее при возобновлении:** combat loot / equip; then EX-P09 dungeon. **Параллельный трек:** EX-W01 location generator (запланирован, не начат) — `LOCATION_GENERATOR_PLAN.md`.
-- **Не завершено:** live E2E against running Go server (manual/env), R-PROX (S-02), Android device measurements, EX-P08 loot/equip, EX-W01 generator, EX-P09–P13. Не отмечать их `[x]` по наличию stub или документации.
-- **Рабочие масштабы локаций:** деревня 200×200 м, город 500×500 м, открытая зона 1000×1000 м, большая дикая 1500×1500 м, подземелье 150–400 м маршрута; источник `docs/content/03_LOCATIONS.md`, предварительно до Android-профилирования.
-- **Автономия Cursor:** может корректировать план, выдавать и принимать задачи, обновлять статусы и сливать прошедшие проверки изменения. Без согласия владельца не менять канон, игровой баланс/монетизацию, архитектурные пины, не добавлять зависимости, не развёртывать VPS и не удалять данные.
-- **Пауза:** владелец попросил остановиться после T-030 — разработка приостановлена до новой команды.
+- **Завершено:** EX-P00–P07; T-015 Godot 4.7.2; T-018…T-030 (auth, WS, quests, dialogue, locale, SQ pilot, inventory engine + bag UI). Merge tips: T-030 `23fe4cc`, accept docs `8c7369e`, EX-W01 plan `06d5751`.
+- **Текущий этап:** EX-P08 [~]. **Далее:** combat loot / equip (предложить T-034+); затем EX-P09. **Параллельно по запросу:** EX-W01 (D-005 stub contract exists — дописать; T-031…T-033).
+- **Не завершено:** live E2E (`NEWMMO_ONLINE=1`), R-PROX, R-DEVICE metrics, EX-P08 loot/equip, EX-W01 implementation, EX-P09–P13.
+- **Плейтест (офлайн):** диалог/«ГОВОРИТЬ» ненадёжен; коды вместо имён в трекере; debug-лейблы на карте; нет фидбека наград после боя — учесть в UX, не путать с закрытыми EX-P*.
+- **Автономия Claude:** план, задачи, код, CI, PR, merge. Без согласия владельца — не канон/баланс/монетизация/пины/deps/VPS/destructive.
+- **Промпт владельца → Claude:** `docs/director/prompts/CLAUDE_HANDOFF.md`.
