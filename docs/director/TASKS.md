@@ -5,7 +5,7 @@ Prompts live in `docs/director/prompts/T-NNN.md`. Protocol: `DIRECTOR.md`.
 
 ## Owner decisions (2026-11-21)
 
-**Latest delegation:** Cursor is the sole autonomous director for approved roadmap work. Cursor owns task issuance, acceptance, CI verification, PR merge, and roadmap updates. Prior ChatGPT/Claude director references are historical. Owner approval remains required for canon, new dependencies, major architecture, deployment, destructive changes. Next after T-030: combat loot / equip (still EX-P08) then EX-P09.
+**Latest delegation:** Cursor is the sole autonomous director for approved roadmap work. Cursor owns task issuance, acceptance, CI verification, PR merge, and roadmap updates. Prior ChatGPT/Claude director references are historical. Owner approval remains required for canon, new dependencies, major architecture, deployment, destructive changes. **Paused per owner** after T-030. Next when resumed: combat loot / equip (still EX-P08) then EX-P09.
 
 1. All three executors can push to this repo. Godot and Go toolchains are available.
 2. Lane split delegated to director → as in `lanes.json` (Cursor=client, Codex=server, ChatGPT=research).
@@ -36,7 +36,7 @@ Prompts live in `docs/director/prompts/T-NNN.md`. Protocol: `DIRECTOR.md`.
 | T-027 | server | EX-P07 start: SQ flag names, EX-P07 interact events, SQ-01-001 registry + PG happy path + flows | T-020 ✔, T-024 ✔ | **DONE 2026-11-21** — PR #8 merge `38791dc` |
 | T-028 | server | EX-P07: SQ-01-002…005 registry + flows + table-driven PG tests | T-027 ✔ | **DONE 2026-11-21** — PR #9 merge `0057a66` |
 | T-029 | server | EX-P08 start: inventory research + contract + `character_inventory` + grant/move/snapshot | T-028 ✔ | **DONE 2026-11-21** — PR #10 merge `820aa39` |
-| T-030 | client | EX-P08: inventory bag UI (`.tscn`) + HUD + snapshot/delta bind + `inventory.move.request` | T-029 ✔ | **REVIEW** |
+| T-030 | client | EX-P08: inventory bag UI (`.tscn`) + HUD + snapshot/delta bind + `inventory.move.request` | T-029 ✔ | **DONE 2026-11-21** — PR #11 merge `23fe4cc` |
 | T-017 | research(+content) | EX-CONTENT-01 pilot: MQ-01-05 + SQ-01-001…005 as drop-in proposals | plan approved ✔, T-016 ✔ | **DONE — integrated into canon 2026-11-21** (owner «переноси пилот в канон»; canon `e69dd80`, client `987945f`; 33 new DIA IDs, none removed; entity count 4925→4958). Before integration: branch `41e9e38` merged into `main` as proposals only (`docs/content/dialogue_expansion/pilot/`); `10_DIALOGUES.md` untouched. Director: lane_check clean (17 commits); strict lint on overlay **0 ERROR / 0 WARN**; MQ-01-05 19 lines / PROGRESS×3, SQ ×15 / PROGRESS×2; owner's decisions applied (Ilra speaks at OBJ3, no A/B in SQ-01-002, LATER added). Quality note: MQ-01-05 strong; SQ voices still somewhat flat — owner judges |
 | T-015 | client | Upgrade the client to Godot 4.7.2 (owner decision) | T-012 ✔ | **DONE** (branch `61eedda`). Director: lane_check clean, `project.godot` + scripts diff reviewed, no secrets; executor reports strict smoke green on 4.7.2, frames before/after match, APK builds (29.2 MB, minSdk 24, targetSdk 36). Director added CI job `client-godot` (Godot 4.7.2, checksum-verified) and moved `android-debug` workflow to 4.7.2; smoke script now refuses non-4.7 unless `ALLOW_GODOT_43=1`. World Studio GUI click-test not done (no Vulkan in executor VM) |
 | T-014 | server | EX-P03 hardening per T-013 (migration 00005 DB-level digest check, strict crossrefs, strict role-URL tests, golden digest vector, Status singleton, audit deadline) | T-013 ✔ | **DONE** (branch `14d5d9d`, 3 commits). Director: lane_check clean, go.mod/go.sum unchanged, migration 00005 read (fingerprint function + `staged→published` trigger), branch CI run 99 green on GitHub (server-db with live PG 17, no skips) |
@@ -103,3 +103,4 @@ First parallel batch (different lanes, no dependencies, disjoint files): **T-001
 | 2026-11-21 | T-026/T-027 merged PR #8 (`38791dc`); T-028 SQ-01-002…005 issued |
 | 2026-11-21 | T-028 merged PR #9 (`0057a66`); EX-P07 SQ pilot closed on server; T-029 inventory issued |
 | 2026-11-21 | T-029 merged PR #10 (`820aa39`); T-030 inventory bag UI issued |
+| 2026-11-21 | T-030 merged PR #11 (`23fe4cc`); EX-P08 bag UI done; paused per owner (loot/equip next) |
