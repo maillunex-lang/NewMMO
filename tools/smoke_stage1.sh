@@ -3,14 +3,22 @@
 # Success = every step exit 0 AND required stdout markers for script smokes.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-GODOT="${GODOT:-$HOME/bin/godot}"
-if [[ ! -x "$GODOT" ]]; then
-  GODOT="$(command -v godot || true)"
+# Prefer Godot 4.7.2 (T-015); fall back to 4.3 symlink / PATH for rollback.
+GODOT="${GODOT:-}"
+if [[ -z "$GODOT" ]]; then
+  if [[ -x "$HOME/bin/godot472" ]]; then
+    GODOT="$HOME/bin/godot472"
+  elif [[ -x "$HOME/bin/godot" ]]; then
+    GODOT="$HOME/bin/godot"
+  else
+    GODOT="$(command -v godot || true)"
+  fi
 fi
-if [[ -z "${GODOT}" ]]; then
+if [[ -z "${GODOT}" || ! -x "$GODOT" ]]; then
   echo "Godot binary not found" >&2
   exit 1
 fi
+echo "Using GODOT=$GODOT ($("$GODOT" --version 2>/dev/null || echo '?'))"
 
 run_godot_capture() {
   # Usage: run_godot_capture <label> <required_marker_or_empty> -- <godot args...>
