@@ -1,8 +1,10 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Theme" path="res://themes/lunex_hud.tres" id="1"]
 [ext_resource type="Script" path="res://scripts/ui/auth_flow_controller.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/ui/safe_area_margins.gd" id="3"]
+[ext_resource type="Texture2D" path="res://assets/ui/gen/login_bg.jpg" id="4"]
+[ext_resource type="Texture2D" path="res://assets/ui/gen/logo.png" id="5"]
 
 [node name="AuthFlow" type="Control"]
 layout_mode = 3
@@ -13,6 +15,43 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("1")
 script = ExtResource("2")
+
+[node name="Backdrop" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="Shade" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.02, 0.04, 0.1, 0.35)
+
+[node name="Logo" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -90.0
+offset_top = 6.0
+offset_right = 90.0
+offset_bottom = 186.0
+grow_horizontal = 2
+mouse_filter = 2
+texture = ExtResource("5")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="SafeArea" type="MarginContainer" parent="."]
 layout_mode = 1

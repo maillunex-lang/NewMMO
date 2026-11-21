@@ -58,7 +58,8 @@ static func _sphere(r: float, seg := 12) -> SphereMesh:
 ## Target heights in metres for imported models (Meshy output has arbitrary scale/pivot).
 const HEIGHTS := {
 	"tree_oak": 5.2, "tree_pine": 6.0, "rock": 1.3, "cottage": 5.2, "fence": 1.2, "lantern": 3.0, "crystal": 2.2,
-	"npc_generic": 1.85, "bush": 1.1, "flowers": 0.6, "mushrooms": 0.5, "stump": 0.8, "tree_birch": 5.6, "well": 2.4, "barrel": 1.0, "haystack": 1.3,
+	"npc_generic": 1.85, "quest_board": 2.6, "campfire": 1.2, "market_stall": 3.4, "signpost": 2.2, "stone_statue": 3.2, "wagon": 2.2,
+	"enemy_enm-01-201": 2.3, "enemy_enm-01-301": 3.4, "enemy_enm-01-005": 1.9, "bush": 1.1, "flowers": 0.6, "mushrooms": 0.5, "stump": 0.8, "tree_birch": 5.6, "well": 2.4, "barrel": 1.0, "haystack": 1.3,
 	"hero_cls-01": 1.95, "hero_cls-02": 1.95, "hero_cls-04": 1.85, "hero_cls-05": 1.9, "enemy_enm-01-002": 1.5,
 	"npc_elder_mira": 1.65, "npc_npc-802": 1.8, "npc_npc-102": 1.85, "hero_cls-03": 1.9, "enemy_enm-01-001": 1.85, "enemy_enm-01-003": 1.1, "enemy_enm-01-004": 1.2,
 }
@@ -128,7 +129,7 @@ static func load_glb(name: String, height := 0.0) -> Node3D:
 	return holder
 
 ## Meshy added a thin dirt "base plate" under some buildings; sinking the model hides it below the ground plane.
-const SINK := {"cottage": 0.16, "well": 0.12, "haystack": 0.05, "barrel": 0.03}
+const SINK := {"market_stall": 0.05, "wagon": 0.05, "stone_statue": 0.05, "campfire": 0.03, "cottage": 0.16, "well": 0.12, "haystack": 0.05, "barrel": 0.03}
 
 static var _anim_cache: Dictionary = {}
 

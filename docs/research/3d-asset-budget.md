@@ -12,4 +12,7 @@ Observed unit costs: preview 20, refine 10 (balance delta slightly above the sum
 | rigging 10 × 5 + animations 5 × 7 (idle, attack, cast, hit, dead) | all humanoids rigged; one shared animation set | ~45 + 35 | 529 → see balance |
 
 Rigging notes: auto-rig failed ("Pose estimation failed") on a robed, staff-holding mage — humanoids must be generated in a strict T/A-pose without long skirts; works for all 10 after that. Rig basic walk/run come free with the rig. Animations are retargeted to every humanoid because Meshy's rig has the same 24 bones.
+| S4 (owner: spend everything): 9 objects/enemies (previews 180 + refines 90 + 3 rigs 15), 14 UI/FX images (42), 24 more skill icons + 6 earlier (3 each), icon test | UI art, FX textures, remaining icons, world objects, dungeon enemies | all remaining | **19** |
+
+The owner's order was UI → world objects → FX/skills → NPC/enemies; the last 19 credits are kept as a reserve.
 

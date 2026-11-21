@@ -7,7 +7,7 @@ extends Node3D
 const PX_PER_M := 32.0
 const PITCH_DEG := 48.0
 const ZOOM_MIN := 7.0
-const ZOOM_MAX := 30.0
+const ZOOM_MAX := 60.0
 const MAP_SIZE := Vector2(2048, 1400)
 const CHAR_SCALE := 1.3   # characters read larger than life, like most MMOs
 
@@ -37,6 +37,8 @@ func setup(p_valley: Node2D, p_player: Node2D) -> void:
 	valley = p_valley
 	player = p_player
 	preset = GfxQuality.load_preset()
+	if OS.get_environment("NEWMMO_ZOOM") != "":
+		zoom = float(OS.get_environment("NEWMMO_ZOOM"))
 	_build_environment()
 	_build_road_mask()
 	_build_ground()
@@ -224,7 +226,9 @@ func _build_dressing() -> void:
 	for n in valley.find_children("*", "StaticBody2D", true, false):
 		if str(n.scene_file_path).get_file() == "cottage.tscn":
 			var c := (n as Node2D).global_position / PX_PER_M
-			for item in [["well", Vector2(-6.0, 1.2), 0.0], ["barrel", Vector2(-3.6, 2.6), 0.4], ["barrel", Vector2(-4.2, 3.2), 1.2], ["haystack", Vector2(5.6, -1.6), 0.8]]:
+			for item in [["well", Vector2(-6.0, 1.2), 0.0], ["barrel", Vector2(-3.6, 2.6), 0.4], ["barrel", Vector2(-4.2, 3.2), 1.2], ["haystack", Vector2(5.6, -1.6), 0.8],
+					["quest_board", Vector2(-1.6, 6.4), 3.14], ["signpost", Vector2(3.2, 7.6), 0.6], ["market_stall", Vector2(10.5, 5.5), -1.2],
+					["wagon", Vector2(13.2, 8.0), 0.9], ["campfire", Vector2(-9.0, 8.5), 0.0], ["stone_statue", Vector2(1.5, -8.5), 0.0]]:
 				var m := ModelLibrary.dressing(str(item[0]))
 				if m != null:
 					m.position = Vector3(c.x + (item[1] as Vector2).x, 0, c.y + (item[1] as Vector2).y)

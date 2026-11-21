@@ -10,6 +10,9 @@ var particle_scale := 1.0
 var _glow: Texture2D = null
 var _rune: Texture2D = null
 var _skills: Dictionary = {}
+var _tex_runes: Dictionary = {}     # style -> Meshy-generated sigil
+var _tex_burst: Texture2D = null
+var _tex_slash: Texture2D = null
 
 const STYLE_COLORS := {
 	"arcane": [Color(0.7, 0.45, 1.0), Color(0.35, 0.7, 1.0)],
@@ -31,6 +34,14 @@ func _ready() -> void:
 	add_to_group("fx3d")
 	_glow = _make_glow()
 	_rune = _make_rune()
+	for pair in [["arcane", "rune_a"], ["ice", "rune_a"], ["lightning", "rune_a"], ["holy", "rune_b"], ["nature", "rune_b"], ["fire", "rune_c"], ["blood", "rune_c"], ["physical", "rune_c"]]:
+		var path := "res://assets/fx/%s.png" % pair[1]
+		if ResourceLoader.exists(path):
+			_tex_runes[pair[0]] = load(path)
+	if ResourceLoader.exists("res://assets/fx/burst.png"):
+		_tex_burst = load("res://assets/fx/burst.png")
+	if ResourceLoader.exists("res://assets/fx/slash.png"):
+		_tex_slash = load("res://assets/fx/slash.png")
 	var f := FileAccess.open("res://data/skills.json", FileAccess.READ)
 	if f != null:
 		var parsed: Variant = JSON.parse_string(f.get_as_text())
@@ -149,6 +160,20 @@ func impact(pos: Vector3, style: String, crit := false) -> void:
 	p.process_material = pm
 	p.emitting = true
 	ring(pos + Vector3(0, 0.05, 0), c, 2.6 if crit else 1.8, 0.45)
+	if _tex_burst != null:
+		var b := MeshInstance3D.new()
+		var q := QuadMesh.new()
+		q.size = Vector2(1, 1)
+		b.mesh = q
+		var bm := _additive(Color(1, 1, 1), _tex_burst, 1.8)
+		b.material_override = bm
+		b.position = pos
+		b.scale = Vector3.ONE * 0.6
+		add_child(b)
+		var tw := create_tween()
+		tw.tween_property(b, "scale", Vector3.ONE * (4.2 if crit else 3.0), 0.28).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(bm, "albedo_color:a", 0.0, 0.28)
+		tw.tween_callback(b.queue_free)
 	flash(pos, _col(style, 1), 3.5 if crit else 2.2, 0.18)
 	_free_later(p, 1.2)
 
@@ -188,7 +213,7 @@ func cast_circle(pos: Vector3, style: String, secs := 0.55) -> void:
 	q.size = Vector2(2.6, 2.6)
 	q.orientation = PlaneMesh.FACE_Y
 	mi.mesh = q
-	var m := _additive(c, _rune, 2.2)
+	var m := _additive(c if not _tex_runes.has(style) else Color(1, 1, 1), _tex_runes.get(style, _rune), 1.6 if _tex_runes.has(style) else 2.2)
 	m.billboard_mode = BaseMaterial3D.BILLBOARD_DISABLED
 	mi.material_override = m
 	mi.position = pos + Vector3(0, 0.06, 0)
@@ -271,7 +296,7 @@ func slash(pos: Vector3, yaw: float, style: String) -> void:
 	var q := QuadMesh.new()
 	q.size = Vector2(2.4, 2.4)
 	mi.mesh = q
-	var m := _additive(_col(style, 1), _crescent(), 2.4)
+	var m := _additive(_col(style, 1) if _tex_slash == null else Color(1, 1, 1), _tex_slash if _tex_slash != null else _crescent(), 2.0)
 	m.billboard_mode = BaseMaterial3D.BILLBOARD_DISABLED
 	mi.material_override = m
 	mi.position = pos + Vector3(0, 1.1, 0)

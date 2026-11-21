@@ -19,10 +19,11 @@ KIND = {"damage": "attack", "shield": "protective shield", "heal": "healing", "h
         "mark": "target mark", "cleanse": "purifying", "movement": "dash", "stealth": "stealth", "reveal": "reveal", "mana": "mana", "barrier": "barrier",
         "mitigation": "damage reduction", "intercept": "guarding"}
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 6
+START = int(sys.argv[2]) if len(sys.argv) > 2 else 0
 skills = json.load(open(os.path.join(ROOT, "client/data/skills.json"), encoding="utf-8"))["classes"]
 jobs = {}
 for cls, lst in skills.items():
-    for s in lst[:N]:
+    for s in lst[START:N]:
         prompt = (f"fantasy MMO skill icon, {KIND.get(s['effect_kind'], 'magic')} ability named '{s['name']}' for a {CLS[cls]}, "
                   "one centered glowing emblem inside a round golden frame, vibrant saturated colors, painterly stylized game art, dark background, no text, no letters")
         code, r = meshy.call("POST", "/v1/text-to-image", {"ai_model": "nano-banana", "prompt": prompt})

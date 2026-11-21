@@ -146,6 +146,54 @@
       "prompt": "round golden haystack bale",
       "poly": 600,
       "tex": "golden yellow straw"
+    },
+    "quest_board": {
+      "prompt": "wooden village notice board with pinned parchment quest notes and a small roof",
+      "poly": 3000,
+      "tex": "warm wood, cream parchment, red wax seals"
+    },
+    "campfire": {
+      "prompt": "cozy campfire with stacked logs ring of stones and bright orange flames",
+      "poly": 1500,
+      "tex": "orange yellow flames, dark logs, grey stones"
+    },
+    "market_stall": {
+      "prompt": "colorful medieval market stall with striped awning, crates of fruit and vegetables",
+      "poly": 4000,
+      "tex": "red and cream striped awning, bright fruit"
+    },
+    "signpost": {
+      "prompt": "wooden crossroads signpost with two arrow boards and a lantern",
+      "poly": 900,
+      "tex": "warm wood, small iron details"
+    },
+    "stone_statue": {
+      "prompt": "ancient stone hero statue on a mossy pedestal, sword raised",
+      "poly": 3500,
+      "tex": "grey stone with green moss"
+    },
+    "wagon": {
+      "prompt": "old wooden merchant cart wagon with barrels and sacks",
+      "poly": 3500,
+      "tex": "warm brown wood, burlap sacks"
+    },
+    "enemy_zombie": {
+      "prompt": "stylized fantasy zombie villager with torn clothes and green rotten skin, full body character standing in a strict T-pose with arms stretched out horizontally and legs slightly apart, symmetrical, game-ready proportions",
+      "poly": 9000,
+      "tex": "sickly green skin, tattered brown cloth",
+      "rig": true
+    },
+    "enemy_skeleton": {
+      "prompt": "stylized fantasy skeleton warrior with rusty helmet and shield, bright bone white, full body character standing in a strict T-pose with arms stretched out horizontally and legs slightly apart, symmetrical, game-ready proportions",
+      "poly": 9000,
+      "tex": "ivory bones, rusty metal",
+      "rig": true
+    },
+    "enemy_ogre": {
+      "prompt": "big stylized fantasy ogre brute with tusks, loincloth and spiked club on his back, full body character standing in a strict T-pose with arms stretched out horizontally and legs slightly apart, symmetrical, game-ready proportions",
+      "poly": 10000,
+      "tex": "olive green skin, brown leather",
+      "rig": true
     }
   }
 }
