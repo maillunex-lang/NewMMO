@@ -64,3 +64,4 @@ First parallel batch (different lanes, no dependencies, disjoint files): **T-001
 | 2026-11-21 | Owner: no 6 GB phone → Android baseline accepted provisionally; device metrics are a mandatory pre-release gate (R-DEVICE in ROADMAP, EX-P13) |
 | 2026-11-21 | Owner ordered the Godot 4.7.2 upgrade (waives device-metrics-first); T-015 issued; lane_check now accepts comma-separated Extra-Write |
 | 2026-11-21 | Owner has a second ChatGPT → T-016 (dialogue audit + style guide) issued; evidence: 3122 lines, 760 unique (24%), 8 lines repeated 120×, ~12 lines/MQ |
+| 2026-11-21 | Owner approved `CONTENT_EXPANSION_PLAN.md`; pilot start awaits «делай» (T-016 audit/style guide first is recommended) |
