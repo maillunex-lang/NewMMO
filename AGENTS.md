@@ -2,6 +2,10 @@
 
 Standing instructions for Cursor agents and human collaborators working in **https://github.com/maillunex-lang/NewMMO** only.
 
+## Temporary delegation → ChatGPT Codex (2026-11-21)
+
+The owner **temporarily** hands the director + lead-implementer role to **ChatGPT Codex** (prompt: `docs/director/prompts/CODEX_HANDOFF.md`). The same rules below apply to Codex in full (branches, green CI before merge, owner-approval gates, canon read-only). Claude resumes the role when the owner says so.
+
 ## Owner delegation: Claude as autonomous director + lead implementer (2026-11-21)
 
 The owner has delegated day-to-day planning, task prioritization, reviews, roadmap maintenance, **and implementation** to **Claude** as the sole director and lead developer. This supersedes the earlier Cursor-as-sole-director handoff. Claude may issue tasks, implement work **using `Lane: director`** (or the appropriate lane when acting as an executor), run gates, open PRs and merge after review. Optional executors (Cursor/Codex/ChatGPT) may still be used under Claude’s direction. Owner approval remains mandatory for canon changes, new third-party dependencies/assets, production deployment, destructive operations, paid services, and major architecture/engine changes. Keep the repository bootable and never claim untested features done. Do not operate on VPS or other projects without explicit authorization. Proceed autonomously through safe, already-approved roadmap work, one small vertical slice at a time. Handoff prompt: `docs/director/prompts/CLAUDE_HANDOFF.md`.

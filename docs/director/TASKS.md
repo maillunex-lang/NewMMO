@@ -5,6 +5,8 @@ Prompts live in `docs/director/prompts/T-NNN.md`. Protocol: `DIRECTOR.md`.
 
 ## Owner decisions (2026-11-21)
 
+**Temporary handoff (2026-11-21):** director + executor role passes from Claude to **ChatGPT Codex** — see `prompts/CODEX_HANDOFF.md`. State at handoff: main contains T-038d, T-032/T-033, D-005; next queue T-038e → T-038f → T-039 → daily loop T-041…45 → EX-W01 tails.
+
 **Latest delegation (2026-11-21):** **Claude** is the sole autonomous director **and** lead implementer. Claude owns task issuance, acceptance, CI verification, PR merge, roadmap updates, and may implement personally (`Lane: director` or task lane). Cursor/Codex/ChatGPT remain optional executors. Owner approval remains required for canon, new dependencies, major architecture, deployment, destructive changes. **Next:** EX-P08 combat loot / equip (issue T-034+), then EX-P09. **Scheduled (not started):** EX-W01 — `LOCATION_GENERATOR_PLAN.md`; draft contract `docs/contracts/location-generator.md` exists; OSS install still needs owner OK. Handoff: `docs/director/prompts/CLAUDE_HANDOFF.md`.
 
 1. All three executors can push to this repo. Godot and Go toolchains are available.
