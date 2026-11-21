@@ -70,3 +70,17 @@ ui.talk_to,Поговорить с %s,Talk to %s
 ui.turn_in_to,Сдать задание: %s,Turn in to: %s
 ui.hint_npc_no_business,%s сейчас не до разговоров.,%s has nothing for you right now.
 ui.hint_nothing_here,Рядом никого нет.,Nobody is nearby.
+dungeon.hint.need_online,Подземелья доступны только онлайн.,Dungeons need an online session.
+dungeon.hint.unavailable,Это подземелье пока недоступно.,This dungeon is not available yet.
+dungeon.hint.level_low,Уровень слишком низкий для входа.,Your level is too low to enter.
+dungeon.hint.region_closed,Этот регион ещё не открыт.,This region is not open yet.
+dungeon.hint.conflict,Сейчас это действие недоступно.,This action is not available right now.
+dungeon.hint.not_done,Сначала пройдите подземелье.,Finish the dungeon first.
+dungeon.hint.done,Склеп пройден. Подойдите к выходу за наградой.,Crypt cleared. Go to the exit for your reward.
+dungeon.hint.entrance,Активируйте входную печать.,Activate the entrance seal.
+dungeon.hint.fight,Очистите зал и изучите первый символ.,Clear the hall and study the first symbol.
+dungeon.hint.puzzle,Зажгите лампады в верном порядке.,Light the lamps in the right order.
+dungeon.hint.miniboss,Победите Хранителя первой лампады.,Defeat the Keeper of the First Lamp.
+dungeon.hint.rest,Отдохните у привала.,Rest at the camp.
+dungeon.hint.boss,Свяжите три огня и победите Криптария.,Bind the three fires and defeat the Cryptarch.
+dungeon.hint.exit,Выход: заберите награду.,Exit: claim your reward.

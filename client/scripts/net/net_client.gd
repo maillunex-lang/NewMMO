@@ -15,6 +15,8 @@ signal quest_reward_granted(payload: Dictionary)
 signal dialogue_node_state(payload: Dictionary)
 signal inventory_delta(payload: Dictionary)
 signal loot_result(payload: Dictionary)
+signal dungeon_snapshot(payload: Dictionary)
+signal dungeon_reward(payload: Dictionary)
 signal command_error(payload: Dictionary)
 signal needs_client_update(code: int, reason: String)
 signal session_replaced()
@@ -45,6 +47,8 @@ const KNOWN_S2C := {
 	"event.contribution": true,
 	"inventory.delta": true,
 	"combat.loot.result": true,
+	"dungeon.snapshot": true,
+	"dungeon.reward": true,
 	"command.error": true,
 }
 const DELTA_TYPES := {
@@ -157,6 +161,25 @@ func request_inventory_move(from_container: String, from_slot: int, to_container
 ## T-034: report a kill of a canon enemy; the server rolls the drop (loot-engine.md). Never sends amounts.
 func request_loot(enemy_id: String) -> String:
 	return send_mutation("combat.loot.request", {"enemy_id": enemy_id})
+
+## T-037 dungeon requests (dungeon-engine.md §4). Outcomes are reported, never decided, by the client.
+func request_dungeon_enter(dungeon_id: String, mode: String = "NORMAL") -> String:
+	return send_mutation("dungeon.enter.request", {"dungeon_id": dungeon_id, "mode": mode})
+
+func request_dungeon_interact(instance_id: String, object_id: String) -> String:
+	return send_mutation("dungeon.interact.request", {"instance_id": instance_id, "object_id": object_id})
+
+func request_dungeon_enemy_defeated(instance_id: String, spawn_id: String) -> String:
+	return send_mutation("dungeon.encounter.report", {"instance_id": instance_id, "outcome": "enemy_defeated", "spawn_id": spawn_id})
+
+func request_dungeon_player_defeated(instance_id: String) -> String:
+	return send_mutation("dungeon.encounter.report", {"instance_id": instance_id, "outcome": "player_defeated"})
+
+func request_dungeon_claim(instance_id: String) -> String:
+	return send_mutation("dungeon.claim.request", {"instance_id": instance_id})
+
+func request_dungeon_leave(instance_id: String) -> String:
+	return send_mutation("dungeon.leave.request", {"instance_id": instance_id})
 
 func request_snapshot(scopes: Array = []) -> void:
 	var payload := {}
@@ -328,6 +351,15 @@ func _dispatch_typed(type_name: String, payload: Dictionary, request_id: String)
 		"inventory.delta":
 			_ack_pending(request_id)
 			inventory_delta.emit(payload)
+		"dungeon.snapshot":
+			_ack_pending(request_id)
+			dungeon_snapshot.emit(payload)
+		"dungeon.reward":
+			_ack_pending(request_id)
+			dungeon_reward.emit(payload)
+			var dch: Variant = payload.get("changes", [])
+			if typeof(dch) == TYPE_ARRAY and (dch as Array).size() > 0:
+				inventory_delta.emit({"inventory_revision": payload.get("inventory_revision", 0), "changes": dch})
 		"combat.loot.result":
 			_ack_pending(request_id)
 			loot_result.emit(payload)

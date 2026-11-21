@@ -6,6 +6,8 @@ signal died(monster: Node)
 @export var monster_id := "slime"
 ## Canon enemy id (06_ENEMIES) this stage-1 stand-in reports to the server for loot (T-034). "" = offline roll only.
 @export var canon_enemy_id := ""
+## T-037: registry spawn id (DNG-…-E1). Set → death is reported to the dungeon controller; no local loot.
+@export var dungeon_spawn_id := ""
 @export var display_name := "Forest Slime"
 @export var max_hp := 40.0
 @export var move_speed := 90.0
@@ -80,6 +82,12 @@ func apply_damage(amount: float, from: Node = null) -> void:
 func _die(killer: Node) -> void:
 	_alive = false
 	died.emit(self)
+	if dungeon_spawn_id != "":
+		var dc := get_tree().get_first_node_in_group("dungeon_controller")
+		if dc != null:
+			dc.report_enemy_defeated(dungeon_spawn_id)
+		queue_free()
+		return
 	var quests := get_tree().get_first_node_in_group("quest_manager")
 	var server_loot: bool = quests != null and quests.has_method("request_loot") and quests.request_loot(canon_enemy_id)
 	if not server_loot:
