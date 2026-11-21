@@ -1,6 +1,6 @@
 name: android-debug-apk
 
-# Manual build of a debug-signed APK on Godot 4.3 (current engine pin) for on-device baseline tests.
+# Manual build of a debug-signed APK on Godot 4.7.2 (engine pin since 2026-11-21) for on-device tests.
 # The APK is signed with an EPHEMERAL debug keystore created in the job (no secrets stored);
 # each build has a different signature -> uninstall the previous build before installing a new one.
 on:
@@ -14,43 +14,43 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      GODOT_VERSION: "4.3-stable"
-      # SHA-512 from https://github.com/godotengine/godot/releases/download/4.3-stable/SHA512-SUMS.txt
-      GODOT_ZIP_SHA512: fd52bb4ba8acc30ca5accd1c566d470ad7282f891ccc0995dfafabcf92bcf76280ce182bf9d80ebd885f3ed2165d01e1fc3f2928436b15498dfbd98656c2a45a
-      GODOT_TPZ_SHA512: 476366caf0fd45a8f24136cf9cf1dc0bc2b96f7c82d53e5f82200b55aefd07b286d283fd6f1ce29e0de70648c5a51d3b12f96c6d4fafd4e8c4878ecda6406d6a
+      GODOT_VERSION: "4.7.2-stable"
+      # SHA-512 from https://github.com/godotengine/godot/releases/download/4.7.2-stable/SHA512-SUMS.txt
+      GODOT_ZIP_SHA512: 9aa00f7a605200940bce3027a567b782f49bd8e940dd06ae9e987bd65aee1b1467edd56ed84fcdcbdd44354bf613bdbb4e5d2913e925850368e150c59ed54c65
+      GODOT_TPZ_SHA512: ca4d71c4d7b81dfc15d1a98baa07534aa95b03fdda78a0075b06672e1648d2e5f40980c9adc28d23e1b92e732ee7bf3461997aa804af74ec2fcd7a93ccb84079
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
-      - name: "Android SDK packages (per Godot 4.3 docs): platform-tools, build-tools 34.0.0, platform android-34"
+      - name: "Android SDK packages (Godot 4.7.2): platform-tools, build-tools 36.1.0, platform android-36"
         run: |
           set -euo pipefail
           export ANDROID_HOME="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
           echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
           SDKM="$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)"
           yes | "$SDKM" --licenses >/dev/null || true
-          "$SDKM" "platform-tools" "build-tools;34.0.0" "platforms;android-34"
-      - name: Godot 4.3 + export templates (checksum-verified)
+          "$SDKM" "platform-tools" "build-tools;36.1.0" "platforms;android-36"
+      - name: Godot 4.7.2 + export templates (checksum-verified)
         run: |
           set -euo pipefail
           base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}"
-          curl -fsSL -o godot.zip "$base/Godot_v4.3-stable_linux.x86_64.zip"
-          curl -fsSL -o templates.tpz "$base/Godot_v4.3-stable_export_templates.tpz"
+          curl -fsSL -o godot.zip "$base/Godot_v4.7.2-stable_linux.x86_64.zip"
+          curl -fsSL -o templates.tpz "$base/Godot_v4.7.2-stable_export_templates.tpz"
           echo "$GODOT_ZIP_SHA512  godot.zip" | sha512sum -c -
           echo "$GODOT_TPZ_SHA512  templates.tpz" | sha512sum -c -
-          mkdir -p "$HOME/bin" "$HOME/.local/share/godot/export_templates/4.3.stable"
+          mkdir -p "$HOME/bin" "$HOME/.local/share/godot/export_templates/4.7.2.stable"
           unzip -q godot.zip -d godot_bin
-          install -m 0755 godot_bin/Godot_v4.3-stable_linux.x86_64 "$HOME/bin/godot"
+          install -m 0755 godot_bin/Godot_v4.7.2-stable_linux.x86_64 "$HOME/bin/godot"
           unzip -q templates.tpz -d tpl
-          cp -r tpl/templates/. "$HOME/.local/share/godot/export_templates/4.3.stable/"
+          cp -r tpl/templates/. "$HOME/.local/share/godot/export_templates/4.7.2.stable/"
           "$HOME/bin/godot" --version
       - name: Godot editor settings (SDK/JDK paths) and ephemeral debug keystore
         run: |
           set -euo pipefail
           mkdir -p "$HOME/.config/godot" "$HOME/lunex-android"
-          cat > "$HOME/.config/godot/editor_settings-4.3.tres" <<EOT
+          cat > "$HOME/.config/godot/editor_settings-4.7.tres" <<EOT
           [gd_resource type="EditorSettings" format=3]
 
           [resource]

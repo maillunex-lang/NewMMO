@@ -19,7 +19,7 @@ Standing instructions for Cursor agents and human collaborators working in **htt
 ## Engine and architecture invariants
 
 - Client: Godot **2D** isometric 2.5D (prerendered sprites). **No runtime 3D character/world rendering.**
-- Project pin today: Godot **4.3** (`client/project.godot`). Target mentioned in planning docs may be newer (e.g. 4.7.x) — pin must be explicit before upgrades.
+- Project pin: Godot **4.7.2** (`client/project.godot` features `4.7`, GL Compatibility; owner decision 2026-11-21, migration T-015). Rollback to 4.3 only deliberately (`ALLOW_GODOT_43=1`, see `docs/research/T-015-godot-4-7-2-migration.md`). Any further engine upgrade needs an explicit owner decision.
 - Server: authoritative **Go + PostgreSQL + WebSocket**. Never trust the client for combat, currency, inventory, or movement authority.
 - UI: major screens are editable `.tscn` Control scenes + Theme resources; scripts bind data, they do not rebuild full layout in code.
 - Locations: editable `.tscn` with layer contract (Ground, Paths, Vegetation, Buildings, Decorations, NPCSpawns, MonsterSpawns, Navigation, Effects). Manual edits must survive regeneration (`Manual` / stable IDs).

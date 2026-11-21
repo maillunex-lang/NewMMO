@@ -18,7 +18,13 @@ if [[ -z "${GODOT}" || ! -x "$GODOT" ]]; then
   echo "Godot binary not found" >&2
   exit 1
 fi
-echo "Using GODOT=$GODOT ($("$GODOT" --version 2>/dev/null || echo '?'))"
+GODOT_VERSION_STR="$("$GODOT" --version 2>/dev/null || echo '?')"
+echo "Using GODOT=$GODOT ($GODOT_VERSION_STR)"
+# Project pin is Godot 4.7.x (owner decision 2026-11-21). Rollback to 4.3 must be explicit.
+if [[ "$GODOT_VERSION_STR" != 4.7.* && "${ALLOW_GODOT_43:-0}" != "1" ]]; then
+  echo "FAIL: Godot 4.7.x required (got $GODOT_VERSION_STR). Set ALLOW_GODOT_43=1 only for a deliberate rollback." >&2
+  exit 1
+fi
 
 run_godot_capture() {
   # Usage: run_godot_capture <label> <required_marker_or_empty> -- <godot args...>

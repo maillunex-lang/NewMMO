@@ -229,6 +229,7 @@
 | 2026-11-21 | EX-P02 crossrefs + CT-003…009 | `59f5cbd` | unittest 32 OK; lint 0 ERROR | C-ITEMQ-001 найден (36 ITEM-Q без объявления) |
 | 2026-11-21 | C-ITEMQ-001 A (по решению владельца) | `8a61c6b` | unittest 32 OK | 36 `ITEM-Q-*` в `11` §12.1, имена — рабочие |
 | 2026-11-21 | Полная сверка связей: client-sync + docs-links + CI | см. `git log` | unittest 35 OK; client-sync 0 ERR; docs-links 0 | клиент == канон; 1 doc-путь починен (`AUDIT.md`) |
+| 2026-11-21 | T-015 переход на Godot 4.7.2 (Cursor) | см. `git log` | executor: strict smoke на 4.7.2 зелёный, кадры до/после совпали, APK собран; CI `client-godot` | пин = 4.7.2; Android minSdk 24/targetSdk 36; GUI-проверка World Studio не сделана; замеры устройства — гейт перед релизом |
 | 2026-11-21 | T-014 EX-P03 hardening (Codex) | см. `git log` | CI на ветке зелёный (server-db, живой PG 17) | EX-P03 закрыт |
 | 2026-11-21 | T-012 Android debug APK baseline, Godot 4.3 (Cursor) | см. `git log` | executor: build_debug_apk OK, apksigner OK, smoke OK; device unavailable | B-APK: сборка воспроизводима (скрипты + CI workflow `android-debug`); замеры на телефоне 6 ГБ — за владельцем (`tools/android/measure_device.sh`) |
 | 2026-11-21 | T-011 client WebSocket layer per D-003 (Cursor) | см. `git log` | executor: smoke OK incl. NET_SMOKE_OK; artificial fail → exit 1 | клиентская часть EX-P04/P06 готова на FakeTransport; живого сервера ещё нет |
@@ -247,7 +248,7 @@
 | ID | Риск | Действие |
 |----|------|----------|
 | R-GO | Go 1.22 vs актуальные pgx/goose | **RESOLVED**: апгрейд Go ≥1.25 одобрен 2026-11-21 (CI 1.25.x; `server/go.mod` — в задаче P03) |
-| R-GODOT | Target 4.7.2; pin 4.3 | **Решение владельца 2026-11-21: переходим на 4.7.2 сейчас** (T-015, гейт `docs/research/godot-4-7-2-upgrade.md`); пин на `main` меняется после приёмки T-015; замеры на устройстве — гейт перед релизом (R-DEVICE) |
+| R-GODOT | ~~Target 4.7.2; pin 4.3~~ **RESOLVED 2026-11-21: проект на 4.7.2** (T-015) | **Решение владельца 2026-11-21: переходим на 4.7.2 сейчас** (T-015, гейт `docs/research/godot-4-7-2-upgrade.md`); пин на `main` меняется после приёмки T-015; замеры на устройстве — гейт перед релизом (R-DEVICE) |
 | R-AUTH | Квесты на клиенте | EX-P04 обязателен до «готово онлайн» |
 | R-DIA | `DLG-*` в 13/14 | **RESOLVED A** — канон только `DIA.*`; `DLG-*` obsolete |
 | R-POI | Клиентские stub POI ≠ `POI-01-*` | OPEN (C-POI-001) → задача D-002 (контракт маппинга) |
