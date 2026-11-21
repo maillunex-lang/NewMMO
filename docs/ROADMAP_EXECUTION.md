@@ -131,12 +131,21 @@
 **Статус:** [x] **EX-P03 закрыт 2026-11-21** — `3fb9aa6` (T-009) + T-014 (hardening); отложено в EX-P04: GC/TTL, FK игровых таблиц на `content_builds`, замер пикового RSS
 
 ### EX-P04 — Go quest state machine (authoritative)
-**Зависит от:** EX-P03  
+**Зависит от:** EX-P03 ✔  
 **Заменяет** клиентский stub как источник истины (клиент остаётся UI)  
-**OSS research:** [x] T-003 `docs/research/go-websocket.md` (merge): рекомендация coder/websocket v1.8.15 (резерв gorilla v1.5.3), JSON v1 без сжатия — **OK владельца получен 2026-11-21**; контракт D-003 опубликован (`docs/contracts/websocket-protocol.md`); реализация — после EX-P03 (T-009) и команды «делай»  
-**Приёмка:** LOCKED→…→COMPLETED; idempotent accept/turn-in; `reward_claims` unique  
-**Тесты:** CT-010, CT-011, CT-013  
-**Статус:** [ ]
+**OSS research:** [x] T-003 `docs/research/go-websocket.md`; OK владельца на coder/websocket v1.8.15 + JSON получен; govulncheck v1.10.0 (официальный инструмент Go) закреплён  
+**Контракты (директор) [x] 2026-11-21:** `docs/contracts/auth-session.md`, `db-gameplay.md`, `quest-engine.md`, `websocket-protocol.md` rev 1.1 (`world.interact.request`), реестр взаимодействий `content/interactables/reg-01.json` (D-002), `min_level` в экспорте квестов  
+**Задачи:** T-018 (сервер: аккаунты, вход, персонажи, WS-билеты) · T-022 (клиент: экраны входа) → T-019 (WebSocket-сервер) → T-020 (автомат квестов, журнал наград, идемпотентность) → T-021 (рецензия безопасности) → T-023 (клиент подключается к настоящему серверу)  
+**Приёмка:**
+- [ ] аккаунты/вход/билеты по `auth-session.md` §8, без секретов в логах
+- [ ] WS-сессия по D-003 (билет, heartbeat, лимиты, остановка)
+- [ ] LOCKED→AVAILABLE→ACTIVE→READY_TO_TURN_IN→COMPLETED на сервере; accept/interact/turn-in идемпотентны
+- [ ] награда ровно один раз (`reward_claims` UNIQUE + ledger), числа = канон `08` для MQ-01-01…05; сумма ledger = агрегаты
+- [ ] конкурентный turn-in → одна награда; build pinning
+- [ ] клиент проходит MQ-01-01…05 через сервер (T-023)  
+**Известные интеримы (видны владельцу):** R-PROX — без серверной позиции проксимити не проверяется до EX-P08/P09; аккаунты слайса — не продовая идентичность (`auth-session.md` §7)  
+**Тесты:** CT-010, CT-011, CT-013 + интеграционные (CI `server-db`)  
+**Статус:** [~] запущен 2026-11-21: контракты [x]; T-018, T-022 выданы
 
 ### EX-P05 — Go dialogue + choices
 **Зависит от:** EX-P04  

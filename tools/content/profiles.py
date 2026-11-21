@@ -187,6 +187,9 @@ def _quest_blocks(blocks, head_re, kind, file, obj_re, flag_re):
     for q in out:
         body = "\n".join(q["fields"].pop("_body"))
         fl = q["fields"]
+        m = re.search(r"(?:Уровень допуска|Минимальный уровень):\*\*\s*(\d+)", body)
+        if m:
+            fl["min_level"] = int(m.group(1))
         fl["flags"] = sorted(set(re.findall(flag_re, body)))
         fl["npcs"] = sorted(set(re.findall(r"NPC-\d{3}", body)))
         fl["locations"] = sorted(set(re.findall(r"LOC-\d\d-\d{3}", body)))

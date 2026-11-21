@@ -129,6 +129,12 @@ jobs:
           if grep -E -- "--- SKIP" /tmp/content-test.log; then echo "database tests were skipped"; exit 1; fi
           go test ./... -race -count=1
           go mod verify
+      - name: govulncheck (pinned official Go vulnerability scanner)
+        working-directory: server
+        run: |
+          set -euo pipefail
+          GOTOOLCHAIN=auto go install golang.org/x/vuln/cmd/govulncheck@v1.10.0
+          "$(go env GOPATH)/bin/govulncheck" ./...
 
   lane-check:
     runs-on: ubuntu-latest

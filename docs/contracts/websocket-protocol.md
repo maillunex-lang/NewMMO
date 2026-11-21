@@ -1,6 +1,6 @@
 # Contract: WebSocket protocol v1 (D-003)
 
-**Owner:** director · **Version:** `protocol_version = 1` · Owner approvals (2026-11-21): **`coder/websocket v1.8.15`**, **JSON text messages**.
+**Owner:** director · **Version:** `protocol_version = 1`, contract rev **1.1** (EX-P04 additions, all additive) · Owner approvals (2026-11-21): **`coder/websocket v1.8.15`**, **JSON text messages**.
 Basis: canon `14_CONTENT_INTEGRATION.md` §15 (event names and required fields are kept), research `docs/research/go-websocket.md`.
 Implementers (server lane: Go; client lane: Godot `WebSocketPeer`) build against this file; changes only via a director task. Machine-readable envelope: `websocket-envelope.schema.json`.
 
@@ -62,12 +62,13 @@ Canon events keep their names and required fields (§15.2); added fields are mar
 | `session.ready` ➕ | S→C | `session_id, character_id, heartbeat_ms, content_build_id` | |
 | `content.version` | S→C | `content_build_id, compatibility` | canon |
 | `state.snapshot.request` ➕ | C→S | `{}` (opt `scopes[]`) | on revision gap / after reconnect (also sent automatically by the server after auth) |
-| `state.snapshot` ➕ | S→C | `scopes: {quests, inventory, …}`, `revision` | full state; replaces client state |
+| `state.snapshot` ➕ | S→C | `scopes: {character, quests, …}`, `revision` | full state; replaces client state; EX-P04 scope shapes in `quest-engine.md` §5 |
 | `quest.accept.request` | C→S | `quest_id, content_build_id` (+envelope `request_id`) | canon; prerequisites + owner checked |
 | `quest.accept.result` | S→C | `quest_id, state, revision` (+`request_id`) | canon; ➕ `ok:boolean`, on failure `error` is sent as `command.error` |
-| `quest.progress.delta` | S→C | `quest_id, objective_id, count, revision` | canon; server-authoritative only; **never** C→S |
+| `quest.progress.delta` | S→C | `quest_id, objective_id, count, revision` | canon; server-authoritative only; **never** C→S; rev 1.1 additive fields `need`, `ready` (true when the quest became `READY_TO_TURN_IN`) |
+| `world.interact.request` ➕ (rev 1.1) | C→S | `event, target_id`, opt `instance_id` | mutation; server-validated interaction (`quest-engine.md` §3); answered by `quest.progress.delta` or `command.error` |
 | `quest.turnin.request` | C→S | `quest_id` | canon; requires `READY_TO_TURN_IN` |
-| `quest.reward.granted` | S→C | `quest_id, reward_claim_id(str), inventory_revision` | canon; exactly-once via ledger |
+| `quest.reward.granted` | S→C | `quest_id, reward_claim_id(str), inventory_revision` | canon; exactly-once via ledger; rev 1.1 additive fields `xp_total, gold_total, level, reputation, evidence[]` (`quest-engine.md` §4) |
 | `dialogue.open.request` | C→S | `npc_id, dialogue_id` | canon; proximity + predicates |
 | `dialogue.node.state` | S→C | `node_id, options[], revision` | canon; options filtered by the server |
 | `dialogue.choice.request` | C→S | `node_id, option_id` | canon; allowed transition only |

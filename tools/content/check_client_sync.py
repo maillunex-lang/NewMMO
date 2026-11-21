@@ -105,6 +105,34 @@ def run(root, content_dir):
                     flows_ids.add(i)
                     if i not in data["lines"]:
                         add("ERROR", "CS_FLOW_LINE", f"{qid}/{stage}: {i} not in client lines")
+    # interaction registry (D-002) must cover every client objective and point at canon places
+    rpath = os.path.join(root, "content", "interactables", "reg-01.json")
+    if os.path.exists(rpath):
+        with open(rpath, encoding="utf-8") as fh:
+            reg = json.load(fh)["interactables"]
+        canon_objs = {o["id"] for d in res["decls"] if d["kind"] in ("quest_main", "quest_side") for o in d["fields"]["objectives"]}
+        by_obj = {}
+        for e in reg:
+            if e["objective_id"] in by_obj:
+                add("ERROR", "CS_REG_DUP", f"registry: duplicate objective {e['objective_id']}")
+            by_obj[e["objective_id"]] = e
+            for k in ("canon_poi", "canon_loc"):
+                if e[k] not in decl:
+                    add("ERROR", "CS_REG_CANON", f"registry {e['objective_id']}: {k} {e[k]} not in canon")
+            if e["objective_id"] not in canon_objs:
+                add("ERROR", "CS_REG_OBJ", f"registry: objective {e['objective_id']} not in canon")
+            if e["count"] > 1 and (not e["instances"] or len(e["instances"]) != e["count"]):
+                add("ERROR", "CS_REG_INST", f"registry {e['objective_id']}: count {e['count']} needs {e['count']} distinct instances")
+        for qf in qfiles:
+            with open(qf, encoding="utf-8") as fh:
+                data = json.load(fh)
+            for q in data["quests"]:
+                for o in q["objectives"]:
+                    r = by_obj.get(o["id"])
+                    if r is None:
+                        add("ERROR", "CS_REG_MISSING", f"{o['id']}: no registry entry")
+                    elif (r["event"], r["target_id"], r["count"]) != (o["event"], o["target"], o.get("count", 1)):
+                        add("ERROR", "CS_REG_DRIFT", f"{o['id']}: registry {r['event']}/{r['target_id']}/{r['count']} != client {o['event']}/{o['target']}/{o.get('count', 1)}")
     # canonical IDs mentioned in client code/scenes
     for path in glob.glob(os.path.join(root, "client", "**", "*"), recursive=True):
         if not path.endswith((".gd", ".tscn", ".tres", ".cfg")) or os.sep + ".godot" + os.sep in path:

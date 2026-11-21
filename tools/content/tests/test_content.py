@@ -232,6 +232,25 @@ class RepoSync(unittest.TestCase):
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
 
+    def test_registry_drift_detected(self):
+        import check_client_sync
+        tmp = tempfile.mkdtemp(prefix="cs_")
+        try:
+            shutil.copytree(os.path.join(ROOT, "client", "data"), os.path.join(tmp, "client", "data"))
+            shutil.copytree(os.path.join(ROOT, "content"), os.path.join(tmp, "content"))
+            rp = os.path.join(tmp, "content", "interactables", "reg-01.json")
+            with open(rp, encoding="utf-8") as fh:
+                r = json.load(fh)
+            r["interactables"][1]["target_id"] = "POI-OTHER"
+            r["interactables"][9]["instances"] = ["only-one"]
+            r["interactables"][2]["canon_poi"] = "POI-01-099"
+            with open(rp, "w", encoding="utf-8") as fh:
+                json.dump(r, fh, ensure_ascii=False)
+            codes = {x[1] for x in check_client_sync.run(tmp, CANON) if x[0] == "ERROR"}
+            self.assertTrue({"CS_REG_DRIFT", "CS_REG_INST", "CS_REG_CANON"} <= codes)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
     def test_docs_links(self):
         import check_docs_links
         self.assertEqual(check_docs_links.check(ROOT), [])
