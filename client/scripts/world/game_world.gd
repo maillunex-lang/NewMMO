@@ -79,16 +79,21 @@ func navigate_to_quest() -> void:
 	if target_id == "":
 		player.show_hint("Нет активной цели задания")
 		return
+	# Several nodes can share one target id (e.g. 3 clues): go to the nearest one.
 	var found: Node2D = null
+	var best := INF
 	for npc in get_tree().get_nodes_in_group("npcs"):
 		if str(npc.get("npc_id")) == target_id:
-			found = npc as Node2D
-			break
-	if found == null:
-		for poi in get_tree().get_nodes_in_group("interactables"):
-			if str(poi.get("interact_id")) == target_id:
+			var d := player.global_position.distance_to((npc as Node2D).global_position)
+			if d < best:
+				best = d
+				found = npc as Node2D
+	for poi in get_tree().get_nodes_in_group("interactables"):
+		if str(poi.get("interact_id")) == target_id:
+			var d := player.global_position.distance_to((poi as Node2D).global_position)
+			if d < best:
+				best = d
 				found = poi as Node2D
-				break
 	if found == null:
 		player.show_hint("Цель задания не найдена на этой локации")
 		return

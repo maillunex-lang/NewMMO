@@ -79,10 +79,13 @@ func _run() -> void:
 	_assert(hit[0] == 1, "arrival triggered exactly one interaction")
 	_assert(not player.has_path(), "route cleared on arrival")
 
-	# 4) farthest anchor through real collision (props must not trap the player)
+	# 4) farthest static anchor (monsters fight back and body-block, which would make this test flaky)
+	for m in get_nodes_in_group("monsters"):
+		m.set_physics_process(false)
+	# farthest anchor through real collision (props must not trap the player)
 	var best: Dictionary = {}
 	for a in LunexGen.collect_anchors(valley):
-		if a["kind"] != "player_spawn" and (best.is_empty() or (a["pos"] as Vector2).distance_to(player.global_position) > (best["pos"] as Vector2).distance_to(player.global_position)):
+		if a["kind"] in ["npc", "interact"] and (best.is_empty() or (a["pos"] as Vector2).distance_to(player.global_position) > (best["pos"] as Vector2).distance_to(player.global_position)):
 			best = a
 	probe.global_position = best["pos"]
 	hit[0] = 0
