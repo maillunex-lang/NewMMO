@@ -247,19 +247,8 @@ func (s storedEntities) matches(count int, byKind map[string]int) bool {
 
 func readStoredEntities(ctx context.Context, tx pgx.Tx, buildID string) (storedEntities, error) {
 	var state storedEntities
-	err := tx.QueryRow(ctx, `
-		WITH entities AS MATERIALIZED (
-			SELECT entity_id, kind, region_id, source_file, source_line, payload
-			FROM public.content_entities WHERE build_id = $1
-		)
-		SELECT count(*),
-			(SELECT coalesce(jsonb_object_agg(kind, total), '{}'::jsonb)
-				FROM (SELECT kind, count(*) AS total FROM entities GROUP BY kind) AS kinds),
-			coalesce(encode(sha256(convert_to(string_agg(
-				entity_id || E'\x1f' || kind || E'\x1f' || coalesce(region_id, '') || E'\x1f' ||
-				source_file || E'\x1f' || source_line::text || E'\x1f' || payload::text,
-				E'\x1e' ORDER BY kind, entity_id), 'UTF8')), 'hex'), '')
-		FROM entities`, buildID).Scan(&state.count, &state.counts, &state.digest)
+	err := tx.QueryRow(ctx, `SELECT entity_count, counts, ingest_digest
+		FROM public.content_entity_fingerprint($1)`, buildID).Scan(&state.count, &state.counts, &state.digest)
 	return state, err
 }
 

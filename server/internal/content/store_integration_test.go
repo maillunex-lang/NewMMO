@@ -298,6 +298,83 @@ func TestContentRegistryPostgres(t *testing.T) {
 		}
 	})
 
+	t.Run("publisher_direct_transition_checks_integrity", func(t *testing.T) {
+		// Soft local mode may use an admin URL. Execute the writes as the
+		// publisher even in that mode.
+		asPublisher := func(operation func(pgx.Tx) error) error {
+			return pgx.BeginFunc(ctx, store.pool, func(tx pgx.Tx) error {
+				if _, err := tx.Exec(ctx, `SET LOCAL ROLE newmmo_content_publisher`); err != nil {
+					return err
+				}
+				return operation(tx)
+			})
+		}
+		stage := func(label string) string {
+			m := fixtureManifest()
+			m.MinimumClientVersion = "0.0.1+" + token + "." + label
+			path, _ := writeFixture(t, m, []byte(fixtureEntities), []byte("{}\n"))
+			return stageExport(t, ctx, store, path).BuildID
+		}
+		updateStatus := func(tx pgx.Tx, id string) error {
+			_, err := tx.Exec(ctx, `UPDATE public.content_builds SET status = 'published' WHERE build_id = $1`, id)
+			return err
+		}
+		pointTo := func(tx pgx.Tx, id string) error {
+			_, err := tx.Exec(ctx, `UPDATE public.content_active SET build_id = $1,
+				previous_build_id = build_id, switched_by = 'integration' WHERE id = 1`, id)
+			return err
+		}
+
+		tampered := stage("publisher-tampered")
+		if err := asPublisher(func(tx pgx.Tx) error {
+			tag, err := tx.Exec(ctx, `WITH removed AS (
+				DELETE FROM public.content_entities WHERE build_id = $1 AND entity_id = 'CLS-01' RETURNING *
+			)
+			INSERT INTO public.content_entities (build_id, entity_id, kind, region_id, source_file, source_line, payload)
+			SELECT build_id, entity_id, kind, region_id, source_file, source_line, payload || '{"tampered":true}'
+			FROM removed`, tampered)
+			if err == nil && tag.RowsAffected() != 1 {
+				return errors.New("expected one replaced payload")
+			}
+			return err
+		}); err != nil {
+			t.Fatal(err)
+		}
+		assertSQLState(t, asPublisher(func(tx pgx.Tx) error { return updateStatus(tx, tampered) }), "55000")
+		assertSQLState(t, asPublisher(func(tx pgx.Tx) error { return pointTo(tx, tampered) }), "55000")
+		assertActive(t, ctx, store, base)
+
+		short := stage("publisher-short")
+		if err := asPublisher(func(tx pgx.Tx) error {
+			_, err := tx.Exec(ctx, `DELETE FROM public.content_entities WHERE build_id = $1 AND entity_id = 'CLS-01'`, short)
+			return err
+		}); err != nil {
+			t.Fatal(err)
+		}
+		assertSQLState(t, asPublisher(func(tx pgx.Tx) error { return updateStatus(tx, short) }), "55000")
+
+		intact := stage("publisher-intact")
+		assertSQLState(t, asPublisher(func(tx pgx.Tx) error { return pointTo(tx, intact) }), "55000")
+		// A trusted publisher may perform the legal SQL transition. Roll it
+		// back, then exercise normal publication and pointer movement.
+		probeDone := errors.New("rollback successful direct transition")
+		if err := asPublisher(func(tx pgx.Tx) error {
+			if err := updateStatus(tx, intact); err != nil {
+				return err
+			}
+			return probeDone
+		}); !errors.Is(err, probeDone) {
+			t.Fatalf("valid direct transition returned %v", err)
+		}
+		if err := store.Publish(ctx, intact, base); err != nil {
+			t.Fatal(err)
+		}
+		assertActive(t, ctx, store, intact)
+		if err := store.Rollback(ctx, base, intact); err != nil {
+			t.Fatal(err)
+		}
+	})
+
 	t.Run("unsupported_rollback_schema", func(t *testing.T) {
 		unsupported := digest([]byte(token + "unsupported"))
 		if err := pgx.BeginFunc(ctx, owner.pool, func(tx pgx.Tx) error {
