@@ -1,19 +1,20 @@
 # GDD-12 - technical baseline (proposed)
 
 ## Components
-- client/: Godot 4 2D, isometric TileMap/2D terrain, directional animated sprite actors, 2D VFX, editable .tscn UI.
+- client/: Godot 4 **3D** world (Lunex Fantasy 3D, owner decision 2026-11-21): 3D terrain/props/characters, 3D camera rig, GPU particle VFX, quality presets; editable .tscn UI. The previous 2D isometric layer is kept as a fallback until the device gate passes (docs/research/3d-migration.md).
 - server/: Go authoritative simulation, WebSocket sessions, HTTP auth/content APIs; server validates movement, combat, loot and inventory.
 - database/: PostgreSQL schema/migrations.
 - admin/: React + TypeScript content and live-ops dashboard.
 - tools/: offline Blender sprite export, atlas packing, validation.
 - deploy/: separate development Docker Compose stack; do not touch production VPS services.
 
-## Visual content pipeline
-1. Create/obtain a licensed 3D source model (e.g. Meshy), rig and animate.
-2. In Blender render fixed camera, consistent lighting and 8 directional views to transparent frame sequences.
-3. Pack animations to atlas with metadata (direction, frame, duration, pivot, hit origin); optimize compression and memory.
-4. Import into Godot AnimatedSprite2D or custom 2D actor scene; VFX remain separate 2D layers.
-5. Keep Blender sources outside runtime APK; test frame memory on 6 GB Android.
+## Visual content pipeline (Lunex Fantasy 3D)
+1. Generate/obtain licensed 3D models (Meshy text/image-to-3D → refine/PBR → auto-rig → animation library); record prompt, task id, date and plan in `client/assets/LICENSES.md`.
+2. Import GLB into `client/assets/models/**`; budgets (mobile): hero ≤ 12k tris, monster 4–8k, building 3–6k, tree/prop 0.3–2k; textures 512–1024 px, ASTC/ETC2; shared materials.
+3. Character/monster scenes `.tscn` (Skeleton3D + AnimationTree) bound to server entities by a *view adapter* (world_controller → puppet view); gameplay never reads the 3D nodes.
+4. Terrain/props are editable `.tscn` with the same layer contract as before (Ground, Paths, Vegetation, Buildings, Decorations, NPCSpawns, MonsterSpawns, Navigation, Effects); server positions map x→X, y→Z.
+5. VFX: GPUParticles3D with per-preset budgets; sun rays as cheap fake volumes; presets Low/Medium/High/Ultra change render scale, shadow quality/distance, particle budget, MSAA and vegetation density (`client/scripts/gfx/quality.gd`).
+6. Device gate: `tools/android/measure_device.sh` on the owner's phone (iQOO 15R, 12 GB) and a mid-range reference before the 2D fallback is removed.
 
 ## UI editor contract
 Each full-screen panel is a dedicated .tscn with Control root. Shared buttons/cards/headers are instanced scenes; global colors/fonts in Theme resources. Use Containers for responsive flow and explicit anchors for draggable HUD elements. Godot Inspector must be sufficient for normal appearance/layout edits. Runtime custom HUD profiles are a separate user-facing feature. Automated scene checks should catch missing references.

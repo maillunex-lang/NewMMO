@@ -26,7 +26,7 @@ The owner has delegated day-to-day planning, task prioritization, reviews, roadm
 
 ## Engine and architecture invariants
 
-- Client: Godot **2D** isometric 2.5D (prerendered sprites). **No runtime 3D character/world rendering.**
+- Client: Godot **3D** world, visual direction **«Lunex Fantasy 3D»** (owner decision 2026-11-21, supersedes the earlier 2D/prerendered-sprite rule): bright saturated stylised 3D characters, buildings, trees and monsters, soft shadows, sun rays, expressive magic VFX, camera pitch ~40–50° with adjustable zoom, landscape UI, graphics presets Low → Ultra. The server stays 2D-coordinate authoritative (x,y → ground plane). UI remains editable `.tscn` Control scenes. 3D assets come from Meshy (owner has a premium account; API key stored as an environment network secret) or other licensed sources, with provenance in `client/assets/LICENSES.md`. The 2D world layer stays bootable as a fallback until the 3D slice passes the device gate (`docs/research/3d-migration.md`).
 - Project pin: Godot **4.7.2** (`client/project.godot` features `4.7`, GL Compatibility; owner decision 2026-11-21, migration T-015). Rollback to 4.3 only deliberately (`ALLOW_GODOT_43=1`, see `docs/research/T-015-godot-4-7-2-migration.md`). Any further engine upgrade needs an explicit owner decision.
 - Server: authoritative **Go + PostgreSQL + WebSocket**. Never trust the client for combat, currency, inventory, or movement authority.
 - UI: major screens are editable `.tscn` Control scenes + Theme resources; scripts bind data, they do not rebuild full layout in code.

@@ -4,7 +4,7 @@ This file distinguishes approved requirements from provisional design. The full 
 
 ## Core
 - Landscape Android fantasy MMORPG; single connected continent with region channels.
-- Isometric 2.5D world; animated prerendered directional 2D sprites. No real-time 3D character rendering.
+- **Lunex Fantasy 3D** (owner decision 2026-11-21): real-time stylised 3D world and characters (Godot 3D), bright saturated palette, soft shadows, sun rays, expressive magic VFX, camera pitch 40–50° with adjustable zoom, landscape UI, graphics presets Low–Ultra. Replaces the earlier isometric 2.5D / prerendered-sprite direction.
 - COMBAT-002 C: auto-combat with manual override; autopath and auto-loot.
 - WORLD-002 A: one connected fantasy continent.
 - QUEST-001 B: story NPC quests and dialogues; important dialogue pauses automation.
