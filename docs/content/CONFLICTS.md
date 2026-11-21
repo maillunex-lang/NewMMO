@@ -15,9 +15,9 @@ Recorded by EX-P00 audit. **Do not silently pick a side in code.** Owner decides
 
 | Field | Value |
 |-------|--------|
-| Status | **RESOLVED** (policy) / **OPEN** (upgrade work) |
-| Decision | **B** — Target Godot is **4.7.2**. **Do not upgrade the engine yet.** First verify client, plugins, export templates, and Android compatibility in a dedicated check. Current project pin remains **4.3** until that gate passes. |
-| History | Noted at EX-P00 → owner chose target 4.7.2 with deferred upgrade. |
+| Status | **RESOLVED — upgrade in progress** (T-015) |
+| Decision | **Owner 2026-11-21: move to Godot 4.7.2 now («только на нём будет»).** Supersedes option B (deferred upgrade). The upgrade gate is `docs/research/godot-4-7-2-upgrade.md`; the earlier condition «device metrics first» is **waived** (no 6 GB phone) — device metrics stay a mandatory pre-release gate (R-DEVICE). The project pin remains **4.3 on `main` until T-015 is accepted**, then becomes **4.7.2**. |
+| History | Noted at EX-P00 → option B (target 4.7.2, deferred) → owner ordered the upgrade (T-015). |
 
 ## C-SET-001 — `SET-*` ID collision (settlements vs armor sets)
 

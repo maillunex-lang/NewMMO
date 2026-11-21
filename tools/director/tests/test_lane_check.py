@@ -61,6 +61,12 @@ class LaneCheck(unittest.TestCase):
     def test_unknown_lane(self):
         self.assertTrue(lc.check_commit(CFG, ["x"], {"Lane": ["root"]}))
 
+    def test_extra_write_comma_separated(self):
+        tr = lc.parse_trailers("m\n\nLane: client\nTask: T-015\nExtra-Write: tools/android/**, tools/smoke_stage1.sh")
+        self.assertEqual(tr["Extra-Write"], ["tools/android/**", "tools/smoke_stage1.sh"])
+        self.assertEqual(lc.check_commit(CFG, ["tools/android/a.sh", "tools/smoke_stage1.sh", "client/x"], tr), [])
+        self.assertTrue(lc.check_commit(CFG, ["tools/content/lint.py"], tr))
+
     def test_trailer_parse(self):
         tr = lc.parse_trailers("msg\n\nLane: server\nTask: T-002\nExtra-Write: a/**\nCo-Authored-By: x")
         self.assertEqual(tr, {"Lane": ["server"], "Task": ["T-002"], "Extra-Write": ["a/**"]})
