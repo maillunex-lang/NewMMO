@@ -1,0 +1,82 @@
+name: android-debug-apk
+
+# Manual build of a debug-signed APK on Godot 4.3 (current engine pin) for on-device baseline tests.
+# The APK is signed with an EPHEMERAL debug keystore created in the job (no secrets stored);
+# each build has a different signature -> uninstall the previous build before installing a new one.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GODOT_VERSION: "4.3-stable"
+      # SHA-512 from https://github.com/godotengine/godot/releases/download/4.3-stable/SHA512-SUMS.txt
+      GODOT_ZIP_SHA512: fd52bb4ba8acc30ca5accd1c566d470ad7282f891ccc0995dfafabcf92bcf76280ce182bf9d80ebd885f3ed2165d01e1fc3f2928436b15498dfbd98656c2a45a
+      GODOT_TPZ_SHA512: 476366caf0fd45a8f24136cf9cf1dc0bc2b96f7c82d53e5f82200b55aefd07b286d283fd6f1ce29e0de70648c5a51d3b12f96c6d4fafd4e8c4878ecda6406d6a
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: "Android SDK packages (per Godot 4.3 docs): platform-tools, build-tools 34.0.0, platform android-34"
+        run: |
+          set -euo pipefail
+          export ANDROID_HOME="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+          SDKM="$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)"
+          yes | "$SDKM" --licenses >/dev/null || true
+          "$SDKM" "platform-tools" "build-tools;34.0.0" "platforms;android-34"
+      - name: Godot 4.3 + export templates (checksum-verified)
+        run: |
+          set -euo pipefail
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}"
+          curl -fsSL -o godot.zip "$base/Godot_v4.3-stable_linux.x86_64.zip"
+          curl -fsSL -o templates.tpz "$base/Godot_v4.3-stable_export_templates.tpz"
+          echo "$GODOT_ZIP_SHA512  godot.zip" | sha512sum -c -
+          echo "$GODOT_TPZ_SHA512  templates.tpz" | sha512sum -c -
+          mkdir -p "$HOME/bin" "$HOME/.local/share/godot/export_templates/4.3.stable"
+          unzip -q godot.zip -d godot_bin
+          install -m 0755 godot_bin/Godot_v4.3-stable_linux.x86_64 "$HOME/bin/godot"
+          unzip -q templates.tpz -d tpl
+          cp -r tpl/templates/. "$HOME/.local/share/godot/export_templates/4.3.stable/"
+          "$HOME/bin/godot" --version
+      - name: Godot editor settings (SDK/JDK paths) and ephemeral debug keystore
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.config/godot" "$HOME/lunex-android"
+          cat > "$HOME/.config/godot/editor_settings-4.3.tres" <<EOT
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          EOT
+          pw="$(openssl rand -hex 16)"
+          echo "::add-mask::$pw"
+          keytool -genkeypair -v -keystore "$HOME/lunex-android/debug.keystore" -storepass "$pw" -keypass "$pw" \
+            -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 3650 -dname "CN=Android Debug,O=Android,C=US" >/dev/null 2>&1
+          {
+            echo "GODOT=$HOME/bin/godot"
+            echo "GODOT_ANDROID_KEYSTORE_DEBUG_PATH=$HOME/lunex-android/debug.keystore"
+            echo "GODOT_ANDROID_KEYSTORE_DEBUG_USER=androiddebugkey"
+            echo "GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=$pw"
+          } >> "$GITHUB_ENV"
+      - name: Build debug APK (tools/android/build_debug_apk.sh)
+        run: |
+          export ANDROID_HOME JAVA_HOME
+          OUT_DIR="$GITHUB_WORKSPACE/client/build" ./tools/android/build_debug_apk.sh
+      - name: APK checksum
+        run: sha256sum client/build/LunexMMORPG-debug.apk | tee client/build/LunexMMORPG-debug.apk.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LunexMMORPG-debug-apk
+          path: |
+            client/build/LunexMMORPG-debug.apk
+            client/build/LunexMMORPG-debug.apk.sha256
+          retention-days: 14

@@ -227,6 +227,7 @@
 | 2026-11-21 | EX-P02 crossrefs + CT-003…009 | `59f5cbd` | unittest 32 OK; lint 0 ERROR | C-ITEMQ-001 найден (36 ITEM-Q без объявления) |
 | 2026-11-21 | C-ITEMQ-001 A (по решению владельца) | `8a61c6b` | unittest 32 OK | 36 `ITEM-Q-*` в `11` §12.1, имена — рабочие |
 | 2026-11-21 | Полная сверка связей: client-sync + docs-links + CI | см. `git log` | unittest 35 OK; client-sync 0 ERR; docs-links 0 | клиент == канон; 1 doc-путь починен (`AUDIT.md`) |
+| 2026-11-21 | T-012 Android debug APK baseline, Godot 4.3 (Cursor) | см. `git log` | executor: build_debug_apk OK, apksigner OK, smoke OK; device unavailable | B-APK: сборка воспроизводима (скрипты + CI workflow `android-debug`); замеры на телефоне 6 ГБ — за владельцем (`tools/android/measure_device.sh`) |
 | 2026-11-21 | T-011 client WebSocket layer per D-003 (Cursor) | см. `git log` | executor: smoke OK incl. NET_SMOKE_OK; artificial fail → exit 1 | клиентская часть EX-P04/P06 готова на FakeTransport; живого сервера ещё нет |
 | 2026-11-21 | T-008 strict smoke + JSON in export filter (Cursor) | см. `git log` | executor: smoke OK, artificial failures fail, PCK contains data JSON | закрыты пробелы смоука и экспорта из T-002; Android APK/keystore dry-run — не сделан (B-APK) |
 | 2026-11-21 | T-007 quest journal + tr() strings (Cursor) | см. `git log` | smokes (executor) identical; client-sync 0 err; static node-path check | EX-P06: журнал за read-only адаптером (готов к замене серверным источником); `ui.csv` |
