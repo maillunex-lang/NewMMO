@@ -16,8 +16,10 @@ var camera: Camera3D = null
 var sun: DirectionalLight3D = null
 var environment: Environment = null
 var preset := "high"
-var zoom := 19.0
+var zoom := 13.0
 
+var _fade_items: Array = []        # {meshes, pos, alpha} tall props that can hide the hero
+var _fade_t := 0.0
 var _views: Dictionary = {}        # instance_id -> {node, view, kind, last, tag}
 var _scan_t := 0.0
 var _cam_target := Vector3.ZERO
@@ -168,6 +170,8 @@ func _build_props() -> void:
 		var s := rng.randf_range(0.9, 1.25) if is_tree else 1.0
 		model.scale = Vector3(s, s, s)
 		add_child(model)
+		if is_tree or sf.get_file() == "cottage.tscn":
+			_fade_items.append({"meshes": model.find_children("*", "MeshInstance3D", true, false), "pos": model.position, "alpha": 0.0})
 
 func _build_camera() -> void:
 	camera = Camera3D.new()
@@ -284,6 +288,7 @@ func _process(delta: float) -> void:
 		_scan_actors()
 	_sync_actors(delta)
 	_update_camera(delta)
+	_update_fades(delta)
 
 func _sync_actors(delta: float) -> void:
 	var pp := player.global_position if player != null else Vector2.ZERO
@@ -339,6 +344,30 @@ func _update_camera(delta: float) -> void:
 	var off := Vector3(0, sin(pitch), cos(pitch)) * zoom
 	camera.global_position = _cam_target + Vector3(0, 1.0, 0) + off
 	camera.look_at(_cam_target + Vector3(0, 1.0, 0), Vector3.UP)
+
+## Tall props between the camera and the hero fade out so the hero is never hidden by a canopy.
+func _update_fades(delta: float) -> void:
+	if camera == null or player == null:
+		return
+	var hero := _to3(player.global_position)
+	var cam_dir := Vector3(camera.global_position.x - hero.x, 0, camera.global_position.z - hero.z)
+	if cam_dir.length() < 0.01:
+		return
+	cam_dir = cam_dir.normalized()
+	for it in _fade_items:
+		var rel: Vector3 = (it["pos"] as Vector3) - hero
+		rel.y = 0
+		var along := rel.dot(cam_dir)
+		var side := (rel - cam_dir * along).length()
+		var want := 0.0
+		if along > -1.0 and along < 14.0 and side < 3.6:
+			want = 0.82
+		var a: float = lerpf(float(it["alpha"]), want, 1.0 - exp(-9.0 * delta))
+		if absf(a - float(it["alpha"])) > 0.004:
+			it["alpha"] = a
+			for m in it["meshes"]:
+				if is_instance_valid(m):
+					(m as GeometryInstance3D).transparency = a
 
 # ---------------------------------------------------------------- input / API
 

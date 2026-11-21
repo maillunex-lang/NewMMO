@@ -1,0 +1,16 @@
+{
+  "style": "stylized fantasy game asset, vibrant saturated colors, hand-painted texture, soft rounded chunky shapes, clean silhouette, low poly, no base plate",
+  "assets": {
+    "tree_oak":   {"prompt": "fantasy oak tree with thick trunk and lush bright green round canopy", "poly": 3000, "tex": "bright saturated green leaves, warm brown bark"},
+    "tree_pine":  {"prompt": "fantasy pine tree, layered fluffy teal-green boughs, slim trunk", "poly": 3000, "tex": "rich emerald and teal needles, brown trunk"},
+    "rock":       {"prompt": "mossy boulder cluster, rounded chunky rocks", "poly": 1200, "tex": "cool grey stone with bright green moss patches"},
+    "cottage":    {"prompt": "cozy fantasy village cottage with red tiled roof, timber frame, chimney, wooden door", "poly": 6000, "tex": "cream plaster walls, saturated red roof, warm wood"},
+    "fence":      {"prompt": "short rustic wooden fence section with three posts", "poly": 800, "tex": "warm honey-brown wood"},
+    "lantern":    {"prompt": "iron lamp post with glowing warm yellow lantern", "poly": 1000, "tex": "dark iron, glowing golden lantern"},
+    "crystal":    {"prompt": "cluster of glowing blue magic crystals", "poly": 800, "tex": "luminous cyan and blue crystal, glowing"},
+    "hero_cls-03": {"prompt": "fantasy mage hero, full body, standing in A-pose, purple and blue robe with golden trim, pointed hat, holding a glowing staff, friendly proportions", "poly": 12000, "tex": "vivid violet robe, gold trim, blue glowing staff gem", "rig": true},
+    "enemy_enm-01-001": {"prompt": "fantasy road bandit, full body, standing in A-pose, hooded leather outfit, orange scarf, dagger", "poly": 9000, "tex": "brown leather, orange scarf", "rig": true},
+    "enemy_enm-01-004": {"prompt": "cute but hostile green slime monster blob with big eyes", "poly": 2500, "tex": "bright jelly green, glossy"},
+    "enemy_enm-01-003": {"prompt": "stylized grey wolf monster, four legs, snarling, glowing eyes", "poly": 7000, "tex": "silver grey fur, glowing pale blue eyes", "rig": false}
+  }
+}

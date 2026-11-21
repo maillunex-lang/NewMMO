@@ -55,14 +55,51 @@ static func _sphere(r: float, seg := 12) -> SphereMesh:
 	s.rings = seg / 2
 	return s
 
-## Try a real GLB first. Returns null when absent.
-static func load_glb(name: String) -> Node3D:
+## Target heights in metres for imported models (Meshy output has arbitrary scale/pivot).
+const HEIGHTS := {
+	"tree_oak": 5.2, "tree_pine": 6.0, "rock": 1.3, "cottage": 5.2, "fence": 1.2, "lantern": 3.0, "crystal": 2.2,
+	"npc_generic": 1.85, "hero_cls-03": 1.9, "enemy_enm-01-001": 1.85, "enemy_enm-01-003": 1.1, "enemy_enm-01-004": 1.2,
+}
+
+static func _aabb_of(node: Node3D) -> AABB:
+	var acc := [AABB(), false]
+	_aabb_walk(node, Transform3D.IDENTITY, acc)
+	return acc[0]
+
+## Works on nodes that are not in the tree yet (global_transform would be invalid there).
+static func _aabb_walk(n: Node, xf: Transform3D, acc: Array) -> void:
+	var cur := xf
+	if n is Node3D:
+		cur = xf * (n as Node3D).transform
+	if n is MeshInstance3D:
+		var a: AABB = cur * (n as MeshInstance3D).get_aabb()
+		acc[0] = a if not acc[1] else (acc[0] as AABB).merge(a)
+		acc[1] = true
+	for c in n.get_children():
+		_aabb_walk(c, cur, acc)
+
+## Try a real GLB first. Returns null when absent. The model is scaled to `height` metres, centred on x/z and
+## standing on y=0, inside a node named "Body" (animated bob / future skeleton animation target).
+static func load_glb(name: String, height := 0.0) -> Node3D:
 	var path := MODEL_DIR + name + ".glb"
-	if ResourceLoader.exists(path):
-		var ps := load(path) as PackedScene
-		if ps != null:
-			return ps.instantiate() as Node3D
-	return null
+	if not ResourceLoader.exists(path):
+		return null
+	var ps := load(path) as PackedScene
+	if ps == null:
+		return null
+	var inst := ps.instantiate() as Node3D
+	var h: float = height if height > 0.0 else float(HEIGHTS.get(name, 1.8 if name.begins_with("hero_") or name.begins_with("enemy_") else 2.0))
+	var holder := Node3D.new()
+	var body := Node3D.new()
+	body.name = "Body"
+	holder.add_child(body)
+	body.add_child(inst)
+	var box := _aabb_of(inst)  # inst itself has identity transform here
+	if box.size.y > 0.001:
+		var k := h / box.size.y
+		inst.scale = Vector3.ONE * k
+		inst.position = Vector3(-box.get_center().x * k, -box.position.y * k, -box.get_center().z * k)
+	return holder
 
 static func prop(scene_file: String) -> Node3D:
 	var base := scene_file.get_file()
