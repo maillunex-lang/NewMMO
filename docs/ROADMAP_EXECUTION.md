@@ -143,16 +143,23 @@
 - [x] награда ровно один раз (`reward_claims` UNIQUE + ledger), числа = канон `08` для MQ-01-01 (CI); MQ-01-02…05 покрыты каталогом, happy-path тест на MQ-01-01
 - [x] конкурентный turn-in → одна награда; region gate `REGION_CLOSED` — T-020 CI
 - [x] build pinning наград/целей (T-021 S-01 fix: `QuestForBuild`)
-- [ ] клиент проходит MQ-01-01…05 через сервер (T-023)  
+- [x] клиент проходит MQ-01-01…05 через сервер (T-023) — FakeTransport smoke `de26d83`; live path gated by `NEWMMO_ONLINE=1`  
 **Известные интеримы (видны владельцу):** R-PROX — без серверной позиции проксимити не проверяется до EX-P08/P09; аккаунты слайса — не продовая идентичность (`auth-session.md` §7)  
 **Тесты:** CT-010, CT-011, CT-013 + интеграционные (CI `server-db`)  
-**Статус:** [~] 2026-11-21: контракты [x]; T-018…T-022 [x]; T-021 [x]; T-023 next
+**Статус:** [x] **EX-P04 закрыт 2026-11-21** — T-018…T-023; live device E2E optional
 
 ### EX-P05 — Go dialogue + choices
-**Зависит от:** EX-P04  
-**Приёмка:** серверная фильтрация опций; proximity/predicates; ветки из 10_DIALOGUES  
-**Тесты:** CT-008, CT-014  
-**Статус:** [ ]
+**Зависит от:** EX-P04 ✔  
+**Контракт:** `docs/contracts/dialogue-engine.md` (D-005)  
+**Задачи:** T-024 (сервер: open/choice, filter, persist, WS)  
+**Приёмка:**
+- [ ] серверная фильтрация опций (ACCEPT/TURN_IN/ASK/LATER/CONTINUE)
+- [ ] `character_dialogue_choices` append-only; идемпотентный choice
+- [ ] illegal option → `PREREQUISITE_NOT_MET`; wrong contact → reject
+- [~] proximity — **R-PROX deferred** (same as quests; EX-P08/P09)
+- [ ] Stage-1 flows MQ-01-01…05 from `content/dialogues/flows_reg01.json` + `dialogue_line` entities  
+**Тесты:** CT-008, CT-014 + unit + CI `server-db`  
+**Статус:** [~] T-024 in review on `cursor/ex-p05-dialogue-engine-6dd6`
 
 ### EX-P06 — Godot quest/dialogue UI polish (editable .tscn)
 **Зависит от:** EX-P05 (или параллельно тонкий UI после P04 с mock)  
@@ -287,8 +294,8 @@
 ## Актуальный handoff для Cursor-директора (2026-11-21)
 
 - **Завершено:** EX-P00–P03, T-018 REST auth, T-019 WebSocket (PR #2), T-020 quest engine (PR #3, `4461aa7`), T-022 login UI, T-015 Godot 4.7.2; EX-CONTENT-01 pilot интегрирован.
-- **Текущий этап:** EX-P04 [~]. **Сейчас:** T-023 PR (Fake* ONLINE_SMOKE_OK; live E2E when NEWMMO_ONLINE=1 + server). **Далее:** EX-P05+.
+- **Текущий этап:** EX-P05 [~]. **Сейчас:** T-024 dialogue engine PR. **Далее:** EX-P06 UI polish → EX-P07 vertical slice.
 - **Не завершено:** live E2E against running Go server (manual/env), R-PROX (S-02), Android device measurements, EX-P05–P13. Не отмечать их `[x]` по наличию stub или документации.
 - **Рабочие масштабы локаций:** деревня 200×200 м, город 500×500 м, открытая зона 1000×1000 м, большая дикая 1500×1500 м, подземелье 150–400 м маршрута; источник `docs/content/03_LOCATIONS.md`, предварительно до Android-профилирования.
 - **Автономия Cursor:** может корректировать план, выдавать и принимать задачи, обновлять статусы и сливать прошедшие проверки изменения. Без согласия владельца не менять канон, игровой баланс/монетизацию, архитектурные пины, не добавлять зависимости, не развёртывать VPS и не удалять данные.
-- **Первое действие:** реализовать T-023 (login→ticket→WS→snapshot→accept/interact/turn-in); никакого ложного `DONE`.
+- **Первое действие:** принять T-024 (dialogue open/choice + filter + persist); затем EX-P06.

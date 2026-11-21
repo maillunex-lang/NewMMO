@@ -1,0 +1,86 @@
+{
+ "version": 1,
+ "region": "REG-01",
+ "_comment": "EX-P05 Stage-1 dialogue flows (D-005). Mirrors client flows for MQ-01-01…05; text comes from content_entities dialogue_line.",
+ "flows": {
+  "MQ-01-01": {
+   "start": [
+    "DIA.MQ-01-01.START.01",
+    "DIA.MQ-01-01.START.02",
+    "DIA.MQ-01-01.START.03"
+   ],
+   "progress": [
+    "DIA.MQ-01-01.PROGRESS.01"
+   ],
+   "turnin": [
+    "DIA.MQ-01-01.TURNIN.01",
+    "DIA.MQ-01-01.DONE.01"
+   ]
+  },
+  "MQ-01-02": {
+   "start": [
+    "DIA.MQ-01-02.START.01",
+    "DIA.MQ-01-02.START.02",
+    "DIA.MQ-01-02.START.03"
+   ],
+   "progress": [
+    "DIA.MQ-01-02.PROGRESS.01"
+   ],
+   "turnin": [
+    "DIA.MQ-01-02.TURNIN.01",
+    "DIA.MQ-01-02.DONE.01"
+   ]
+  },
+  "MQ-01-03": {
+   "start": [
+    "DIA.MQ-01-03.START.01",
+    "DIA.MQ-01-03.START.02",
+    "DIA.MQ-01-03.START.03"
+   ],
+   "progress": [
+    "DIA.MQ-01-03.PROGRESS.01"
+   ],
+   "turnin": [
+    "DIA.MQ-01-03.TURNIN.01",
+    "DIA.MQ-01-03.DONE.01"
+   ]
+  },
+  "MQ-01-04": {
+   "start": [
+    "DIA.MQ-01-04.START.01",
+    "DIA.MQ-01-04.START.02",
+    "DIA.MQ-01-04.START.03"
+   ],
+   "progress": [
+    "DIA.MQ-01-04.PROGRESS.01"
+   ],
+   "turnin": [
+    "DIA.MQ-01-04.TURNIN.01",
+    "DIA.MQ-01-04.DONE.01"
+   ]
+  },
+  "MQ-01-05": {
+   "start": [
+    "DIA.MQ-01-05.START.01",
+    "DIA.MQ-01-05.START.02",
+    "DIA.MQ-01-05.START.03",
+    "DIA.MQ-01-05.START.04"
+   ],
+   "progress": {
+    "0": [
+     "DIA.MQ-01-05.PROGRESS.01"
+    ],
+    "1": [
+     "DIA.MQ-01-05.PROGRESS.02"
+    ],
+    "2": [
+     "DIA.MQ-01-05.PROGRESS.03"
+    ]
+   },
+   "turnin": [
+    "DIA.MQ-01-05.TURNIN.01",
+    "DIA.MQ-01-05.DONE.01"
+   ]
+  }
+ }
+}
