@@ -25,10 +25,10 @@ func NewHandler(zones []*Zone, loader PlayerLoader) *Handler {
 	return h
 }
 
-// Handle serves world.join.request, world.move.request, world.stop.request and world.leave.request.
+// Handle serves world.join/move/stop/cast/leave requests.
 // The returned type/payload (if any) is sent as the reply; deltas flow later through push.
-func (h *Handler) Handle(ctx context.Context, accountID string, characterID int64, typ string, payload map[string]any,
-	owner any, push Pusher) (string, any, error) {
+func (h *Handler) Handle(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any,
+	owner any, push Pusher, pushCritical CriticalPusher) (string, any, error) {
 	ref := strconv.FormatInt(characterID, 10)
 	switch typ {
 	case "world.join.request":
@@ -47,7 +47,8 @@ func (h *Handler) Handle(ctx context.Context, accountID string, characterID int6
 		if prev, ok := h.byChar.Load(ref); ok && prev.(*Zone) != z {
 			prev.(*Zone).Leave(ref, owner)
 		}
-		snap, err := z.Join(ref, owner, info, push)
+		info.AccountID, info.Character = accountID, characterID
+		snap, err := z.Join(ref, owner, info, push, pushCritical)
 		if err != nil {
 			return "", nil, err
 		}
@@ -63,6 +64,32 @@ func (h *Handler) Handle(ctx context.Context, accountID string, characterID int6
 			return "", nil, err
 		}
 		return "", nil, z.Move(ref, owner, seq, Vec{x, y})
+	case "world.cast.request":
+		skill, ok := payload["skill_id"].(string)
+		var target EntityID
+		switch len(payload) {
+		case 1:
+		case 2:
+			tf, okt := payload["target_id"].(float64)
+			if !okt || tf < 1 || tf > 4294967295 || tf != math.Trunc(tf) {
+				return "", nil, ErrBadRequest
+			}
+			target = EntityID(tf)
+		default:
+			return "", nil, ErrBadRequest
+		}
+		if !ok || skill == "" || requestID == "" {
+			return "", nil, ErrBadRequest
+		}
+		z, err := h.joined(ref)
+		if err != nil {
+			return "", nil, err
+		}
+		out, err := z.Cast(ref, owner, requestID, skill, target)
+		if err != nil {
+			return "", nil, err
+		}
+		return "world.cast.result", out, nil
 	case "world.stop.request":
 		seq, ok := seqArg(payload["seq"])
 		if !ok || len(payload) != 1 {

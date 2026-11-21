@@ -10,12 +10,18 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
+	"strconv"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/maillunex-lang/NewMMO/server/internal/damage"
 )
+
+var durationRe = regexp.MustCompile(`(\d+)\s*с(?:\s|[,;.]|$)`)
+
+var gainRe = regexp.MustCompile(`\+(\d+)\s+(?:стойкости|ярости|фокуса|света)`)
 
 type Ability struct {
 	ID         string
@@ -52,6 +58,8 @@ type Skill struct {
 	Coef       float64
 	Scale      string
 	Rule       string
+	Gain       int // resource gained on cast, parsed from the rule text ("+10 стойкости")
+	DurationS  int // first "N с" in the rule text (shield/buff duration), 0 if absent
 }
 
 type Catalog struct {
@@ -190,6 +198,12 @@ func (b *builder) add(r row) error {
 			CooldownS: p.CD, EffectKind: p.Kind, Scale: p.Scale, Rule: p.Rule}
 		if p.Coef != nil {
 			s.Coef = *p.Coef
+		}
+		if m := durationRe.FindStringSubmatch(p.Rule); m != nil {
+			s.DurationS, _ = strconv.Atoi(m[1])
+		}
+		if m := gainRe.FindStringSubmatch(p.Rule); m != nil {
+			s.Gain, _ = strconv.Atoi(m[1])
 		}
 		c.Skills[p.ClassID] = append(c.Skills[p.ClassID], s)
 	}

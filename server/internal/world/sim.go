@@ -6,7 +6,10 @@ package world
 
 import (
 	"math"
+	"math/rand/v2"
 	"sort"
+
+	"github.com/maillunex-lang/NewMMO/server/internal/damage"
 )
 
 type Vec struct{ X, Y float64 }
@@ -48,9 +51,25 @@ type Entity struct {
 	Moving  bool
 	HP      int
 	MaxHP   int
+	Dead    bool
 	target  *Vec
 	lastSeq uint64
 	changed uint64 // tick of the last visible change
+
+	// combat (combat.go)
+	classID     string
+	pstats      damage.Stats         // player: derived stats at join
+	estats      damage.EnemyStatsOut // enemy: canon stats
+	home        Vec                  // enemy spawn position
+	resource    float64              // player resource 0..100
+	cooldowns   map[string]uint64    // skill id -> tick at which it is ready
+	gcdUntil    uint64
+	combatUntil uint64 // in combat while tick < combatUntil
+	shield      int
+	shieldUntil uint64
+	contrib     map[string]int // enemy: damage by character ref
+	respawnAt   uint64
+	selfDirty   bool
 }
 
 // View is the wire shape of an entity.
@@ -66,11 +85,12 @@ type View struct {
 	Moving bool     `json:"moving"`
 	HP     int      `json:"hp"`
 	MaxHP  int      `json:"max_hp"`
+	Dead   bool     `json:"dead,omitempty"`
 }
 
 func (e *Entity) view() View {
 	return View{ID: e.ID, Kind: e.Kind, Ref: e.Ref, Name: e.Name, Level: e.Level,
-		X: round2(e.Pos.X), Y: round2(e.Pos.Y), Facing: e.Facing, Moving: e.Moving, HP: e.HP, MaxHP: e.MaxHP}
+		X: round2(e.Pos.X), Y: round2(e.Pos.Y), Facing: e.Facing, Moving: e.Moving, HP: e.HP, MaxHP: e.MaxHP, Dead: e.Dead}
 }
 
 func round2(v float64) float64 { return math.Round(v*100) / 100 }
@@ -82,10 +102,15 @@ type Sim struct {
 	entities map[EntityID]*Entity
 	byRef    map[string]EntityID                // players by character id
 	views    map[EntityID]map[EntityID]struct{} // per player: entities it currently knows
+	combat   *Combat
+	rng      *rand.Rand
+	events   []Event // combat events produced since the last DrainEvents
+	kills    []Kill
 }
 
 func New(cfg Config) *Sim {
-	return &Sim{cfg: cfg, next: 1, entities: map[EntityID]*Entity{}, byRef: map[string]EntityID{}, views: map[EntityID]map[EntityID]struct{}{}}
+	return &Sim{cfg: cfg, next: 1, entities: map[EntityID]*Entity{}, byRef: map[string]EntityID{}, views: map[EntityID]map[EntityID]struct{}{},
+		rng: rand.New(rand.NewPCG(1, 2))}
 }
 
 func (s *Sim) Tick() uint64   { return s.tick }
@@ -95,8 +120,9 @@ func (s *Sim) alloc() EntityID { id := s.next; s.next++; return id }
 
 func (s *Sim) AddEnemy(spawnID, enemyID, name string, level, maxHP int, pos Vec) EntityID {
 	id := s.alloc()
+	p := s.cfg.Bounds.Clamp(pos)
 	s.entities[id] = &Entity{ID: id, Kind: KindEnemy, Ref: enemyID, Spawn: spawnID, Name: name, Level: level,
-		Pos: s.cfg.Bounds.Clamp(pos), Facing: 2, HP: maxHP, MaxHP: maxHP, changed: s.tick}
+		Pos: p, home: p, Facing: 2, HP: maxHP, MaxHP: maxHP, changed: s.tick, contrib: map[string]int{}}
 	return id
 }
 
@@ -194,6 +220,7 @@ func (s *Sim) Step() {
 		}
 		e.changed = s.tick
 	}
+	s.stepCombat()
 }
 
 // facing maps a direction to the game's 8 rows (angle = atan2(y, x), screen y down: 0=E, 2=S, 4=W, 6=N).
@@ -257,6 +284,7 @@ type Delta struct {
 	AckSeq uint64     `json:"ack_seq"`
 	Upsert []View     `json:"upsert,omitempty"`
 	Remove []EntityID `json:"remove,omitempty"`
+	Self   *SelfState `json:"self,omitempty"`
 }
 
 // DeltaFor returns what changed for this viewer in the current tick: entities that entered its interest set
@@ -288,5 +316,10 @@ func (s *Sim) DeltaFor(id EntityID) (Delta, bool) {
 	sort.Slice(d.Remove, func(i, j int) bool { return d.Remove[i] < d.Remove[j] })
 	s.views[id] = now
 	d.Tick, d.AckSeq = s.tick, v.lastSeq
-	return d, len(d.Upsert) > 0 || len(d.Remove) > 0 || v.changed >= s.tick
+	if v.Kind == KindPlayer && v.selfDirty {
+		st := s.selfState(v)
+		d.Self = &st
+		v.selfDirty = false
+	}
+	return d, len(d.Upsert) > 0 || len(d.Remove) > 0 || d.Self != nil || v.changed >= s.tick
 }

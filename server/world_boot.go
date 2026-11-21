@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/maillunex-lang/NewMMO/server/internal/auth"
 	"github.com/maillunex-lang/NewMMO/server/internal/combatdata"
+	"github.com/maillunex-lang/NewMMO/server/internal/loot"
 	"github.com/maillunex-lang/NewMMO/server/internal/quest"
 	"github.com/maillunex-lang/NewMMO/server/internal/world"
 	"github.com/maillunex-lang/NewMMO/server/internal/ws"
@@ -34,7 +36,27 @@ func attachWorld(ctx context.Context, store *auth.Store, socket *ws.Server, logg
 	if err != nil {
 		return nil, err
 	}
+	lootCat := loot.NewCatalog()
+	if err := lootCat.LoadFromDB(ctx, pool, buildID); err != nil {
+		return nil, fmt.Errorf("load loot tables: %w", err)
+	}
+	lootEngine := loot.NewEngine(pool, lootCat, loot.LoadConfig(os.Getenv))
 	runCtx, cancel := context.WithCancel(ctx)
+	// Server-observed kills grant loot (closes R-KILL for the open world): one personal roll per contributor.
+	killHook := func(k world.KillEvent) {
+		for _, c := range k.Contributors {
+			gctx, stop := context.WithTimeout(runCtx, 10*time.Second)
+			res, err := lootEngine.GrantKill(gctx, c.AccountID, c.Character, k.EnemyID)
+			stop()
+			if err != nil {
+				logger.Warn("kill loot not granted", "character_id", c.Character, "enemy_id", k.EnemyID, "error", err.Error())
+				continue
+			}
+			if c.Push != nil {
+				c.Push("combat.loot.result", res.Revision, res)
+			}
+		}
+	}
 	var zones []*world.Zone
 	for _, d := range defs {
 		z, err := world.NewZone(d, cat)
@@ -42,6 +64,7 @@ func attachWorld(ctx context.Context, store *auth.Store, socket *ws.Server, logg
 			cancel()
 			return nil, err
 		}
+		z.SetKillHook(killHook)
 		zones = append(zones, z)
 		go z.Run(runCtx)
 	}

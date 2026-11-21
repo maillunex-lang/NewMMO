@@ -2,6 +2,7 @@ package loot
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -77,6 +78,24 @@ func (e *Engine) Claim(ctx context.Context, accountID string, characterID int64,
 	if requestID == "" || enemyID == "" || len(payload) != 1 {
 		return Result{}, ErrBadRequest
 	}
+	return e.claim(ctx, accountID, characterID, typ, requestID, enemyID, payload, false)
+}
+
+// GrantKill rolls the drop for a kill the SERVER itself observed (world simulation, T-038c): no kill report
+// from the client, so no per-minute claim cap; every other rule (category, region gate, ledger, idempotency) holds.
+func (e *Engine) GrantKill(ctx context.Context, accountID string, characterID int64, enemyID string) (Result, error) {
+	var b [16]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return Result{}, ErrInternal
+	}
+	b[6] = b[6]&0x0f | 0x40
+	b[8] = b[8]&0x3f | 0x80
+	h := hex.EncodeToString(b[:])
+	reqID := h[:8] + "-" + h[8:12] + "-" + h[12:16] + "-" + h[16:20] + "-" + h[20:]
+	return e.claim(ctx, accountID, characterID, "world.kill", reqID, enemyID, map[string]any{"enemy_id": enemyID}, true)
+}
+
+func (e *Engine) claim(ctx context.Context, accountID string, characterID int64, typ, requestID, enemyID string, payload map[string]any, trusted bool) (Result, error) {
 	reqUUID, err := parseUUID(requestID)
 	if err != nil {
 		return Result{}, ErrBadRequest
@@ -135,7 +154,7 @@ func (e *Engine) Claim(ctx context.Context, accountID string, characterID int64,
 		WHERE character_id=$1 AND created_at > now() - interval '1 minute'`, characterID).Scan(&recent); err != nil {
 		return Result{}, ErrInternal
 	}
-	if recent >= e.cfg.MaxPerMinute {
+	if !trusted && recent >= e.cfg.MaxPerMinute {
 		return Result{}, ErrRateLimited
 	}
 

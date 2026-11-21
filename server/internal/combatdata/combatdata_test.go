@@ -93,3 +93,23 @@ func TestRealExport(t *testing.T) {
 		t.Fatalf("elite L8 HP %d must exceed normal L8 HP %d", elite.MaxHP, normal.MaxHP)
 	}
 }
+
+func TestResourceGainParsedFromRule(t *testing.T) {
+	dir := os.Getenv("NEWMMO_CONTENT_EXPORT_DIR")
+	if dir == "" {
+		t.Skip("NEWMMO_CONTENT_EXPORT_DIR not set")
+	}
+	c, err := LoadExport(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]int{"CLS-01": 10, "CLS-02": 12, "CLS-04": 10, "CLS-05": 8}
+	for class, gain := range want {
+		if got := c.Skills[class][0].Gain; got != gain {
+			t.Errorf("%s SK01 gain = %d, want %d", class, got, gain)
+		}
+	}
+	if c.Skills["CLS-03"][0].Gain != 0 {
+		t.Error("mage SK01 has no gain")
+	}
+}

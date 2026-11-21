@@ -15,5 +15,6 @@ Director-owned. Implementation lanes build against these files; they change only
 | `loot-engine.md` | combat loot: server-rolled drops, kill-report interim (R-KILL), ledger, messages | **v1 published** (T-034) |
 | `dungeon-engine.md` | dungeon instance state machine, puzzle, checkpoints, personal reward (solo slice DNG-01-001) | **v1 published** (T-036) |
 | `world-sim.md` | server world simulation: zones, server-owned movement, interest-filtered snapshot/delta (T-038b) | **v1 published** (T-038b) |
+| `combat-engine.md` | server combat slice 1: skill casting, damage/heal/shield, resources, cooldowns, kills → personal loot | **v1 published** (T-038c1) |
 
 See `docs/director/DIRECTOR.md` §7.

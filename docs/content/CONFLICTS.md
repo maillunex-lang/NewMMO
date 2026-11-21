@@ -56,6 +56,15 @@ Recorded by EX-P00 audit. **Do not silently pick a side in code.** Owner decides
 | Interim | Server config `NEWMMO_LOOT_REGION_COEF_JSON` (`{"REG-01":1.0}`), **default 1.0 for every region** (neutral reading = canon gold range as printed). Equipment roll skipped until equip UI/instances exist. No balance change made. |
 | Owner decision needed | Region coefficients for REG-01…06 (balance). Until then gold is the printed canon range. |
 
+## C-RANGE-001 — skill ranges and unit scale are not defined
+
+| Field | Value |
+|-------|--------|
+| Status | **OPEN, interim applied** (2026-11-21, T-038c1) |
+| Problem | `05_CLASSES.md` skill tables give target type, cost, cooldown and coefficient but **no range**; `06` uses metres (aggro 7–9 m, leash 24 m) while the client works in pixels. |
+| Interim | `world.Combat`: 1 m = 32 world units; single-target range 2.5 m for CLS-01/02 and 9 m for CLS-03/04/05, +1 m latency slack; enemy respawn 30 s. Tunables only; no balance claim. |
+| Owner decision needed | Real per-skill ranges (or per-class), unit scale, respawn timers per spawn. |
+
 ## Other open notes
 
 | ID | Note |
