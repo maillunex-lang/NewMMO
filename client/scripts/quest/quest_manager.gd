@@ -1,6 +1,6 @@
 extends Node
-## Local Stage-1 quest runtime for MQ-01-01…05.
-## Mirrors canon event names; NOT authoritative (Stage 2 will move this to Go/Postgres).
+## Stage-1 quest runtime for MQ-01-01…05.
+## Offline: local stub (mq01_smoke). Online (T-023): server-authoritative via NetClient.
 
 signal quest_updated(quest_id: String, status: String, detail: String)
 signal quest_completed(quest_id: String, reward_text: String)
@@ -8,6 +8,7 @@ signal dialogue_flow_requested(npc_id: String, flow_ids: PackedStringArray, mode
 
 const QUEST_PATH := "res://data/quests/mq_01_01_to_05.json"
 const DIALOGUE_PATH := "res://data/dialogues/mq_01_01_to_05.json"
+const INTERACTABLES_PATH := "res://config/interactables_reg_01.json"
 
 var _quests: Array = []
 var _dialogues: Dictionary = {}
@@ -19,12 +20,38 @@ var _progress: Dictionary = {}  # objective_id -> count
 var _xp := 0
 var _rep_fac08 := 0
 var _evidence: Array = []
+var _online := false
+var _net: RefCounted = null
+var _content_build_id := ""
+var _instances_by_target: Dictionary = {}  # target_id -> PackedStringArray of instance ids
+var _used_instances: Dictionary = {}  # objective_id -> {instance_id: true}
 
 func _ready() -> void:
 	add_to_group("quest_manager")
 	_load_data()
+	_load_interactables()
 	_bootstrap_first_available()
 	_emit()
+
+## Attach NetClient; mutations go to the server. Keep offline dialogue presentation.
+func enable_online(net_client: RefCounted, content_build_id: String = "") -> void:
+	_online = true
+	_net = net_client
+	_content_build_id = content_build_id
+	if _net != null:
+		if not _net.quest_accept_result.is_connected(_on_net_accept):
+			_net.quest_accept_result.connect(_on_net_accept)
+		if not _net.quest_progress_delta.is_connected(_on_net_progress):
+			_net.quest_progress_delta.connect(_on_net_progress)
+		if not _net.quest_reward_granted.is_connected(_on_net_reward):
+			_net.quest_reward_granted.connect(_on_net_reward)
+		if not _net.state_snapshot.is_connected(_on_net_snapshot):
+			_net.state_snapshot.connect(_on_net_snapshot)
+		if _content_build_id == "" and str(_net.content_build_id) != "":
+			_content_build_id = str(_net.content_build_id)
+
+func is_online() -> bool:
+	return _online
 
 func _load_data() -> void:
 	var qf := FileAccess.open(QUEST_PATH, FileAccess.READ)
@@ -37,6 +64,49 @@ func _load_data() -> void:
 	_quests = qdata.get("quests", [])
 	_dialogues = ddata.get("lines", {})
 	_flows = ddata.get("flows", {})
+
+func _load_interactables() -> void:
+	_instances_by_target.clear()
+	var path := INTERACTABLES_PATH
+	if not FileAccess.file_exists(path):
+		path = "res://data/interactables_reg_01.json"
+	if not FileAccess.file_exists(path):
+		return
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return
+	var parsed = JSON.parse_string(f.get_as_text())
+	f.close()
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return
+	for row in parsed.get("interactables", []):
+		if typeof(row) != TYPE_DICTIONARY:
+			continue
+		var target := str(row.get("target_id", ""))
+		var count := int(row.get("count", 1))
+		var instances = row.get("instances", null)
+		if count > 1 and typeof(instances) == TYPE_ARRAY:
+			var packed := PackedStringArray()
+			for inst in instances:
+				packed.append(str(inst))
+			_instances_by_target[target] = packed
+
+func _next_instance_for(target_id: String) -> String:
+	if not _instances_by_target.has(target_id):
+		return ""
+	var list: PackedStringArray = _instances_by_target[target_id]
+	var used: Dictionary = _used_instances.get(target_id, {})
+	for inst in list:
+		if not used.has(inst):
+			return inst
+	return ""
+
+func _mark_instance_used(target_id: String, instance_id: String) -> void:
+	if instance_id == "":
+		return
+	if not _used_instances.has(target_id):
+		_used_instances[target_id] = {}
+	_used_instances[target_id][instance_id] = true
 
 func get_line(dia_id: String) -> Dictionary:
 	return _dialogues.get(dia_id, {"speaker": "SYSTEM", "text": dia_id})
@@ -167,6 +237,17 @@ func on_dialogue_action(action: String, npc_id: String, player: Node) -> void:
 			_try_event("npc_interact", npc_id, player)
 
 func report_world_event(event: String, target_id: String, player: Node = null) -> void:
+	report_world_event_ex(event, target_id, "", player)
+
+func report_world_event_ex(event: String, target_id: String, instance_id: String, player: Node = null) -> void:
+	if _online and _net != null and _status == "active":
+		var iid := instance_id
+		if iid == "":
+			iid = _next_instance_for(target_id)
+		_net.request_world_interact(event, target_id, iid)
+		if iid != "":
+			_mark_instance_used(target_id, iid)
+		return
 	_try_event(event, target_id, player)
 
 func _open_flow(npc_id: String, mode: String) -> void:
@@ -202,14 +283,24 @@ func _completed_objective_count() -> int:
 func _accept(_player: Node) -> void:
 	if _status != "available":
 		return
+	if _online and _net != null:
+		_net.request_quest_accept(_active_id, _content_build_id)
+		return
 	_status = "active"
 	_progress.clear()
+	_used_instances.clear()
 	_flags["QF-%s-START" % _active_id] = true
 	_emit()
 
 func _complete(player: Node) -> void:
 	if _status != "objectives_complete":
 		return
+	if _online and _net != null:
+		_net.request_quest_turnin(_active_id)
+		return
+	_apply_local_reward(player)
+
+func _apply_local_reward(player: Node) -> void:
 	var q := _quest_by_id(_active_id)
 	if q.is_empty():
 		return
@@ -234,6 +325,76 @@ func _complete(player: Node) -> void:
 	quest_completed.emit(_active_id, reward_text)
 	_emit()
 	_advance_to_next()
+
+func _on_net_accept(payload: Dictionary, _request_id: String) -> void:
+	if str(payload.get("quest_id", "")) != _active_id:
+		return
+	if str(payload.get("state", "")) == "ACTIVE" or payload.get("ok") == true:
+		_status = "active"
+		_progress.clear()
+		_used_instances.clear()
+		_flags["QF-%s-START" % _active_id] = true
+		_emit()
+
+func _on_net_progress(payload: Dictionary) -> void:
+	if str(payload.get("quest_id", "")) != _active_id:
+		return
+	var oid := str(payload.get("objective_id", ""))
+	var have := int(payload.get("count", 0))
+	if oid != "":
+		_progress[oid] = have
+	if payload.get("ready") == true:
+		_status = "objectives_complete"
+	_emit()
+
+func _on_net_reward(payload: Dictionary) -> void:
+	var qid := str(payload.get("quest_id", ""))
+	if qid != "" and qid != _active_id:
+		return
+	_xp = int(payload.get("xp_total", _xp))
+	var gold := int(payload.get("gold_total", 0))
+	var rep_map: Dictionary = payload.get("reputation", {})
+	if typeof(rep_map) == TYPE_DICTIONARY and rep_map.has("FAC-08"):
+		_rep_fac08 = int(rep_map.get("FAC-08"))
+	for item in payload.get("evidence", []):
+		_evidence.append(str(item))
+	_status = "completed"
+	var reward_text := "+XP→%d, gold→%d" % [_xp, gold]
+	quest_completed.emit(_active_id, reward_text)
+	_emit()
+	_advance_to_next()
+
+func _on_net_snapshot(payload: Dictionary, _revision: int) -> void:
+	var scopes: Dictionary = payload.get("scopes", {})
+	if typeof(scopes) != TYPE_DICTIONARY:
+		return
+	var quests: Dictionary = scopes.get("quests", {})
+	if typeof(quests) != TYPE_DICTIONARY:
+		return
+	var completed: Array = quests.get("completed", [])
+	var active: Array = quests.get("active", [])
+	var available: Array = quests.get("available", [])
+	if not active.is_empty() and typeof(active[0]) == TYPE_DICTIONARY:
+		var a: Dictionary = active[0]
+		_active_id = str(a.get("quest_id", _active_id))
+		var st := str(a.get("state", "ACTIVE"))
+		_status = "objectives_complete" if st == "READY_TO_TURN_IN" else "active"
+		_progress.clear()
+		for obj in a.get("objectives", []):
+			if typeof(obj) != TYPE_DICTIONARY:
+				continue
+			_progress[str(obj.get("objective_id", ""))] = int(obj.get("have", 0))
+		_emit()
+		return
+	if not available.is_empty():
+		_active_id = str(available[0])
+		_status = "available"
+		_progress.clear()
+		_emit()
+		return
+	if not completed.is_empty() and _active_id != "" and completed.has(_active_id):
+		_status = "completed"
+		_emit()
 
 func _advance_to_next() -> void:
 	var idx := _index_of(_active_id)

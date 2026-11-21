@@ -166,6 +166,7 @@ func _test_ticket_and_signal() -> void:
 	auth2.configure(fh2, "http://127.0.0.1:18086")
 	auth2.access_token = "mem_token"
 	ui.configure_auth(auth2)
+	ui.enter_online = false  # T-023: ticket signal only; live WS covered by online_smoke
 	root.add_child(ui)
 	for i in range(5):
 		await process_frame

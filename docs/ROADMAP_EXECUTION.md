@@ -6,7 +6,7 @@
 **Главный канон-оркестратор:** `docs/content/14_CONTENT_INTEGRATION.md`  
 **Канон контента:** `docs/content/01_WORLD.md` … `14_CONTENT_INTEGRATION.md`  
 **Процесс:** `AGENTS.md`, `.cursor/rules/open-source-research.mdc`  
-**Обновлено:** 2026-11-21 · EX-P00/P01/P02/P03 [x]; EX-DIR [x]; EX-P04 [~] (T-018…T-022 DONE, T-023 next); EX-CONTENT-01 pilot integrated; Cursor назначен автономным директором для уже утверждённых работ.
+**Обновлено:** 2026-11-21 · EX-P00/P01/P02/P03 [x]; EX-DIR [x]; EX-P04 [~] (T-018…T-022 DONE, T-023 in review); EX-CONTENT-01 pilot integrated; Cursor назначен автономным директором для уже утверждённых работ.
 
 ---
 
@@ -287,8 +287,8 @@
 ## Актуальный handoff для Cursor-директора (2026-11-21)
 
 - **Завершено:** EX-P00–P03, T-018 REST auth, T-019 WebSocket (PR #2), T-020 quest engine (PR #3, `4461aa7`), T-022 login UI, T-015 Godot 4.7.2; EX-CONTENT-01 pilot интегрирован.
-- **Текущий этап:** EX-P04 [~]. **Сейчас:** T-023 live client↔server wiring. **Далее:** EX-P05+.
-- **Не завершено:** live E2E клиент↔сервер (T-023), R-PROX (S-02), Android device measurements, EX-P05–P13. Не отмечать их `[x]` по наличию stub или документации.
+- **Текущий этап:** EX-P04 [~]. **Сейчас:** T-023 PR (Fake* ONLINE_SMOKE_OK; live E2E when NEWMMO_ONLINE=1 + server). **Далее:** EX-P05+.
+- **Не завершено:** live E2E against running Go server (manual/env), R-PROX (S-02), Android device measurements, EX-P05–P13. Не отмечать их `[x]` по наличию stub или документации.
 - **Рабочие масштабы локаций:** деревня 200×200 м, город 500×500 м, открытая зона 1000×1000 м, большая дикая 1500×1500 м, подземелье 150–400 м маршрута; источник `docs/content/03_LOCATIONS.md`, предварительно до Android-профилирования.
 - **Автономия Cursor:** может корректировать план, выдавать и принимать задачи, обновлять статусы и сливать прошедшие проверки изменения. Без согласия владельца не менять канон, игровой баланс/монетизацию, архитектурные пины, не добавлять зависимости, не развёртывать VPS и не удалять данные.
 - **Первое действие:** реализовать T-023 (login→ticket→WS→snapshot→accept/interact/turn-in); никакого ложного `DONE`.
