@@ -37,6 +37,34 @@ def norm(t: str) -> str:
     return re.sub(r"[\s«»\"'.,!?…:;—-]+", " ", t).strip()
 
 
+def overlay(content_dir, proposal_dir, tmp):
+    """Copy the canon to tmp and replace the sections "### `<ID>`" of 10_DIALOGUES.md with proposal files
+    (docs/content/dialogue_expansion/pilot/*.dialogue.md, each holding one drop-in section). Returns replaced IDs."""
+    import shutil
+    shutil.copytree(content_dir, tmp, dirs_exist_ok=True)
+    path = os.path.join(tmp, "10_DIALOGUES.md")
+    with open(path, encoding="utf-8") as fh:
+        text = fh.read()
+    replaced = []
+    for fn in sorted(os.listdir(proposal_dir)):
+        if not fn.endswith(".dialogue.md"):
+            continue
+        with open(os.path.join(proposal_dir, fn), encoding="utf-8") as fh:
+            sec = fh.read().strip("\n")
+        m = re.match(r"### `((?:MQ|SQ)-[\d-]+)`", sec)
+        if not m:
+            raise SystemExit(f"{fn}: must start with ### `QUEST-ID` — title")
+        qid = m.group(1)
+        pat = re.compile(r"^### `" + re.escape(qid) + r"`.*?(?=^### |^## |\Z)", re.S | re.M)
+        if not pat.search(text):
+            raise SystemExit(f"{fn}: section {qid} not found in 10_DIALOGUES.md")
+        text = pat.sub(lambda _m: sec + "\n\n", text, count=1)
+        replaced.append(qid)
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(text)
+    return replaced
+
+
 def run(content_dir, schemas_dir, quests=None):
     res = lint.run(content_dir, schemas_dir, None)
     decl = {d["id"]: d for d in res["decls"]}
@@ -108,11 +136,24 @@ def main(argv=None):
     ap.add_argument("--content-dir", default=os.path.join(root, "docs", "content"))
     ap.add_argument("--schemas", default=os.path.join(root, "content", "schemas"))
     ap.add_argument("--quests", default="")
+    ap.add_argument("--proposal-dir", default="", help="overlay *.dialogue.md sections onto 10_DIALOGUES.md before linting")
     ap.add_argument("--strict", action="store_true")
     ap.add_argument("--out", default=os.path.join(root, "build", "content", "dialogue-lint.json"))
     a = ap.parse_args(argv)
     sel = [x for x in a.quests.split(",") if x] or None
-    findings, meta = run(a.content_dir, a.schemas, sel)
+    content_dir = a.content_dir
+    tmp = None
+    if a.proposal_dir:
+        import tempfile
+        tmp = tempfile.mkdtemp(prefix="dlg_overlay_")
+        replaced = overlay(a.content_dir, a.proposal_dir, tmp)
+        content_dir = tmp
+        sel = sel or replaced
+        print(f"overlay: {len(replaced)} section(s) replaced: {', '.join(replaced)}")
+    findings, meta = run(content_dir, a.schemas, sel)
+    if tmp:
+        import shutil
+        shutil.rmtree(tmp, ignore_errors=True)
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     with open(a.out, "w", encoding="utf-8") as fh:
         json.dump({"meta": meta, "findings": findings}, fh, ensure_ascii=False, indent=1)

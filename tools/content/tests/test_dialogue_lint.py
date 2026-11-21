@@ -61,5 +61,28 @@ class DialogueLint(unittest.TestCase):
             shutil.rmtree(tmp, ignore_errors=True)
 
 
+    def test_overlay_proposal_replaces_section(self):
+        tmp = tempfile.mkdtemp(prefix="dl_")
+        try:
+            prop = os.path.join(tmp, "p")
+            os.makedirs(prop)
+            lines = ["### `MQ-01-05` — Ложная улика", "**Место:** `LOC-01-002` · **Контакт:** `NPC-802`"]
+            n = 0
+            for st in ("START", "OBJ1", "OBJ2", "OBJ3", "PROGRESS", "TURNIN", "DONE"):
+                n += 1
+                lines.append(f"- `DIA.MQ-01-05.{st}.01` · `NPC-802`: «Совершенно отдельная реплика номер {n} про печать и чернила.»")
+            with open(os.path.join(prop, "MQ-01-05.dialogue.md"), "w", encoding="utf-8") as fh:
+                fh.write("\n".join(lines) + "\n")
+            out = os.path.join(tmp, "c")
+            replaced = dl.overlay(CANON, prop, out)
+            self.assertEqual(replaced, ["MQ-01-05"])
+            f, _ = dl.run(out, SCHEMAS, ["MQ-01-05"])
+            self.assertEqual([x for x in f if x["severity"] == "ERROR"], [])
+            # neighbour section untouched
+            self.assertIn("### `MQ-01-06`", open(os.path.join(out, "10_DIALOGUES.md"), encoding="utf-8").read())
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+
 if __name__ == "__main__":
     unittest.main()
