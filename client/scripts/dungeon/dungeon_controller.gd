@@ -200,6 +200,11 @@ func _apply(snap: Dictionary) -> void:
 		return
 	var rooms: Dictionary = snap.get("rooms", {})
 	var current := str(snap.get("room_id", ""))
+	# Room change first: it clears the previous room's enemies, then this room's spawns are created below.
+	var changed := current != _last_room
+	if changed:
+		_last_room = current
+		_enter_room(current)
 	for room_id in rooms.keys():
 		var node := _scene.get_node_or_null("Rooms/%s" % str(room_id).get_slice("-", 3)) as Node2D
 		if node == null:
@@ -214,9 +219,7 @@ func _apply(snap: Dictionary) -> void:
 			o.modulate = Color(1, 1, 1, 0.35) if done else Color(1, 1, 1, 1)
 		if active:
 			_sync_spawns(node, rv.get("spawns", {}))
-	if current != _last_room:
-		_last_room = current
-		_enter_room(current)
+	if changed:
 		room_changed.emit(current)
 	if str(snap.get("status", "")) == "COMPLETED":
 		_hint(tr("dungeon.hint.done"))
