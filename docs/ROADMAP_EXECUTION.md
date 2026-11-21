@@ -6,7 +6,7 @@
 **Главный канон-оркестратор:** `docs/content/14_CONTENT_INTEGRATION.md`  
 **Канон контента:** `docs/content/01_WORLD.md` … `14_CONTENT_INTEGRATION.md`  
 **Процесс:** `AGENTS.md`, `.cursor/rules/open-source-research.mdc`  
-**Обновлено:** 2026-11-21 · EX-P00 closed → `docs/AUDIT_BASELINE.md`
+**Обновлено:** 2026-11-21 · tip `main` — EX-P00 [x]; EX-P01 next; EX-CONTENT-01 plan awaiting approval
 
 ---
 
@@ -16,7 +16,12 @@
 
 1. `git checkout main && git pull origin main`
 2. Прочитать `14_CONTENT_INTEGRATION.md` + профильные MD этапа
-3. **OSS research** (GitHub + https://hysenlabs.com/projects + Asset Library + docs) → `docs/research/<система>.md` → **ждать подтверждения** владельца перед установкой
+3. **OSS research (обязательно перед крупной подсистемой):**  
+   - GitHub (рабочий код + лицензия)  
+   - **https://hysenlabs.com/projects** (каталог / поиск шаблонов и аналогов; проверить upstream)  
+   - Godot Asset Library (если клиент)  
+   - официальная документация  
+   → сравнить ≥3 кандидатов, когда есть → `docs/research/<система>.md` → **ждать подтверждения** владельца **перед любой установкой/vendoring**
 4. Реализовать минимальный срез; не трогать чужие VPS/сервисы
 5. Тесты (unit/smoke/go test по критериям этапа)
 6. Отметить этап `[x]` в **этом файле** (+ коммит SHA, дата, результат тестов)
@@ -71,7 +76,8 @@
 - [ ] Отчёт validation; ERROR блокирует «publish»
 - [ ] CI job на lint content  
 **Тесты:** CT-001…CT-002 из §19  
-**Статус:** [ ] in progress / not closed
+**OSS research:** [x] `docs/research/content-validation.md` (stdlib-only рекомендация; **ничего не установлено**)  
+**Статус:** [ ] реализация/CI **не закрыты** — следующий исполнительный шаг после «делай»
 
 ### EX-CONTENT-01 — Dialogue expansion (not new quests)
 **Зависит от:** EX-P01 (lint) + owner approval of plan  
@@ -186,6 +192,8 @@
 | 2026-11-21 | DONE-E MQ-01-01…05 local | `11d48ca` | `MQ01_SMOKE_OK` | не сервер |
 | 2026-11-21 | Canon 01–14 present | `efe1c7b` | — | integration+events |
 | 2026-11-21 | EX-P00 baseline audit | `7567a54` | docs-only | local rewards + authority gaps documented |
+| 2026-11-21 | EX-CONTENT-01 plan (draft) | `ad45425` | — | ждёт утверждения владельца |
+| 2026-11-21 | EX-P01 research only | `663ecc5` | — | content-validation.md; no deps installed |
 
 ---
 
@@ -193,9 +201,9 @@
 
 | ID | Риск | Действие |
 |----|------|----------|
-| R-GODOT | Канон 4.7.2 vs проект 4.3 | Не апгрейдить без пина владельца |
+| R-GODOT | Target 4.7.2; pin 4.3 | C-GODOT-001 B — не апгрейдить до отдельной проверки |
 | R-AUTH | Квесты на клиенте | EX-P04 обязателен до «готово онлайн» |
-| R-DIA | `DIA.*` в 10 vs `DLG-*` в §14 | Зафиксировать в CONFLICTS/схеме как alias |
+| R-DIA | `DLG-*` в 13/14 | **RESOLVED A** — канон только `DIA.*`; `DLG-*` obsolete |
 | R-EQ | `EQ-CC-RR-SS-RR` | Typed fields, не слепой regex |
 | R-APK | Нет Android templates в CI VM | Честно блокировать APK stage |
 | R-VPS | 8GB / 18 events | Caps + staged rollout |
