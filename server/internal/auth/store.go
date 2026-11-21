@@ -83,10 +83,11 @@ func (s *Store) Ready(ctx context.Context) error {
 	return s.pool.Ping(ctx)
 }
 
-// Prune removes login history beyond the rate-limit retention window.
+// Prune removes login history beyond the rate-limit retention window and stale idempotency rows (T-021 S-03).
 func (s *Store) Prune(ctx context.Context) {
 	_, _ = s.pool.Exec(ctx, `DELETE FROM public.login_attempts WHERE at < now() - interval '24 hours'`)
 	_, _ = s.pool.Exec(ctx, `DELETE FROM public.ws_tickets WHERE created_at < now() - interval '1 hour'`)
+	_, _ = s.pool.Exec(ctx, `DELETE FROM public.idempotency_keys WHERE created_at < now() - interval '48 hours'`)
 }
 
 func (s *Store) Register(ctx context.Context, login, password string, ip netip.Addr) (string, error) {

@@ -83,3 +83,18 @@ func TestCodeMapping(t *testing.T) {
 		t.Fatal(Code(ErrRegionClosed))
 	}
 }
+
+func TestQuestForBuildUsesCachedActive(t *testing.T) {
+	cat := NewCatalog()
+	cat.mu.Lock()
+	cat.build = "build-active"
+	cat.byID["MQ-01-01"] = QuestDef{ID: "MQ-01-01", Reward: RewardDef{XP: 100, Gold: 12}}
+	cat.mu.Unlock()
+	def, err := cat.QuestForBuild(t.Context(), nil, "build-active", "MQ-01-01")
+	if err != nil || def.Reward.XP != 100 {
+		t.Fatalf("%#v %v", def, err)
+	}
+	if _, err := cat.QuestForBuild(t.Context(), nil, "build-active", "missing"); err != ErrNotFound {
+		t.Fatal(err)
+	}
+}

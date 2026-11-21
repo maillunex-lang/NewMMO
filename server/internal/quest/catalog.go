@@ -220,6 +220,74 @@ func (c *Catalog) ActiveBuildID(ctx context.Context, pool *pgxpool.Pool) (string
 	return id, err
 }
 
+// QuestForBuild returns the quest definition for a specific content build.
+// When buildID matches the active catalog build, returns the cached def.
+// Otherwise loads the pinned payload from content_entities (S-01 / T-021).
+func (c *Catalog) QuestForBuild(ctx context.Context, pool *pgxpool.Pool, buildID, questID string) (QuestDef, error) {
+	if buildID == "" || questID == "" {
+		return QuestDef{}, ErrNotFound
+	}
+	c.mu.RLock()
+	if buildID == c.build {
+		q, ok := c.byID[questID]
+		c.mu.RUnlock()
+		if !ok {
+			return QuestDef{}, ErrNotFound
+		}
+		return q, nil
+	}
+	registry := c.byObj
+	c.mu.RUnlock()
+
+	var kind, region string
+	var payload []byte
+	err := pool.QueryRow(ctx, `
+		SELECT kind, coalesce(region_id, ''), payload
+		FROM public.content_entities
+		WHERE build_id = $1 AND entity_id = $2 AND kind IN ('quest_main', 'quest_side')`,
+		buildID, questID).Scan(&kind, &region, &payload)
+	if err != nil {
+		return QuestDef{}, ErrContentMismatch
+	}
+	var fields struct {
+		Title      string         `json:"title"`
+		MinLevel   int            `json:"min_level"`
+		Prereqs    []string       `json:"prereqs"`
+		Flags      []string       `json:"flags"`
+		Objectives []ObjectiveDef `json:"objectives"`
+		Reward     RewardDef      `json:"reward"`
+	}
+	if json.Unmarshal(payload, &fields) != nil {
+		return QuestDef{}, ErrInternal
+	}
+	if fields.MinLevel < 1 {
+		fields.MinLevel = 1
+	}
+	if fields.Prereqs == nil {
+		fields.Prereqs = []string{}
+	}
+	if region == "" && strings.HasPrefix(questID, "MQ-") && len(questID) >= 5 {
+		region = "REG-" + questID[3:5]
+	}
+	objs := make([]ObjectiveDef, len(fields.Objectives))
+	copy(objs, fields.Objectives)
+	for i := range objs {
+		if reg, ok := registry[objs[i].ID]; ok {
+			objs[i].Need = reg.Count
+			objs[i].Event = reg.Event
+			objs[i].Target = reg.TargetID
+			objs[i].Instances = append([]string{}, reg.Instances...)
+		} else if objs[i].Need < 1 {
+			objs[i].Need = 1
+		}
+	}
+	return QuestDef{
+		ID: questID, Kind: kind, RegionID: region, Title: fields.Title,
+		MinLevel: fields.MinLevel, Prereqs: fields.Prereqs, Flags: fields.Flags,
+		Objectives: objs, Reward: fields.Reward,
+	}, nil
+}
+
 func FlagName(questID, suffix string) string {
 	if strings.HasPrefix(questID, "MQ-") {
 		return "QF-" + questID + "-" + suffix

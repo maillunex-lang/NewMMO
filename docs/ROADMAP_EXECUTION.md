@@ -6,7 +6,7 @@
 **Главный канон-оркестратор:** `docs/content/14_CONTENT_INTEGRATION.md`  
 **Канон контента:** `docs/content/01_WORLD.md` … `14_CONTENT_INTEGRATION.md`  
 **Процесс:** `AGENTS.md`, `.cursor/rules/open-source-research.mdc`  
-**Обновлено:** 2026-11-21 · EX-P00/P01/P02/P03 [x]; EX-DIR [x]; EX-P04 [~] (T-018/T-019/T-022 DONE, T-020 next); EX-CONTENT-01 pilot integrated; Cursor назначен автономным директором для уже утверждённых работ.
+**Обновлено:** 2026-11-21 · EX-P00/P01/P02/P03 [x]; EX-DIR [x]; EX-P04 [~] (T-018…T-022 DONE, T-023 next); EX-CONTENT-01 pilot integrated; Cursor назначен автономным директором для уже утверждённых работ.
 
 ---
 
@@ -137,15 +137,16 @@
 **Контракты (директор) [x] 2026-11-21:** `docs/contracts/auth-session.md`, `db-gameplay.md`, `quest-engine.md`, `websocket-protocol.md` rev 1.1 (`world.interact.request`), реестр взаимодействий `content/interactables/reg-01.json` (D-002), `min_level` в экспорте квестов  
 **Задачи:** T-018 (сервер: аккаунты, вход, персонажи, WS-билеты) · T-022 (клиент: экраны входа) → T-019 (WebSocket-сервер) → T-020 (автомат квестов, журнал наград, идемпотентность) → T-021 (рецензия безопасности) → T-023 (клиент подключается к настоящему серверу)  
 **Приёмка:**
-- [ ] аккаунты/вход/билеты по `auth-session.md` §8, без секретов в логах
-- [ ] WS-сессия по D-003 (билет, heartbeat, лимиты, остановка)
-- [ ] LOCKED→AVAILABLE→ACTIVE→READY_TO_TURN_IN→COMPLETED на сервере; accept/interact/turn-in идемпотентны
-- [ ] награда ровно один раз (`reward_claims` UNIQUE + ledger), числа = канон `08` для MQ-01-01…05; сумма ledger = агрегаты
-- [ ] конкурентный turn-in → одна награда; build pinning
+- [x] аккаунты/вход/билеты по `auth-session.md` §8, без секретов в логах — T-018
+- [x] WS-сессия по D-003 (билет, heartbeat, лимиты, остановка) — T-019
+- [x] LOCKED→AVAILABLE→ACTIVE→READY_TO_TURN_IN→COMPLETED на сервере; accept/interact/turn-in идемпотентны — T-020 (`4461aa7`)
+- [x] награда ровно один раз (`reward_claims` UNIQUE + ledger), числа = канон `08` для MQ-01-01 (CI); MQ-01-02…05 покрыты каталогом, happy-path тест на MQ-01-01
+- [x] конкурентный turn-in → одна награда; region gate `REGION_CLOSED` — T-020 CI
+- [x] build pinning наград/целей (T-021 S-01 fix: `QuestForBuild`)
 - [ ] клиент проходит MQ-01-01…05 через сервер (T-023)  
 **Известные интеримы (видны владельцу):** R-PROX — без серверной позиции проксимити не проверяется до EX-P08/P09; аккаунты слайса — не продовая идентичность (`auth-session.md` §7)  
 **Тесты:** CT-010, CT-011, CT-013 + интеграционные (CI `server-db`)  
-**Статус:** [~] запущен 2026-11-21: контракты [x]; T-022 [x] (`dc183e2`); T-018 [x] (`3e25b43`); T-019 [x] (PR #2, merge `324bd2d`, CI #155); T-020, T-021, T-023 в очереди
+**Статус:** [~] 2026-11-21: контракты [x]; T-018…T-022 [x]; T-021 [x]; T-023 next
 
 ### EX-P05 — Go dialogue + choices
 **Зависит от:** EX-P04  
@@ -285,9 +286,9 @@
 
 ## Актуальный handoff для Cursor-директора (2026-11-21)
 
-- **Завершено:** EX-P00–P03, T-018 REST auth, T-019 WebSocket transport (PR #2, `324bd2d`, CI #155), T-022 клиентский login UI, T-015 Godot 4.7.2; EX-CONTENT-01 pilot интегрирован.
-- **Текущий этап:** EX-P04 [~]. **Следующая незаблокированная задача:** T-020 (server quest state machine, rewards/ledger/idempotency, region gates). Затем T-021 security review и T-023 live client wiring; проверить фактические зависимости в `docs/director/TASKS.md`.
-- **Не завершено:** серверный цикл MQ-01-01…05, live E2E клиент↔сервер, серверные награды, Android device measurements, EX-P05–P13. Не отмечать их `[x]` по наличию stub или документации.
+- **Завершено:** EX-P00–P03, T-018 REST auth, T-019 WebSocket (PR #2), T-020 quest engine (PR #3, `4461aa7`), T-022 login UI, T-015 Godot 4.7.2; EX-CONTENT-01 pilot интегрирован.
+- **Текущий этап:** EX-P04 [~]. **Сейчас:** T-023 live client↔server wiring. **Далее:** EX-P05+.
+- **Не завершено:** live E2E клиент↔сервер (T-023), R-PROX (S-02), Android device measurements, EX-P05–P13. Не отмечать их `[x]` по наличию stub или документации.
 - **Рабочие масштабы локаций:** деревня 200×200 м, город 500×500 м, открытая зона 1000×1000 м, большая дикая 1500×1500 м, подземелье 150–400 м маршрута; источник `docs/content/03_LOCATIONS.md`, предварительно до Android-профилирования.
 - **Автономия Cursor:** может корректировать план, выдавать и принимать задачи, обновлять статусы и сливать прошедшие проверки изменения. Без согласия владельца не менять канон, игровой баланс/монетизацию, архитектурные пины, не добавлять зависимости, не развёртывать VPS и не удалять данные.
-- **Первое действие:** read-only аудит актуального `main` и CI, исправление устаревших ссылок/статусов, затем подготовка T-020 в рамках существующих утверждённых контрактов; никакого ложного `DONE`.
+- **Первое действие:** реализовать T-023 (login→ticket→WS→snapshot→accept/interact/turn-in); никакого ложного `DONE`.
