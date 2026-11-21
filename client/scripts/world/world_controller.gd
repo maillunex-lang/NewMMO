@@ -231,6 +231,7 @@ func _on_event(p: Dictionary) -> void:
 	for e in p.get("events", []):
 		var t := str(e.get("type", ""))
 		var target := int(e.get("target", 0))
+		get_tree().call_group("fx3d", "on_event", t, _entity_node(int(e.get("caster", 0))), _entity_node(target), e)
 		match t:
 			"damage":
 				_float_text(target, str(int(e.get("amount", 0))), Color(1, 0.85, 0.2) if bool(e.get("crit", false)) else (Color(1, 0.4, 0.4) if target == _you else Color.WHITE))
@@ -461,6 +462,15 @@ func auto_tick() -> void:
 		return
 
 # ----- helpers -------------------------------------------------------------------------
+
+func _entity_node(entity_id: int) -> Node2D:
+	if entity_id == 0:
+		return null
+	if entity_id == _you:
+		return _get_player()
+	if _entities.has(entity_id) and is_instance_valid(_entities[entity_id]):
+		return _entities[entity_id]
+	return null
 
 func _float_text(entity_id: int, text: String, color: Color) -> void:
 	var node: Node2D = null

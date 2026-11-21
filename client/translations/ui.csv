@@ -1,7 +1,7 @@
 keys,ru,en
 ui.auto,АВТО,AUTO
 ui.auto_on,АВТО ВКЛ,AUTO ON
-ui.talk,ГОВОРИТЬ,TALK
+ui.talk,Поговорить,Talk
 ui.next,Далее,Continue
 ui.close,Закрыть,Close
 ui.accept,Принять,Accept
@@ -122,3 +122,5 @@ world.hint.resting,Отдыхаю: восстанавливаю здоровье
 ui.death_title,Вы погибли,You died
 ui.death_sub,Возрождение через несколько секунд…,Respawning in a few seconds…
 ui.quest_tap_hint,Нажмите — автопуть к цели,Tap to auto-travel to the objective
+ui.inspect,Осмотреть,Inspect
+ui.enter,Войти,Enter

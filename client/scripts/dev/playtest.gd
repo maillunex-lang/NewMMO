@@ -70,7 +70,7 @@ func _run() -> void:
 			if is_instance_valid(ents[k]) and str(ents[k].get("kind")) == "enemy":
 				n_enemies += 1
 		print("PT t=%d hp=%.0f/%.0f mp=%.0f dead=%s deaths=%d enemies=%d nearest=%.0f %s auto=%s casts=%d errs=%s" % [t, player.hp, player.max_hp, player.mp, str(dead), deaths, n_enemies, dist, ehp, str(player.auto_combat), casts[0], str(errs)])
-		if t == 8 or t == 30 or t == 60:
+		if t in [8, 30, 60] or (OS.get_environment("NEWMMO_PT_BURST") == "1" and t >= 3 and t <= 9):
 			_shot("t%02d" % t)
 	_shot("end")
 	print("PT DONE deaths=%d" % deaths)

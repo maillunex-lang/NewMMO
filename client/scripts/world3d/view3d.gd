@@ -17,6 +17,7 @@ var sun: DirectionalLight3D = null
 var environment: Environment = null
 var preset := "high"
 var zoom := 13.0
+var fx: Fx3D = null
 
 var _fade_items: Array = []        # {meshes, pos, alpha} tall props that can hide the hero
 var _fade_t := 0.0
@@ -24,7 +25,7 @@ var _views: Dictionary = {}        # instance_id -> {node, view, kind, last, tag
 var _scan_t := 0.0
 var _cam_target := Vector3.ZERO
 var _t := 0.0
-var _name_font_size := 44
+var _name_font_size := 30
 
 func setup(p_valley: Node2D, p_player: Node2D) -> void:
 	valley = p_valley
@@ -35,6 +36,10 @@ func setup(p_valley: Node2D, p_player: Node2D) -> void:
 	_build_paths()
 	_build_props()
 	_build_camera()
+	fx = Fx3D.new()
+	fx.name = "Fx3D"
+	fx.particle_scale = float(GfxQuality.settings(preset)["particles"])
+	add_child(fx)
 	GfxQuality.apply(preset, get_viewport(), environment, sun)
 	valley.visible = false  # 2D visuals off; physics, areas and groups keep working
 	_scan_actors()
@@ -220,7 +225,7 @@ func _make_view(n: Node2D, kind: String) -> void:
 	var tag := Label3D.new()
 	tag.text = label
 	tag.font_size = _name_font_size
-	tag.outline_size = 14
+	tag.outline_size = 10
 	tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	tag.no_depth_test = true
 	tag.pixel_size = 0.006
@@ -398,5 +403,7 @@ func set_preset(p: String) -> void:
 	if not GfxQuality.DATA.has(p):
 		return
 	preset = p
+	if fx != null:
+		fx.particle_scale = float(GfxQuality.settings(p)["particles"])
 	GfxQuality.save_preset(p)
 	GfxQuality.apply(p, get_viewport(), environment, sun)

@@ -156,8 +156,39 @@ func _on_auto() -> void:
 		auto_btn.text = tr("ui.auto_on") if on else tr("ui.auto")
 		auto_btn.modulate = Color(1.0, 0.9, 0.5) if on else Color.WHITE
 
+## The action button is contextual: it appears bottom-centre only while an NPC / object is within reach.
+const INTERACT_RANGE := 100.0
+var _interact_target: Node2D = null
+var _interact_t := 0.0
+
+func _process(delta: float) -> void:
+	_interact_t -= delta
+	if _interact_t > 0.0 or interact_btn == null or _player == null:
+		return
+	_interact_t = 0.12
+	var best: Node2D = null
+	var best_d := INTERACT_RANGE
+	var pp: Vector2 = (_player as Node2D).global_position
+	for g in ["npcs", "interactables"]:
+		for n in get_tree().get_nodes_in_group(g):
+			var d: float = (n as Node2D).global_position.distance_to(pp)
+			if d < best_d and n.has_method("on_interact"):
+				best_d = d
+				best = n as Node2D
+	_interact_target = best
+	interact_btn.visible = best != null and not bool(_player.get("online_dead"))
+	if best != null:
+		var verb := "ui.talk"
+		if best.get("dungeon_entry_id") != null and str(best.get("dungeon_entry_id")) != "":
+			verb = "ui.enter"
+		elif best.get("interact_id") != null:
+			verb = "ui.inspect"
+		interact_btn.text = tr(verb)
+
 func _on_interact() -> void:
-	if _player and _player.has_method("try_interact"):
+	if _interact_target != null and is_instance_valid(_interact_target):
+		_interact_target.on_interact(_player)
+	elif _player and _player.has_method("try_interact"):
 		_player.try_interact()
 
 func _on_quest_tapped(event: InputEvent) -> void:
