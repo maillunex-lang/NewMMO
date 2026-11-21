@@ -9,7 +9,7 @@ Status legend: [ ] planned, [x] completed (implemented **and** tested).
 - [x] Technical audit (`docs/AUDIT.md`) and implementation plan (`docs/IMPLEMENTATION_PLAN.md`).
 - [ ] Confirm unresolved architecture decisions and production budgets.
 - [x] Editable Godot 4 project skeleton with Stage 1 HUD theme (component library still thin).
-- [ ] Create Go server skeleton beyond `/healthz`, PostgreSQL migrations, isolated Compose dev environment.
+- [x] Go server skeleton, PostgreSQL migrations, isolated Compose dev environment and REST auth/WebSocket transport (EX-P03, T-018, T-019); quest engine still pending.
 - [x] Add lint/build/test CI (server tests + file presence checks).
 
 ## Phase 1 - playable vertical slice
@@ -19,8 +19,8 @@ Status legend: [ ] planned, [x] completed (implemented **and** tested).
 - [x] Joystick, tap movement (autopath to quests still basic tap-to-point).
 - [x] Editable HUD and quest dialogue scenes.
 - [x] Three enemy types and **local** combat/loot (server authority = Stage 2).
-- [ ] Two online test clients, persistence and reconnect.
-- [ ] Android APK test on 6 GB device (export templates / SDK not available in current CI image).
+- [ ] Two online test clients, quest persistence and reconnect (T-020/T-023 pending; WebSocket transport T-019 complete).
+- [ ] Android APK test on 6 GB device (APK build tooling exists; real-device performance metrics pending).
 
 ## Phase 2 - game systems
 
@@ -38,3 +38,11 @@ Status legend: [ ] planned, [x] completed (implemented **and** tested).
 - [ ] Load/security/performance testing and staged release.
 
 No task is considered complete until implemented and tested, not merely documented.
+
+## Current execution status (2026-11-21)
+
+- [x] EX-P00–P03: audit, content tooling/registry, DB loader/migrations.
+- [x] T-018 REST accounts/tickets; T-019 WebSocket server (PR #2, merge `324bd2d`, CI #155); T-022 login/characters UI.
+- [~] EX-P04: T-020 authoritative quests/reward ledger is next, followed by T-021 security review and T-023 live client wiring.
+- [ ] EX-P05–P13: not completed; see `docs/ROADMAP_EXECUTION.md`.
+- **Director:** Cursor, delegated by owner 2026-11-21, subject to owner-approval gates in `AGENTS.md`.
