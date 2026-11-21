@@ -1,4 +1,5 @@
 // Package content verifies export bundles and manages the content registry.
+// Input is limited to 64 MiB. The full decoded entity set is held in memory.
 package content
 
 import (
@@ -141,12 +142,21 @@ func loadBundle(dir string) (bundle, error) {
 		return bundle{}, err
 	}
 	if err := input.read("crossrefs.json", func(r io.Reader) error {
-		hash := sha256.New()
-		if _, err := io.Copy(hash, r); err != nil {
+		raw, err := io.ReadAll(r)
+		if err != nil {
 			return err
 		}
-		if hex.EncodeToString(hash.Sum(nil)) != result.manifest.CrossrefsSHA256 {
+		if digest(raw) != result.manifest.CrossrefsSHA256 {
 			return failure(HashMismatch, "crossrefs.json SHA-256 mismatch")
+		}
+		fields, err := objectFields(raw)
+		if err != nil {
+			return failure(BundleInvalid, "crossrefs.json must be a strict UTF-8 JSON object")
+		}
+		for _, key := range []string{"schema", "entities", "unresolved", "soft_group_ids"} {
+			if _, ok := fields[key]; !ok {
+				return failure(BundleInvalid, "crossrefs.json missing required key "+key)
+			}
 		}
 		return nil
 	}); err != nil {

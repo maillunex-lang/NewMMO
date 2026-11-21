@@ -14,6 +14,9 @@ const fixtureEntities = `{"id":"CLS-01","kind":"class","payload":{"name":"Стр
 {"id":"LOC-01-001","kind":"location","payload":{"name":"Долина"},"region_id":"REG-01","schema_version":1,"source_file":"01_TEST.md","source_line":2}
 `
 
+const fixtureCrossrefs = `{"schema":"newmmo.content.crossrefs/1","entities":{},"unresolved":{},"soft_group_ids":{}}
+`
+
 func fixtureManifest() manifest {
 	sourceFiles := make([]sourceFile, 14)
 	for i := range sourceFiles {
@@ -62,7 +65,7 @@ func readFile(t *testing.T, dir, name string) []byte {
 }
 
 func TestVerifyBundle(t *testing.T) {
-	dir, want := writeFixture(t, fixtureManifest(), []byte(fixtureEntities), []byte("{}\n"))
+	dir, want := writeFixture(t, fixtureManifest(), []byte(fixtureEntities), []byte(fixtureCrossrefs))
 	summary, err := Verify(dir)
 	if err != nil || summary != want {
 		t.Fatalf("Verify = %+v, %v; want %+v", summary, err, want)
@@ -77,10 +80,12 @@ func TestVerifyBundle(t *testing.T) {
 	}
 }
 
+// Content export contract rev 1.2 §2 (T-013 I-02) assigns canonical
+// serialization to the producer: docs/contracts/content-export.md.
 func TestVerifyHashesExactManifestBytes(t *testing.T) {
 	m := fixtureManifest()
 	m.MinimumClientVersion = "é<&>\u2028\u2029"
-	dir, original := writeFixture(t, m, []byte(fixtureEntities), []byte("{}\n"))
+	dir, original := writeFixture(t, m, []byte(fixtureEntities), []byte(fixtureCrossrefs))
 	raw := readFile(t, dir, "manifest.json")
 	raw = bytes.ReplaceAll(raw, []byte(`\u2028\u2029`), []byte("\u2028\u2029"))
 	id := digest(raw)
@@ -103,7 +108,7 @@ func TestVerifyTamperedHashes(t *testing.T) {
 		{"crossrefs.json", "{}", "{ }", "SHA-256 mismatch"},
 	} {
 		t.Run(tc.file, func(t *testing.T) {
-			dir, _ := writeFixture(t, fixtureManifest(), []byte(fixtureEntities), []byte("{}\n"))
+			dir, _ := writeFixture(t, fixtureManifest(), []byte(fixtureEntities), []byte(fixtureCrossrefs))
 			data := readFile(t, dir, tc.file)
 			writeFile(t, dir, tc.file, bytes.Replace(data, []byte(tc.old), []byte(tc.new), 1))
 			assertInvalidBundle(t, dir, tc.reason)
@@ -148,7 +153,7 @@ func TestVerifyRejectsInvalidManifestAndEntities(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			m := fixtureManifest()
 			entities := tc.change(&m, fixtureEntities)
-			dir, _ := writeFixture(t, m, []byte(entities), []byte("{}\n"))
+			dir, _ := writeFixture(t, m, []byte(entities), []byte(fixtureCrossrefs))
 			assertInvalidBundle(t, dir, tc.reason)
 		})
 	}
@@ -183,14 +188,14 @@ func TestStrictParsingAndLimits(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			data := strings.Replace(fixtureEntities, tc.from, tc.to, 1)
-			dir, _ := writeFixture(t, fixtureManifest(), []byte(data), []byte("{}\n"))
+			dir, _ := writeFixture(t, fixtureManifest(), []byte(data), []byte(fixtureCrossrefs))
 			if _, err := Verify(dir); err == nil || ErrorCode(err) != tc.code {
 				t.Fatalf("Verify error = %v; want %s", err, tc.code)
 			}
 		})
 	}
 	t.Run("bundle too large", func(t *testing.T) {
-		dir, _ := writeFixture(t, fixtureManifest(), []byte(fixtureEntities), []byte("{}\n"))
+		dir, _ := writeFixture(t, fixtureManifest(), []byte(fixtureEntities), []byte(fixtureCrossrefs))
 		if err := os.Truncate(filepath.Join(dir, "crossrefs.json"), maxBundleBytes); err != nil {
 			t.Fatal(err)
 		}
@@ -201,13 +206,13 @@ func TestStrictParsingAndLimits(t *testing.T) {
 	t.Run("entity count limit", func(t *testing.T) {
 		m := fixtureManifest()
 		m.EntityCount, m.Counts["class"] = maxEntities+1, maxEntities
-		dir, _ := writeFixture(t, m, []byte(fixtureEntities), []byte("{}\n"))
+		dir, _ := writeFixture(t, m, []byte(fixtureEntities), []byte(fixtureCrossrefs))
 		if _, err := Verify(dir); err == nil || ErrorCode(err) != BundleTooLarge {
 			t.Fatalf("Verify error = %v; want %s", err, BundleTooLarge)
 		}
 	})
 	t.Run("manifest one line and LF", func(t *testing.T) {
-		dir, _ := writeFixture(t, fixtureManifest(), []byte(fixtureEntities), []byte("{}\n"))
+		dir, _ := writeFixture(t, fixtureManifest(), []byte(fixtureEntities), []byte(fixtureCrossrefs))
 		raw := append(readFile(t, dir, "manifest.json"), '\n')
 		writeFile(t, dir, "manifest.json", raw)
 		writeFile(t, dir, "BUILD_ID", []byte(digest(raw)+"\n"))
@@ -215,4 +220,29 @@ func TestStrictParsingAndLimits(t *testing.T) {
 			t.Fatalf("Verify error = %v; want %s", err, BundleInvalid)
 		}
 	})
+}
+
+func TestVerifyRejectsHashConsistentInvalidCrossrefs(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		raw  string
+	}{
+		{"invalid UTF-8", strings.Replace(fixtureCrossrefs, "newmmo", "\xff", 1)},
+		{"BOM", "\xef\xbb\xbf" + fixtureCrossrefs},
+		{"not an object", "[]\n"},
+		{"missing schema", strings.Replace(fixtureCrossrefs, `"schema":"newmmo.content.crossrefs/1",`, "", 1)},
+		{"missing entities", strings.Replace(fixtureCrossrefs, `"entities":{},`, "", 1)},
+		{"missing unresolved", strings.Replace(fixtureCrossrefs, `"unresolved":{},`, "", 1)},
+		{"missing soft group IDs", strings.Replace(fixtureCrossrefs, `,"soft_group_ids":{}`, "", 1)},
+		{"duplicate nested key", strings.Replace(fixtureCrossrefs, `"entities":{}`, `"entities":{"one":1,"one":2}`, 1)},
+		{"garbage", "not JSON\n"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			dir, _ := writeFixture(t, fixtureManifest(), []byte(fixtureEntities), []byte(tc.raw))
+			_, err := Verify(dir)
+			if err == nil || ErrorCode(err) != BundleInvalid || !strings.Contains(err.Error(), "crossrefs.json") {
+				t.Fatalf("expected a crossrefs validation error after matching hashes, got %v", err)
+			}
+		})
+	}
 }

@@ -17,12 +17,23 @@ import (
 )
 
 func TestContentRegistryPostgres(t *testing.T) {
+	strictRoles := os.Getenv("NEWMMO_REQUIRE_ROLE_URLS") == "1"
+	if strictRoles {
+		for _, name := range []string{"NEWMMO_TEST_DATABASE_URL", "NEWMMO_TEST_MIGRATE_DATABASE_URL", "NEWMMO_TEST_APP_DATABASE_URL"} {
+			if os.Getenv(name) == "" {
+				t.Fatalf("%s is required when NEWMMO_REQUIRE_ROLE_URLS=1", name)
+			}
+		}
+	}
 	url := os.Getenv("NEWMMO_TEST_DATABASE_URL")
 	if url == "" {
 		t.Skip("NEWMMO_TEST_DATABASE_URL is unset")
 	}
 	dir := os.Getenv("NEWMMO_CONTENT_EXPORT_DIR")
 	if dir == "" {
+		if strictRoles {
+			t.Fatal("NEWMMO_CONTENT_EXPORT_DIR is required when NEWMMO_REQUIRE_ROLE_URLS=1")
+		}
 		t.Skip("NEWMMO_CONTENT_EXPORT_DIR is unset")
 	}
 	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
@@ -33,6 +44,13 @@ func TestContentRegistryPostgres(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer store.Close()
+	owner := openOptionalTestStore(t, ctx, "NEWMMO_TEST_MIGRATE_DATABASE_URL", store)
+	app := openOptionalTestStore(t, ctx, "NEWMMO_TEST_APP_DATABASE_URL", store)
+	if strictRoles {
+		assertCurrentUser(t, ctx, store, "newmmo_content_publisher")
+		assertCurrentUser(t, ctx, owner, "newmmo_migrator")
+		assertCurrentUser(t, ctx, app, "newmmo_app")
+	}
 
 	t.Run("transaction_retry_limits", func(t *testing.T) {
 		for _, sqlState := range []string{"40P01", "40001"} {
@@ -166,8 +184,6 @@ func TestContentRegistryPostgres(t *testing.T) {
 		return info.BuildID
 	}
 
-	owner := openOptionalTestStore(t, ctx, "NEWMMO_TEST_MIGRATE_DATABASE_URL", store)
-	app := openOptionalTestStore(t, ctx, "NEWMMO_TEST_APP_DATABASE_URL", store)
 	current := original
 	if current == "" {
 		t.Run("two_first_publishes", func(t *testing.T) {
@@ -312,7 +328,7 @@ func TestContentRegistryPostgres(t *testing.T) {
 		stage := func(label string) string {
 			m := fixtureManifest()
 			m.MinimumClientVersion = "0.0.1+" + token + "." + label
-			path, _ := writeFixture(t, m, []byte(fixtureEntities), []byte("{}\n"))
+			path, _ := writeFixture(t, m, []byte(fixtureEntities), []byte(fixtureCrossrefs))
 			return stageExport(t, ctx, store, path).BuildID
 		}
 		updateStatus := func(tx pgx.Tx, id string) error {
@@ -513,6 +529,18 @@ func racePublish(t *testing.T, ctx context.Context, store *Store, previous strin
 		t.Fatal("neither concurrent publish won")
 	}
 	return winner
+}
+
+func assertCurrentUser(t *testing.T, ctx context.Context, store *Store, expected string) {
+	t.Helper()
+	var current string
+	if err := store.pool.QueryRow(ctx, `SELECT current_user`).Scan(&current); err != nil {
+		t.Fatalf("cannot check current_user for %s: %v", expected, safeDBError("check test database role", err))
+	}
+	if current != expected {
+		t.Fatalf("current_user = %q, want %q", current, expected)
+	}
+	t.Logf("current_user = %s", current)
 }
 
 func openOptionalTestStore(t *testing.T, ctx context.Context, env string, fallback *Store) *Store {
