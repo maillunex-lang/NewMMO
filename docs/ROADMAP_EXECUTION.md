@@ -192,7 +192,8 @@
 
 ### EX-P13 — Endings, admin, hardening, Android RC
 **Зависит от:** EX-P12 / достаточный контент  
-**Приёмка:** END-01…03 персональны; admin RBAC; Android 6GB metrics; rollback  
+**Приёмка:**
+- [ ] **Отложенный долг (R-DEVICE):** замеры на реальном устройстве 6 ГБ (CT-020) — без них релиз/RC и апгрейд движка не принимаются END-01…03 персональны; admin RBAC; Android 6GB metrics; rollback  
 **Тесты:** CT-019…CT-024  
 **Статус:** [ ]
 
@@ -251,7 +252,8 @@
 | R-MULTI | 3 исполнителя ломают друг друга | EX-DIR: lanes + trailers + CI `lane-check` + rebase-before-push; откат директором |
 | R-NAMES | Названия `ITEM-Q-*` рабочие (от названий квестов) | Владелец утверждает финальные имена; не блокер для P03 |
 | R-EQ | `EQ-CC-RR-SS-RR` | Typed fields, не слепой regex |
-| R-APK | Нет Android templates в CI VM | Честно блокировать APK stage; **T-012** (2026-11-21): локальная debug-сборка на 4.3 + база метрик, установка инструментария одобрена владельцем |
+| R-APK | Нет Android templates в CI VM | Честно блокировать APK stage; **T-012** (2026-11-21): локальная debug-сборка на 4.3 + CI `android-debug`, инструментарий одобрен владельцем |
+| R-DEVICE | Нет устройства 6 ГБ для замеров CT-020 | **ПРИНЯТО владельцем 2026-11-21: временно считаем базу Android «ок» без цифр; замеры (`tools/android/measure_device.sh`, 3×3: старт, FPS/p95, peak PSS, падения) — ОБЯЗАТЕЛЬНЫЙ гейт перед релизом/Android RC (EX-P13) и перед апгрейдом на Godot 4.7.2.** До тех пор цифры производительности не заявляются |
 | R-VPS | 8GB / 18 events | Caps + staged rollout |
 
 ---

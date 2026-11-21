@@ -59,3 +59,4 @@ First parallel batch (different lanes, no dependencies, disjoint files): **T-001
 | 2026-11-21 | T-009 merged; CI server-db updated for role bootstrap; ChatGPT gets code review task T-013 |
 | 2026-11-21 | T-013 merged; contracts rev 1.2; CI: pipefail + two-goose-runners + REQUIRE_ROLE_URLS; T-014 issued to Codex |
 | 2026-11-21 | T-012 merged; android-debug workflow (manual dispatch) added so the owner gets an APK artifact; device measurements pending the owner's phone |
+| 2026-11-21 | Owner: no 6 GB phone → Android baseline accepted provisionally; device metrics are a mandatory pre-release gate (R-DEVICE in ROADMAP, EX-P13) |
