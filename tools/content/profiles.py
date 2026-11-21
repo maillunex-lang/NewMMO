@@ -57,6 +57,8 @@ def _rows(blocks, id_re, kind, file, columns):
             for h, c in zip(hdr, cells):
                 if h in columns:
                     f[columns[h]] = strip_ticks(c)
+            if kind == "loot_table":
+                f["row_text"] = " | ".join(cells)
             out.append(D(kind, cid, file, line, **f))
     return out
 
@@ -87,7 +89,7 @@ def p_locations(b, f):
             m = re.match(r"`(POI-\d\d-\d{3})`\s*[—-]\s*(.*)", blk.text)
             if m:
                 out.append(D("poi", m.group(1), f, blk.line, description=m.group(2), region=cur_reg))
-    out += _rows(_in_section(b, lambda t: t.startswith("5.")), r"SET-\d\d-\d\d", "settlement", f,
+    out += _rows(_in_section(b, lambda t: t.startswith("5.")), r"STL-\d\d-\d\d", "settlement", f,
                  {"название": "name", "регион": "region", "роль": "role"})
     out += _rows(_in_section(b, lambda t: t.startswith("6.")), r"DNG-\d\d-00[12]", "dungeon_ref", f,
                  {"подземелье": "name", "регион": "region", "уровень входа": "level"})
@@ -162,6 +164,10 @@ def _quest_blocks(blocks, head_re, kind, file, obj_re, flag_re):
             continue
         txt = blk.text
         cur["fields"]["_body"].append(txt)
+        if txt.startswith("**Открытие") and "prereqs" not in cur["fields"]:
+            seg = re.split(r"\*\*(?:Начало|Цели)", txt)[0]
+            seg = re.sub(r"`QF-[^`]*`|`SQF-[^`]*`", "", seg)
+            cur["fields"]["prereqs"] = sorted(set(re.findall(r"(?<![A-Za-z0-9-])(?:MQ-\d\d-\d\d|SQ-\d\d-\d{3})(?![A-Za-z0-9-])", seg)))
         if blk.kind == "list_item":
             m = re.match(obj_re, txt)
             if m:
@@ -251,6 +257,7 @@ def p_items(b, f):
     out += _rows(b, r"ITEM-SQ-\d\d-\d{3}", "quest_item", f, {"название": "name"})
     for d in out:
         if d["kind"] == "loot_table":
+            d["fields"]["percents"] = [float(x) for x in re.findall(r"(\d+(?:\.\d+)?)\s*%", d["fields"].pop("row_text", ""))]
             m = re.search(r"ENM-\d\d-\d{3}", d["fields"].pop("enemy_raw", ""))
             if m:
                 d["fields"]["enemy"] = m.group()
@@ -288,6 +295,15 @@ def p_events(b, f):
             m = re.match(r"`(EVT-\d\d-00[1-3])`\s*—\s*«(.*?)»", blk.text)
             if m:
                 out.append(D("event", m.group(1), f, blk.line, title=m.group(2)))
+    boss = {}
+    for t in _tables(_in_section(b, lambda t: t.startswith("2."))):
+        for _line, cells in t.rows:
+            m = re.search(r"`(EVT-\d\d-003)`\s*/\s*`(ENM-\d\d-401)`", cells[3] if len(cells) > 3 else "")
+            if m:
+                boss[m.group(1)] = m.group(2)
+    for d in out:
+        if d["id"] in boss:
+            d["fields"]["world_boss"] = boss[d["id"]]
     return out
 
 

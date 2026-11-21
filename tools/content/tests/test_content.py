@@ -61,20 +61,32 @@ class RealCanon(Sandbox):
                      "quest_side": 120, "dungeon": 12, "event": 18, "ending": 3}.items():
             self.assertEqual(c[k], v, k)
 
-    def test_set_collision_blocks_without_allowlist(self):  # C-SET-001 is real canon data
+    def test_no_id_collisions_without_allowlist(self):  # C-SET-001 RESOLVED (STL-*)
         res = self.run_lint(allow=None)
-        self.assertEqual(len(self.errors(res, "DUPLICATE_DECLARATION")), 15)
-        self.assertFalse(res["publishable"])
+        self.assertEqual(self.errors(res, "DUPLICATE_DECLARATION"), [])
+        self.assertTrue(res["publishable"])
+        self.assertEqual(res["counts"]["settlement"], 18)
+        self.assertTrue(all(d["id"].startswith("STL-") for d in res["decls"] if d["kind"] == "settlement"))
+
+    def test_repo_allowlist_is_empty(self):
+        with open(ALLOW, encoding="utf-8") as fh:
+            self.assertEqual(json.load(fh)["entries"], [])
+
+    def _dup_with_allow(self, expires):
+        self.edit("08_QUESTS_MAIN.md", "#### `MQ-01-02` — Два свидетеля", "#### `MQ-01-01` — Два свидетеля")
+        p = os.path.join(self.tmp, "allow.json")
+        with open(p, "w") as fh:
+            json.dump({"entries": [{"code": "DUPLICATE_DECLARATION", "id": "MQ-01-01", "conflict": "T-1",
+                                    "owner": "t", "expires": expires}]}, fh)
+        return self.run_lint(allow=p)
+
+    def test_allowlist_downgrades_until_expiry(self):
+        res = self._dup_with_allow("2999-01-01")
+        self.assertFalse(self.errors(res, "DUPLICATE_DECLARATION"))
+        self.assertTrue(any(i["code"] == "DUPLICATE_DECLARATION" and i["severity"] == "WARN" for i in res["report"].items))
 
     def test_expired_allowlist_becomes_error(self):
-        p = os.path.join(self.tmp, "allow.json")
-        with open(ALLOW, encoding="utf-8") as fh:
-            data = json.load(fh)
-        for e in data["entries"]:
-            e["expires"] = "2000-01-01"
-        with open(p, "w") as fh:
-            json.dump(data, fh)
-        res = self.run_lint(allow=p)
+        res = self._dup_with_allow("2000-01-01")
         self.assertTrue(self.errors(res, "ALLOWLIST_EXPIRED"))
         self.assertFalse(res["publishable"])
 

@@ -36,6 +36,10 @@
         "title": {
           "type": "string",
           "minLength": 1
+        },
+        "world_boss": {
+          "type": "string",
+          "pattern": "^ENM-0[1-6]-401$"
         }
       }
     }

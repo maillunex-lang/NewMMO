@@ -23,10 +23,11 @@ Recorded by EX-P00 audit. **Do not silently pick a side in code.** Owner decides
 
 | Field | Value |
 |-------|--------|
-| Status | **OPEN** — owner decision needed (found by EX-P01 lint, CT-002) |
-| Problem | `03_LOCATIONS.md` §5 declares settlements as `SET-RR-NN` (e.g. `SET-01-01` Астервиль). `11_ITEMS_LOOT.md` §2/§6 declares armor sets as `SET-CC-RR` (e.g. `SET-01-01` «Страж Заря»). 15 strings collide (`SET-0R-0N`, R=1..5, N=1..3). `14` §4 lists `SET-*` only for items. |
-| Options | **A** rename settlements to a new prefix (e.g. `STL-RR-NN`) in `03`; **B** rename item sets (e.g. `ISET-CC-RR`) in `11`; **C** keep both, namespaced by typed field (`kind`+`id`) — parsers already carry `kind`, but bare-string ID registry in `14` §4 stays ambiguous. |
-| Interim | Not edited (canon is owner-approved only). `content/lint_allowlist.json` downgrades the 15 duplicates to WARN, owner = project owner, **expires 2026-12-31**, then lint fails again. |
+| Status | **RESOLVED** (2026-11-21) |
+| Decision | **A** (owner) — settlements renamed `SET-RR-NN` → `STL-RR-NN` in `03_LOCATIONS.md` §5 (18 IDs). Armor sets `SET-CC-RR` in `11_ITEMS_LOOT.md` unchanged. Names, regions, roles, services of settlements unchanged. |
+| Applied | EX-P02: `03` §5 rows + `STL-XX-NN` line in §«Категории и ID»; `14` §4 registry row «Поселение». No other references existed in docs/client/server/JSON (repo-wide grep). Schema `settlement` and `content/lint_allowlist.json` (entries removed) updated. |
+| Verified | `tools/content/lint.py` without allowlist: 0 duplicate declarations; unit test `test_no_id_collisions_without_allowlist`. |
+| History | OPEN at EX-P01 (15 collisions: `SET-0R-0N`, R=1..5, N=1..3) → owner approved A and one-time canon edit. |
 
 ## Other open notes
 
