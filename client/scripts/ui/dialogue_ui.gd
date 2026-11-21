@@ -3,12 +3,20 @@ extends Control
 signal closed(npc_id: String)
 signal action_chosen(action: String, npc_id: String)
 
-@onready var panel: PanelContainer = $Panel
-@onready var portrait: TextureRect = $Panel/Margin/VBox/Header/Portrait
-@onready var speaker: Label = $Panel/Margin/VBox/Header/Speaker
-@onready var body: Label = $Panel/Margin/VBox/Body
-@onready var next_btn: Button = $Panel/Margin/VBox/Next
-@onready var choices: HBoxContainer = $Panel/Margin/VBox/Choices
+@onready var panel: PanelContainer = $SafeArea/Chrome/Panel
+@onready var portrait: TextureRect = $SafeArea/Chrome/Panel/Margin/VBox/Header/Portrait
+@onready var speaker: Label = $SafeArea/Chrome/Panel/Margin/VBox/Header/Speaker
+@onready var body: Label = $SafeArea/Chrome/Panel/Margin/VBox/Body
+@onready var next_btn: Button = $SafeArea/Chrome/Panel/Margin/VBox/Next
+@onready var choices: HBoxContainer = $SafeArea/Chrome/Panel/Margin/VBox/Choices
+@onready var choice_accept: Button = $SafeArea/Chrome/Panel/Margin/VBox/Choices/ChoiceAccept
+@onready var choice_ask: Button = $SafeArea/Chrome/Panel/Margin/VBox/Choices/ChoiceAsk
+@onready var choice_turn_in: Button = $SafeArea/Chrome/Panel/Margin/VBox/Choices/ChoiceTurnIn
+
+## Chrome labels are authored on the .tscn buttons (Theme/scene), not built here.
+@export var player_speaker_label := "Вы"
+@export var next_label := "Далее"
+@export var close_label := "Закрыть"
 
 var _npc_id := ""
 var _important := true
@@ -22,9 +30,13 @@ func _ready() -> void:
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	next_btn.pressed.connect(_on_next)
-	if choices:
-		for c in choices.get_children():
-			c.queue_free()
+	if choice_accept:
+		choice_accept.pressed.connect(func(): _choose("ACCEPT"))
+	if choice_ask:
+		choice_ask.pressed.connect(func(): _choose("ASK"))
+	if choice_turn_in:
+		choice_turn_in.pressed.connect(func(): _choose("TURN_IN"))
+	_hide_choice_buttons()
 
 func open_flow(npc_id: String, display_name: String, flow_ids: PackedStringArray, portrait_tex: Texture2D = null, mode: String = "") -> void:
 	_npc_id = npc_id
@@ -37,7 +49,7 @@ func open_flow(npc_id: String, display_name: String, flow_ids: PackedStringArray
 	if portrait_tex:
 		portrait.texture = portrait_tex
 	for id in flow_ids:
-		# Skip PLAYER ACCEPT/TURN_IN/ASK lines; those become buttons
+		# Skip PLAYER ACCEPT/TURN_IN/ASK lines; those become scene buttons
 		var line: Dictionary = {}
 		if _quest and _quest.has_method("get_line"):
 			line = _quest.get_line(str(id))
@@ -49,7 +61,7 @@ func open_flow(npc_id: String, display_name: String, flow_ids: PackedStringArray
 	_show_current()
 
 func _show_current() -> void:
-	_clear_choices()
+	_hide_choice_buttons()
 	if _index >= _flow.size():
 		_show_mode_actions_or_finish()
 		return
@@ -59,7 +71,7 @@ func _show_current() -> void:
 		line = _quest.get_line(dia_id)
 	var sp: String = str(line.get("speaker", ""))
 	if sp == "PLAYER":
-		speaker.text = "Вы"
+		speaker.text = player_speaker_label
 	elif sp.begins_with("NPC-") and _quest and _quest.has_method("npc_display_name"):
 		speaker.text = _quest.npc_display_name(sp)
 	elif sp != "SYSTEM":
@@ -72,59 +84,45 @@ func _show_current() -> void:
 		_show_mode_actions_or_finish()
 	else:
 		next_btn.visible = true
-		next_btn.text = "Далее" if not last else "Закрыть"
+		next_btn.text = next_label if not last else close_label
 
 func _show_mode_actions_or_finish() -> void:
-	_clear_choices()
+	_hide_choice_buttons()
 	if _mode == "start":
 		next_btn.visible = false
-		_add_choice("ACCEPT", "Принять")
-		_add_choice("ASK", "Спросить")
+		if choice_accept:
+			choice_accept.visible = true
+		if choice_ask:
+			choice_ask.visible = true
 		return
 	if _mode == "turnin":
 		next_btn.visible = false
-		_add_choice("TURN_IN", "Сдать")
+		if choice_turn_in:
+			choice_turn_in.visible = true
 		return
 	_finish()
 
-func _label_for_action(action: String) -> String:
-	match action:
-		"ACCEPT":
-			return "Принять"
-		"TURN_IN":
-			return "Сдать"
-		"ASK":
-			return "Спросить"
-		_:
-			return action
-
-func _add_choice(action: String, label: String) -> void:
-	if choices == null:
-		return
-	var btn := Button.new()
-	btn.text = label
-	btn.pressed.connect(func(): _choose(action))
-	choices.add_child(btn)
-
-func _clear_choices() -> void:
-	if choices == null:
-		return
-	for c in choices.get_children():
-		c.queue_free()
+func _hide_choice_buttons() -> void:
+	if choice_accept:
+		choice_accept.visible = false
+	if choice_ask:
+		choice_ask.visible = false
+	if choice_turn_in:
+		choice_turn_in.visible = false
 
 func _choose(action: String) -> void:
 	if action == "ASK":
-		# Show canon ASK response, do not accept quest
+		# Show canon ASK response from data; do not accept quest
 		var qid := ""
 		if _quest and _quest.has_method("get_active_quest_id"):
 			qid = _quest.get_active_quest_id()
 		var ask_id := "DIA.%s.START.03" % qid
 		var line: Dictionary = _quest.get_line(ask_id) if _quest else {}
 		speaker.text = _quest.npc_display_name(_npc_id) if _quest else _npc_id
-		body.text = str(line.get("text", "Доказательство важнее удобного объяснения."))
-		_clear_choices()
+		body.text = str(line.get("text", ""))
+		_hide_choice_buttons()
 		next_btn.visible = true
-		next_btn.text = "Закрыть"
+		next_btn.text = close_label
 		_mode = ""
 		_index = _flow.size()
 		return
@@ -136,10 +134,10 @@ func _choose(action: String) -> void:
 		var done_id := "DIA.%s.DONE.01" % qid2
 		var done_line: Dictionary = _quest.get_line(done_id) if _quest else {}
 		speaker.text = _quest.npc_display_name(_npc_id) if _quest else _npc_id
-		body.text = str(done_line.get("text", "Задание завершено."))
-		_clear_choices()
+		body.text = str(done_line.get("text", ""))
+		_hide_choice_buttons()
 		next_btn.visible = true
-		next_btn.text = "Закрыть"
+		next_btn.text = close_label
 		_mode = ""
 		_index = _flow.size()
 		return
@@ -151,7 +149,7 @@ func _on_next() -> void:
 
 func _finish() -> void:
 	visible = false
-	_clear_choices()
+	_hide_choice_buttons()
 	closed.emit(_npc_id)
 
 func _unhandled_input(event: InputEvent) -> void:

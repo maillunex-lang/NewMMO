@@ -3,6 +3,7 @@
 [ext_resource type="Theme" path="res://themes/lunex_hud.tres" id="1"]
 [ext_resource type="Script" path="res://scripts/ui/dialogue_ui.gd" id="2"]
 [ext_resource type="Texture2D" path="res://assets/ui/portrait_mira.png" id="3"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area_margins.gd" id="4"]
 
 [node name="Dialogue" type="Control"]
 layout_mode = 3
@@ -25,7 +26,24 @@ grow_vertical = 2
 mouse_filter = 0
 color = Color(0.02, 0.03, 0.05, 0.45)
 
-[node name="Panel" type="PanelContainer" parent="."]
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("4")
+base_margin = 16
+
+[node name="Chrome" type="Control" parent="SafeArea"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="SafeArea/Chrome"]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -35,54 +53,72 @@ anchor_bottom = 1.0
 offset_left = -420.0
 offset_top = -230.0
 offset_right = 420.0
-offset_bottom = -28.0
+offset_bottom = -12.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="Margin" type="MarginContainer" parent="Panel"]
+[node name="Margin" type="MarginContainer" parent="SafeArea/Chrome/Panel"]
 layout_mode = 2
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 10
 
-[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="SafeArea/Chrome/Panel/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Header" type="HBoxContainer" parent="Panel/Margin/VBox"]
+[node name="Header" type="HBoxContainer" parent="SafeArea/Chrome/Panel/Margin/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Portrait" type="TextureRect" parent="Panel/Margin/VBox/Header"]
+[node name="Portrait" type="TextureRect" parent="SafeArea/Chrome/Panel/Margin/VBox/Header"]
 custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 texture = ExtResource("3")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Speaker" type="Label" parent="Panel/Margin/VBox/Header"]
+[node name="Speaker" type="Label" parent="SafeArea/Chrome/Panel/Margin/VBox/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
 theme_override_font_sizes/font_size = 20
-text = "Elder Mira"
+text = "…"
 vertical_alignment = 1
 
-[node name="Body" type="Label" parent="Panel/Margin/VBox"]
+[node name="Body" type="Label" parent="SafeArea/Chrome/Panel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "…"
 autowrap_mode = 3
 
-[node name="Choices" type="HBoxContainer" parent="Panel/Margin/VBox"]
+[node name="Choices" type="HBoxContainer" parent="SafeArea/Chrome/Panel/Margin/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 8
 alignment = 2
 
-[node name="Next" type="Button" parent="Panel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 40)
+[node name="ChoiceAccept" type="Button" parent="SafeArea/Chrome/Panel/Margin/VBox/Choices"]
+visible = false
+custom_minimum_size = Vector2(120, 48)
+layout_mode = 2
+text = "Принять"
+
+[node name="ChoiceAsk" type="Button" parent="SafeArea/Chrome/Panel/Margin/VBox/Choices"]
+visible = false
+custom_minimum_size = Vector2(120, 48)
+layout_mode = 2
+text = "Спросить"
+
+[node name="ChoiceTurnIn" type="Button" parent="SafeArea/Chrome/Panel/Margin/VBox/Choices"]
+visible = false
+custom_minimum_size = Vector2(120, 48)
+layout_mode = 2
+text = "Сдать"
+
+[node name="Next" type="Button" parent="SafeArea/Chrome/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(120, 48)
 layout_mode = 2
 size_flags_horizontal = 8
-text = "Continue"
+text = "Далее"

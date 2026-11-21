@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Theme" path="res://themes/lunex_hud.tres" id="1"]
 [ext_resource type="Script" path="res://scripts/ui/hud_controller.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/ui/virtual_joystick.gd" id="3"]
 [ext_resource type="Texture2D" path="res://assets/ui/portrait_player.png" id="4"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area_margins.gd" id="5"]
 
 [sub_resource type="StyleBoxFlat" id="joy_base"]
 bg_color = Color(0.08, 0.1, 0.14, 0.55)
@@ -42,116 +43,127 @@ mouse_filter = 2
 theme = ExtResource("1")
 script = ExtResource("2")
 
-[node name="TopBar" type="PanelContainer" parent="."]
+[node name="SafeArea" type="MarginContainer" parent="."]
 layout_mode = 1
-offset_left = 16.0
-offset_top = 16.0
-offset_right = 320.0
-offset_bottom = 108.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("5")
+base_margin = 16
 
-[node name="Stats" type="HBoxContainer" parent="TopBar"]
+[node name="Chrome" type="Control" parent="SafeArea"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="TopBar" type="PanelContainer" parent="SafeArea/Chrome"]
+layout_mode = 1
+offset_right = 304.0
+offset_bottom = 92.0
+
+[node name="Stats" type="HBoxContainer" parent="SafeArea/Chrome/TopBar"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Portrait" type="TextureRect" parent="TopBar/Stats"]
+[node name="Portrait" type="TextureRect" parent="SafeArea/Chrome/TopBar/Stats"]
 custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 texture = ExtResource("4")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Bars" type="VBoxContainer" parent="TopBar/Stats"]
+[node name="Bars" type="VBoxContainer" parent="SafeArea/Chrome/TopBar/Stats"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Name" type="Label" parent="TopBar/Stats/Bars"]
+[node name="Name" type="Label" parent="SafeArea/Chrome/TopBar/Stats/Bars"]
 layout_mode = 2
-text = "Guardian · Lv 1"
+text = "…"
 
-[node name="Health" type="ProgressBar" parent="TopBar/Stats/Bars"]
+[node name="Health" type="ProgressBar" parent="SafeArea/Chrome/TopBar/Stats/Bars"]
 custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 value = 100.0
 show_percentage = false
 
-[node name="Mana" type="ProgressBar" parent="TopBar/Stats/Bars"]
+[node name="Mana" type="ProgressBar" parent="SafeArea/Chrome/TopBar/Stats/Bars"]
 custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 value = 70.0
 show_percentage = false
 theme_override_styles/fill = SubResource("mp_fill")
 
-[node name="Quest" type="PanelContainer" parent="."]
+[node name="Quest" type="PanelContainer" parent="SafeArea/Chrome"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -340.0
-offset_top = 16.0
-offset_right = -16.0
-offset_bottom = 110.0
+offset_left = -324.0
+offset_bottom = 94.0
 grow_horizontal = 0
 
-[node name="QuestText" type="Label" parent="Quest"]
+[node name="QuestText" type="Label" parent="SafeArea/Chrome/Quest"]
 layout_mode = 2
-text = "Prologue · Talk to Elder Mira"
+text = ""
 autowrap_mode = 3
 
-[node name="Skills" type="HBoxContainer" parent="."]
+[node name="Skills" type="HBoxContainer" parent="SafeArea/Chrome"]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -390.0
-offset_top = -86.0
-offset_right = -16.0
-offset_bottom = -18.0
+offset_left = -374.0
+offset_top = -70.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_constants/separation = 6
 mouse_filter = 0
 
-[node name="Skill1" type="Button" parent="Skills"]
-custom_minimum_size = Vector2(55, 55)
+[node name="Skill1" type="Button" parent="SafeArea/Chrome/Skills"]
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 text = "1"
 
-[node name="Skill2" type="Button" parent="Skills"]
-custom_minimum_size = Vector2(55, 55)
+[node name="Skill2" type="Button" parent="SafeArea/Chrome/Skills"]
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 text = "2"
 
-[node name="Skill3" type="Button" parent="Skills"]
-custom_minimum_size = Vector2(55, 55)
+[node name="Skill3" type="Button" parent="SafeArea/Chrome/Skills"]
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 text = "3"
 
-[node name="Skill4" type="Button" parent="Skills"]
-custom_minimum_size = Vector2(55, 55)
+[node name="Skill4" type="Button" parent="SafeArea/Chrome/Skills"]
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 text = "4"
 
-[node name="Skill5" type="Button" parent="Skills"]
-custom_minimum_size = Vector2(55, 55)
+[node name="Skill5" type="Button" parent="SafeArea/Chrome/Skills"]
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 text = "5"
 
-[node name="Skill6" type="Button" parent="Skills"]
-custom_minimum_size = Vector2(55, 55)
+[node name="Skill6" type="Button" parent="SafeArea/Chrome/Skills"]
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 text = "6"
 
-[node name="Joystick" type="Panel" parent="."]
+[node name="Joystick" type="Panel" parent="SafeArea/Chrome"]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = -160.0
-offset_right = 144.0
-offset_bottom = -40.0
+offset_left = 8.0
+offset_top = -144.0
+offset_right = 128.0
+offset_bottom = -24.0
 grow_vertical = 0
 mouse_filter = 0
 theme_override_styles/panel = SubResource("joy_base")
@@ -159,7 +171,7 @@ script = ExtResource("3")
 knob_path = NodePath("Knob")
 max_radius = 42.0
 
-[node name="Knob" type="Panel" parent="Joystick"]
+[node name="Knob" type="Panel" parent="SafeArea/Chrome/Joystick"]
 layout_mode = 0
 offset_left = 36.0
 offset_top = 36.0
@@ -168,42 +180,42 @@ offset_bottom = 84.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("joy_knob")
 
-[node name="AutoCombat" type="Button" parent="."]
+[node name="AutoCombat" type="Button" parent="SafeArea/Chrome"]
+custom_minimum_size = Vector2(100, 56)
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -520.0
-offset_top = -86.0
-offset_right = -410.0
-offset_bottom = -18.0
+offset_left = -500.0
+offset_top = -70.0
+offset_right = -390.0
 grow_horizontal = 0
 grow_vertical = 0
 text = "AUTO"
 
-[node name="Interact" type="Button" parent="."]
+[node name="Interact" type="Button" parent="SafeArea/Chrome"]
+custom_minimum_size = Vector2(100, 56)
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 160.0
-offset_top = -86.0
-offset_right = 270.0
-offset_bottom = -18.0
+offset_left = 144.0
+offset_top = -70.0
+offset_right = 254.0
 grow_vertical = 0
 text = "TALK"
 
-[node name="LootLog" type="Label" parent="."]
+[node name="LootLog" type="Label" parent="SafeArea/Chrome"]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -160.0
-offset_top = 120.0
+offset_top = 104.0
 offset_right = 160.0
-offset_bottom = 148.0
+offset_bottom = 132.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.95, 0.86, 0.55, 1)
 horizontal_alignment = 1
