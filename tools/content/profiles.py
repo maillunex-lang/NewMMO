@@ -106,8 +106,70 @@ def p_characters(b, f):
 
 
 def p_classes(b, f):
-    return _rows(_in_section(b, lambda t: t.startswith("2.")), r"CLS-0[1-5]", "class", f,
-                 {"класс": "name", "роль": "role", "ресурс": "resource"})
+    out = _rows(_in_section(b, lambda t: t.startswith("2.")), r"CLS-0[1-5]", "class", f,
+                {"класс": "name", "роль": "role", "ресурс": "resource"})
+    skills = _rows(_in_section(b, lambda t: t.startswith("4.")), r"CLS-0[1-5]-SK\d\d", "skill", f,
+                   {"навык": "name", "уровень": "level", "цель": "target", "стоимость": "cost", "cd, с": "cooldown",
+                    "базовый эффект": "effect", "правило": "rule"})
+    for d in skills:
+        fl = d["fields"]
+        fl["class_id"] = d["id"][:6]
+        fl["level"] = _int(fl.get("level"))
+        fl["cost"] = _int(fl.get("cost"))
+        fl["cooldown_s"] = _num(fl.pop("cooldown", ""))
+        eff = fl.pop("effect", "")
+        fl["effect_raw"] = eff
+        k = re.match(r"([a-z_]+):\+?(\d+(?:\.\d+)?)%?(?:\*(\w+))?", eff)
+        m = re.match(r"(\d+(?:\.\d+)?)\*(AP|SP)\b", eff)
+        if k:
+            fl["effect_kind"], fl["coefficient"] = k.group(1), float(k.group(2))
+            if k.group(3):
+                fl["scale"] = k.group(3)
+        elif m:
+            fl["effect_kind"], fl["coefficient"], fl["scale"] = "damage", float(m.group(1)), m.group(2)
+        elif re.match(r"[a-z_]+$", eff):
+            fl["effect_kind"] = eff
+    return out + skills
+
+
+_AB_ID = re.compile(r"`(AB-ENM-(\d\d)-(\d{3})-([A-Z]))`")
+_NUMRE = r"(\d+(?:[.,]\d+)?)"
+
+
+def _num(s):
+    m = re.search(r"\d+(?:[.,]\d+)?", s or "")
+    return float(m.group().replace(",", ".")) if m else None
+
+
+def _abilities(blocks, f):
+    """AB-ENM-RR-NNN-X from the §5 enemy cards: coefficient/scale, cooldown (A = attack interval),
+    telegraph; the remaining mechanics stay as `text` for hand-written boss scripts."""
+    out = []
+    for b in blocks:
+        if b.kind not in ("list_item", "paragraph") or "AB-ENM-" not in b.text:
+            continue
+        ms = list(_AB_ID.finditer(b.text))
+        for i, m in enumerate(ms):
+            seg = b.text[m.end(): ms[i + 1].start() if i + 1 < len(ms) else len(b.text)]
+            aid, rr, nnn, slot = m.groups()
+            fl = {"enemy": f"ENM-{rr}-{nnn}", "slot": slot}
+            c = re.search(_NUMRE + r"\*(AP|SP)(?:\s*(?:\||или)\s*(?:" + _NUMRE + r"\*)?(AP|SP))?", seg)
+            if c:
+                fl["coefficient"] = float(c.group(1).replace(",", "."))
+                a2 = c.group(4)
+                fl["scale"] = c.group(2) if not a2 or a2 == c.group(2) else "AP|SP"
+            cd = re.search(r"CD\s*" + _NUMRE + r"\s*с", seg) or re.search(r"(?:каждые|интервал)\s*" + _NUMRE + r"\s*с", seg)
+            if not cd and slot == "A":
+                cd = re.search(r"(?:^|[\s,])" + _NUMRE + r"\s*с\b", seg)
+            if cd:
+                fl["cooldown_s"] = float(cd.group(1).replace(",", "."))
+            tg = (re.search(r"(?:телеграф|подготовк\w*|предупреждени\w*)\s*" + _NUMRE + r"\s*с", seg)
+                  or re.search(_NUMRE + r"\s*с\s*телеграф", seg))
+            if tg:
+                fl["telegraph_s"] = float(tg.group(1).replace(",", "."))
+            fl["text"] = re.sub(r"\s+", " ", seg).strip(" ;.,")[:240]
+            out.append(D("ability", aid, f, b.line, **fl))
+    return out
 
 
 def p_enemies(b, f):
@@ -121,7 +183,7 @@ def p_enemies(b, f):
     for d in out:
         d["fields"]["level"] = _int(d["fields"].get("level"))
         d["fields"]["spawn_refs"] = re.findall(r"(?:SPAWN|SPX|DNG|EVT)-\d\d-\d{3}", d["fields"].pop("spawn", ""))
-    return out
+    return out + _abilities(sec, f)
 
 
 def p_story(b, f):

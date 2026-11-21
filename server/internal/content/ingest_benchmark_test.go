@@ -19,8 +19,8 @@ func BenchmarkRegistryIngest(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	if len(snapshot.entities) != 4958 {
-		b.Fatalf("want 4958 entities, got %d", len(snapshot.entities))
+	if len(snapshot.entities) < 1000 || len(snapshot.entities) != snapshot.manifest.EntityCount {
+		b.Fatalf("bundle has %d entities, manifest says %d", len(snapshot.entities), snapshot.manifest.EntityCount)
 	}
 	store, err := Open(b.Context(), url, "benchmark")
 	if err != nil {

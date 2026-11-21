@@ -134,6 +134,30 @@ def _typed_checks(decls, reg, report):
         if not t["fields"].get("percents"):
             report.add("ERROR", "CT009_NO_WEIGHTS", "no drop probabilities parsed", t["file"], t["line"], t["id"])
 
+    # CT-COMBAT (T-038a): every enemy has attack A and signature B with numbers; elites/bosses extra slots;
+    # every class has the 12 canonical skills at the canonical unlock levels.
+    abil = collections.defaultdict(dict)
+    for a in by_kind["ability"]:
+        if a["fields"]["enemy"] not in reg:
+            report.add("ERROR", "CT_COMBAT_ABILITY_ENEMY", "ability enemy undeclared", a["file"], a["line"], a["id"])
+        abil[a["fields"]["enemy"]][a["fields"]["slot"]] = a
+    for e in by_kind["enemy"]:
+        have = abil.get(e["id"], {})
+        for slot in ("A", "B"):
+            a = have.get(slot)
+            if a is None:
+                report.add("ERROR", "CT_COMBAT_NO_ABILITY", f"enemy has no ability {slot}", e["file"], e["line"], e["id"])
+            elif "coefficient" not in a["fields"] or "cooldown_s" not in a["fields"]:
+                report.add("ERROR", "CT_COMBAT_ABILITY_NUMBERS", f"ability {slot} lacks coefficient/cooldown", a["file"], a["line"], a["id"])
+    LEVELS = [1, 3, 6, 10, 15, 20, 25, 30, 35, 40, 50, 60]
+    skills = collections.defaultdict(dict)
+    for sk in by_kind["skill"]:
+        skills[sk["fields"]["class_id"]][sk["id"]] = sk
+    for c in by_kind["class"]:
+        mine = sorted(skills.get(c["id"], {}).values(), key=lambda x: x["id"])
+        if [x["fields"]["level"] for x in mine] != LEVELS:
+            report.add("ERROR", "CT_COMBAT_SKILL_LEVELS", f"class skill unlock levels {[x['fields']['level'] for x in mine]} != {LEVELS}", c["file"], c["line"], c["id"])
+
     # quest evidence: declared ITEM-Q set must equal the set granted by quest rewards (bijection)
     granted = {}
     for q in by_kind["quest_main"]:
