@@ -5,6 +5,7 @@ extends Node
 signal quest_updated(quest_id: String, status: String, detail: String)
 signal quest_completed(quest_id: String, reward_text: String)
 signal dialogue_flow_requested(npc_id: String, flow_ids: PackedStringArray, mode: String)
+signal dialogue_server_node(npc_id: String, node: Dictionary)
 
 const QUEST_PATH := "res://data/quests/mq_01_01_to_05.json"
 const DIALOGUE_PATH := "res://data/dialogues/mq_01_01_to_05.json"
@@ -25,6 +26,9 @@ var _net: RefCounted = null
 var _content_build_id := ""
 var _instances_by_target: Dictionary = {}  # target_id -> PackedStringArray of instance ids
 var _used_instances: Dictionary = {}  # objective_id -> {instance_id: true}
+var _dialogue_npc_id := ""
+var _dialogue_node_id := ""
+var _dialogue_id := ""
 
 func _ready() -> void:
 	add_to_group("quest_manager")
@@ -33,7 +37,7 @@ func _ready() -> void:
 	_bootstrap_first_available()
 	_emit()
 
-## Attach NetClient; mutations go to the server. Keep offline dialogue presentation.
+## Attach NetClient; mutations go to the server. Dialogue open/choice when online (T-025).
 func enable_online(net_client: RefCounted, content_build_id: String = "") -> void:
 	_online = true
 	_net = net_client
@@ -47,6 +51,8 @@ func enable_online(net_client: RefCounted, content_build_id: String = "") -> voi
 			_net.quest_reward_granted.connect(_on_net_reward)
 		if not _net.state_snapshot.is_connected(_on_net_snapshot):
 			_net.state_snapshot.connect(_on_net_snapshot)
+		if not _net.dialogue_node_state.is_connected(_on_net_dialogue_node):
+			_net.dialogue_node_state.connect(_on_net_dialogue_node)
 		if _content_build_id == "" and str(_net.content_build_id) != "":
 			_content_build_id = str(_net.content_build_id)
 
@@ -205,6 +211,13 @@ func on_npc_talk(npc_id: String, player: Node) -> void:
 	if q.is_empty():
 		return
 	var contact := str(q.get("contact", ""))
+	if _online and _net != null and (npc_id == contact or _status == "active"):
+		if _status == "active":
+			_try_event("npc_interact", npc_id, player)
+		_dialogue_npc_id = npc_id
+		_dialogue_id = _active_id
+		_net.request_dialogue_open(npc_id, _active_id)
+		return
 	# Objective npc_interact can target contact or other interactables routed as npc.
 	if _status == "available" and npc_id == contact:
 		_open_flow(npc_id, "start")
@@ -222,12 +235,18 @@ func on_npc_talk(npc_id: String, player: Node) -> void:
 		_open_flow(npc_id, "progress")
 
 func on_dialogue_action(action: String, npc_id: String, player: Node) -> void:
+	if _online and _net != null and _dialogue_node_id != "":
+		_net.request_dialogue_choice(
+			_dialogue_node_id, action,
+			_dialogue_id if _dialogue_id != "" else _active_id,
+			npc_id if npc_id != "" else _dialogue_npc_id
+		)
 	match action:
 		"ACCEPT":
 			_accept(player)
 		"TURN_IN":
 			_complete(player)
-		"ASK":
+		"ASK", "LATER", "CONTINUE":
 			pass
 		_:
 			pass
@@ -235,6 +254,15 @@ func on_dialogue_action(action: String, npc_id: String, player: Node) -> void:
 		# After accept, first talk objective may complete
 		if action == "ACCEPT":
 			_try_event("npc_interact", npc_id, player)
+
+func _on_net_dialogue_node(payload: Dictionary) -> void:
+	_dialogue_node_id = str(payload.get("node_id", ""))
+	_dialogue_id = str(payload.get("dialogue_id", _dialogue_id))
+	var npc := _dialogue_npc_id
+	if npc == "":
+		var q := _quest_by_id(_active_id)
+		npc = str(q.get("contact", ""))
+	dialogue_server_node.emit(npc, payload)
 
 func report_world_event(event: String, target_id: String, player: Node = null) -> void:
 	report_world_event_ex(event, target_id, "", player)
@@ -479,4 +507,5 @@ func debug_snapshot() -> Dictionary:
 		"xp": _xp,
 		"rep_fac08": _rep_fac08,
 		"evidence": _evidence.duplicate(),
+		"dialogue_node_id": _dialogue_node_id,
 	}

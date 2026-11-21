@@ -133,8 +133,13 @@ func request_world_interact(event: String, target_id: String, instance_id: Strin
 func request_dialogue_open(npc_id: String, dialogue_id: String) -> String:
 	return send_mutation("dialogue.open.request", {"npc_id": npc_id, "dialogue_id": dialogue_id})
 
-func request_dialogue_choice(node_id: String, option_id: String) -> String:
-	return send_mutation("dialogue.choice.request", {"node_id": node_id, "option_id": option_id})
+func request_dialogue_choice(node_id: String, option_id: String, dialogue_id: String = "", npc_id: String = "") -> String:
+	var payload := {"node_id": node_id, "option_id": option_id}
+	if dialogue_id != "":
+		payload["dialogue_id"] = dialogue_id
+	if npc_id != "":
+		payload["npc_id"] = npc_id
+	return send_mutation("dialogue.choice.request", payload)
 
 func request_snapshot(scopes: Array = []) -> void:
 	var payload := {}
@@ -301,6 +306,7 @@ func _dispatch_typed(type_name: String, payload: Dictionary, request_id: String)
 			_ack_pending(request_id)
 			quest_reward_granted.emit(payload)
 		"dialogue.node.state":
+			_ack_pending(request_id)
 			dialogue_node_state.emit(payload)
 		"inventory.delta":
 			inventory_delta.emit(payload)

@@ -20,6 +20,8 @@ var _index := 0
 var _quest: Node = null
 var _pending_action := ""
 var _mode := ""
+var _server_options: Array = []
+var _server_driven := false
 
 func _ready() -> void:
 	visible = false
@@ -52,6 +54,8 @@ func _apply_chrome_labels() -> void:
 func open_flow(npc_id: String, display_name: String, flow_ids: PackedStringArray, portrait_tex: Texture2D = null, mode: String = "") -> void:
 	_npc_id = npc_id
 	_mode = mode
+	_server_driven = false
+	_server_options.clear()
 	_flow.clear()
 	_index = 0
 	_pending_action = ""
@@ -69,6 +73,56 @@ func open_flow(npc_id: String, display_name: String, flow_ids: PackedStringArray
 		_flow.append(str(id))
 	visible = true
 	_show_current()
+
+## Server-authoritative node (EX-P05 / T-025). Options list drives visible buttons.
+func open_server_node(npc_id: String, display_name: String, node: Dictionary, portrait_tex: Texture2D = null) -> void:
+	_npc_id = npc_id
+	_server_driven = true
+	_mode = ""
+	_flow.clear()
+	_index = 0
+	_quest = get_tree().get_first_node_in_group("quest_manager")
+	if portrait_tex:
+		portrait.texture = portrait_tex
+	var sp := str(node.get("speaker", ""))
+	if sp == "PLAYER":
+		speaker.text = tr("ui.you")
+	elif display_name != "":
+		speaker.text = display_name
+	else:
+		speaker.text = sp if sp != "" else npc_id
+	body.text = str(node.get("text", ""))
+	_server_options = node.get("options", [])
+	if typeof(_server_options) != TYPE_ARRAY:
+		_server_options = []
+	visible = true
+	_show_server_options()
+
+func _show_server_options() -> void:
+	_hide_choice_buttons()
+	var ids: PackedStringArray = PackedStringArray()
+	for opt in _server_options:
+		if typeof(opt) != TYPE_DICTIONARY:
+			continue
+		ids.append(str(opt.get("option_id", "")))
+	var has_accept := "ACCEPT" in ids
+	var has_ask := "ASK" in ids
+	var has_turn_in := "TURN_IN" in ids
+	var has_continue := "CONTINUE" in ids or "LATER" in ids
+	if choice_accept:
+		choice_accept.visible = has_accept
+	if choice_ask:
+		choice_ask.visible = has_ask
+	if choice_turn_in:
+		choice_turn_in.visible = has_turn_in
+	if has_accept or has_ask or has_turn_in:
+		next_btn.visible = false
+	elif has_continue:
+		next_btn.visible = true
+		next_btn.text = tr("ui.close")
+	else:
+		next_btn.visible = true
+		next_btn.text = tr("ui.close")
 
 func _show_current() -> void:
 	_hide_choice_buttons()
@@ -121,6 +175,16 @@ func _hide_choice_buttons() -> void:
 		choice_turn_in.visible = false
 
 func _choose(action: String) -> void:
+	if _server_driven:
+		action_chosen.emit(action, _npc_id)
+		if action == "LATER" or action == "CONTINUE":
+			_finish()
+			return
+		# Wait for next dialogue.node.state; keep panel open for ASK/ACCEPT/TURN_IN follow-up text.
+		_hide_choice_buttons()
+		next_btn.visible = true
+		next_btn.text = tr("ui.close")
+		return
 	if action == "ASK":
 		var qid := ""
 		if _quest and _quest.has_method("get_active_quest_id"):
@@ -153,11 +217,16 @@ func _choose(action: String) -> void:
 	_finish()
 
 func _on_next() -> void:
+	if _server_driven:
+		_finish()
+		return
 	_index += 1
 	_show_current()
 
 func _finish() -> void:
 	visible = false
+	_server_driven = false
+	_server_options.clear()
 	_hide_choice_buttons()
 	closed.emit(_npc_id)
 
