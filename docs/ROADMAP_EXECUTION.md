@@ -123,7 +123,7 @@
 **Контракты до старта:** D-001 content export (director) в `docs/contracts/`
 **OSS research:** [x] T-001 `docs/research/db-migrations.md` (merge `3fb9aa6`) — рекомендация: **goose + pgx/v5 (pgxpool)**, запасной golang-migrate; без ORM
 **Проверка директором (go.mod на тегах upstream, 2026-11-21):** goose v3.30.0 → Go 1.26.0 (v3.26.0 → 1.23.0); golang-migrate v4.20.1 → 1.25.11; pgx v5.13.0 → 1.25.0 (v5.7.6 → 1.23.0); tern v2.4.3 → 1.25.0; sqlc v1.31.1 → 1.26.0. `server/go.mod` = Go 1.22, CI `setup-go 1.22.x`, локально Go 1.24.7 ⇒ **без апгрейда Go актуальные версии не подключить**
-**Решения владельца (2026-11-21) — блокер снят:** (1) **Go сервера → 1.25+** (CI уже `setup-go 1.25.x`; директива `go` в `server/go.mod` поднимается в первой серверной задаче P03 после merge T-005, чтобы не конфликтовать с Codex); (2) **goose одобрен** — как закреплённый внешний CLI/образ в отдельном migration-job (не зависимость сервера) + **pgx/v5/pgxpool одобрен**; без ORM; sqlc — отдельное решение позже
+**Решения владельца (2026-11-21) — блокер снят:** (1) **Go сервера → 1.25+** (CI `setup-go 1.25.x`; директива `go 1.25.0` в `server/go.mod` — сделано в T-006); (2) **goose одобрен** — как закреплённый внешний CLI/образ в отдельном migration-job (не зависимость сервера) + **pgx/v5/pgxpool одобрен**; без ORM; sqlc — отдельное решение позже
 **Условия Фазы 2 (обязательны до `go get`/скачивания):** точные версии и контрольные суммы фиксируются в `docs/contracts/` (pin-матрица), проверяются LICENSE/SPDX на теге, `go.mod`/дерево зависимостей, GHSA/открытые issues; кандидаты: pgx v5.13.0 (Go 1.25.0), goose v3.30.0 CLI (готовый бинарь/образ, не сборка из исходников); запасной golang-migrate v4.20.1  
 **Приёмка:** миграции из §16 (адаптированные), rollback, content_builds loader  
 **Тесты:** migrate up/down на локальном/Compose Postgres  
@@ -226,6 +226,7 @@
 | 2026-11-21 | EX-P02 crossrefs + CT-003…009 | `59f5cbd` | unittest 32 OK; lint 0 ERROR | C-ITEMQ-001 найден (36 ITEM-Q без объявления) |
 | 2026-11-21 | C-ITEMQ-001 A (по решению владельца) | `8a61c6b` | unittest 32 OK | 36 `ITEM-Q-*` в `11` §12.1, имена — рабочие |
 | 2026-11-21 | Полная сверка связей: client-sync + docs-links + CI | см. `git log` | unittest 35 OK; client-sync 0 ERR; docs-links 0 | клиент == канон; 1 doc-путь починен (`AUDIT.md`) |
+| 2026-11-21 | T-006 Go 1.25 directive + WS-ready wrapper (Codex) | см. `git log` | director re-run on Go 1.25.0: vet + test -race OK | R-GO закрыт на уровне `server/go.mod`; CI уже 1.25.x |
 | 2026-11-21 | T-002 Godot 4.7.2 gate research (ChatGPT) | см. `git log` | docs-only; director spot-check of smoke/export claims | 4.7.2 вышел 2026-08-18; рекомендация: держать 4.3 до B-APK + базы на 6 ГБ; найдены пробелы смоука/экспорта → T-008 |
 | 2026-11-21 | T-004 client UI safe-area + scene choices (Cursor) | см. `git log` | smokes (executor): stage1/MQ01/boot OK; client-sync 0 err | в P06 сделано: safe-area, кнопки выбора в `.tscn`; журнал квестов и i18n → T-007 |
 | 2026-11-21 | T-005 Go server hardening (Codex) | `b026eab` | go vet + test -race OK; live smoke OK | stdlib only; replaced by T-006 follow-up (go 1.25 directive, WS-ready wrapper) |

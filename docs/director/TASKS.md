@@ -24,7 +24,7 @@ Prompts live in `docs/director/prompts/T-NNN.md`. Protocol: `DIRECTOR.md`.
 | T-004 | client | Compliance review of HUD/dialogue scenes + safe fixes | — | **DONE** (merge: see `git log`; branch `aa2ba71`). Director: lane_check clean, @onready paths vs `.tscn` verified statically, client-sync 0 err. **Godot is not installed on the director's machine → smokes are executor-reported**; re-run `./tools/smoke_stage1.sh` locally if in doubt |
 | T-007 | client | Quest journal screen (`.tscn`) behind a data adapter + UI strings via `tr()` → `client/translations/ui.csv` | T-004 ✔ | **ISSUED** (`prompts/T-007.md`) |
 | T-005 | server | Go server hardening without new deps: config via env, `/healthz` `/readyz`, graceful shutdown, stdlib structured logging, tests | — | **DONE** `b026eab` (branch `272a76f`). Director: vet + `go test -race` green, live run: healthz/readyz/X-Request-Id, SIGTERM clean stop. Follow-up: wrapper lacks Hijacker/Flusher → T-006 |
-| T-006 | server | Go directive 1.25.0 + `statusWriter` Hijacker/Flusher/ResponseController (WebSocket-ready), stdlib only | T-005 ✔ | **ISSUED** (`prompts/T-006.md`) |
+| T-006 | server | Go directive 1.25.0 + `statusWriter` Hijacker/Flusher/ResponseController (WebSocket-ready), stdlib only | T-005 ✔ | **DONE** (branch `f2516ec`). Director re-ran on Go 1.25.0: vet + `go test -race` green; go.mod only `go 1.25.0`, no requires |
 
 First parallel batch (different lanes, no dependencies, disjoint files): **T-001 + T-004 + T-005** — issued. Next: T-002/T-003 (research) when a research slot frees; D-001/D-002 by director meanwhile. Merge order when all return: T-001 (docs) → T-005 (server) → T-004 (client); each gated by CI + lane_check.
 
@@ -39,3 +39,4 @@ First parallel batch (different lanes, no dependencies, disjoint files): **T-001
 | 2026-11-21 | T-005 reviewed and merged (`b026eab`); T-006 issued to Codex |
 | 2026-11-21 | T-004 reviewed and merged; T-007 issued to Cursor |
 | 2026-11-21 | T-002 reviewed and merged; T-003 issued to ChatGPT; T-008 queued for Cursor |
+| 2026-11-21 | T-006 reviewed and merged; Codex idle until EX-P03 (needs owner «делай» + D-001) |
