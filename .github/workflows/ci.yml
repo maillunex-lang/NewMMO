@@ -100,8 +100,8 @@ jobs:
         working-directory: server
         run: |
           go vet ./...
-          go test ./... -race -count=1 -v ./internal/content 2>&1 | tee /tmp/content-test.log
-          ! grep -E "^(--- SKIP|\s+--- SKIP)" /tmp/content-test.log
+          go test ./internal/content -race -count=1 -v 2>&1 | tee /tmp/content-test.log
+          if grep -E -- "--- SKIP" /tmp/content-test.log; then echo "database tests were skipped"; exit 1; fi
           go test ./... -race -count=1
           go mod verify
 
