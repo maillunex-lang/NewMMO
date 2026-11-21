@@ -31,3 +31,5 @@ per-region reachability of dungeon rooms/POI graph beyond declared links (EX-P09
 Other checks: `check_client_sync.py` (client/data quests+dialogues vs canon declarations; stub POI ids are INFO per C-POI-001),
 `check_docs_links.py` (repo paths referenced from docs must exist; canon specs `docs/content/NN_*` skipped — they describe planned structure).
 Multi-agent gate lives in `tools/director/` (`lane_check.py`).
+
+`dialogue_lint.py` (T-016 spec, **report mode, not in CI**): stamps/duplicates/length/PROGRESS variants/early-secret markers; `--quests MQ-01-05,SQ-01-001 --strict` checks a rewritten batch. Baseline on the current canon: every quest has findings.

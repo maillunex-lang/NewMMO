@@ -38,6 +38,15 @@ Recorded by EX-P00 audit. **Do not silently pick a side in code.** Owner decides
 | Applied | New table in `11` §12.1; names derived mechanically from quest titles (`Улика: «<название квеста>»`) — **working names, owner approves final in-game names**. No `ITEM-SQ-*` registered (no SQ grants any). Schema `quest_item` + check «declared set == granted set» (CT009_EVIDENCE_*). Allowlist emptied. |
 | History | OPEN at EX-P02 (36 unresolved refs) → owner chose A. |
 
+## C-CHOICE-001 — chapter-end choices `CHOICE-RR-20`: mentioned but not specified
+
+| Field | Value |
+|-------|--------|
+| Status | **OPEN** — owner decision needed before dialogue batch «REG-01 MQ-01-20» (found by T-016 audit, verified by director) |
+| Problem | `08_QUESTS_MAIN.md` §3 says branches are `CHOICE-RR-09` **and `CHOICE-RR-20`** (A/B). Quest cards `MQ-01-09`…`MQ-06-09` define the choice (e.g. `CHOICE-01-09`), and `MQ-06-20` defines the final three-way ending, but the cards `MQ-01-20`…`MQ-05-20` contain **no «Выбор» definition** (their journal text only says «зафиксировать выбор»), and `10_DIALOGUES.md` has no `CHOICE` lines for them. |
+| Options | **A** `CHOICE-RR-20` does not exist for chapters 1–5 (fix the sentence in `08` §3); **B** it exists: owner defines the A/B options, effects and flags per chapter (then `08` cards and `10` get them); **C** treat the «20» choice as the chapter-summary acknowledgement without gameplay branching. |
+| Interim | Nothing implemented; dialogue pilot (MQ-01-05, SQ-01-001…005) is unaffected. Batch `MQ-01-20` waits for this decision. |
+
 ## Other open notes
 
 | ID | Note |
