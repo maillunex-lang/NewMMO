@@ -124,3 +124,4 @@ ui.death_sub,Возрождение через несколько секунд�
 ui.quest_tap_hint,Нажмите — автопуть к цели,Tap to auto-travel to the objective
 ui.inspect,Осмотреть,Inspect
 ui.enter,Войти,Enter
+ui.assets_loading,Загрузка ресурсов игры… 0%,Downloading game assets… 0%

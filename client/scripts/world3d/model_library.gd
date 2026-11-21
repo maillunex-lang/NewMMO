@@ -58,10 +58,34 @@ static func _sphere(r: float, seg := 12) -> SphereMesh:
 ## Target heights in metres for imported models (Meshy output has arbitrary scale/pivot).
 const HEIGHTS := {
 	"tree_oak": 5.2, "tree_pine": 6.0, "rock": 1.3, "cottage": 5.2, "fence": 1.2, "lantern": 3.0, "crystal": 2.2,
-	"npc_generic": 1.85, "hero_cls-03": 1.9, "enemy_enm-01-001": 1.85, "enemy_enm-01-003": 1.1, "enemy_enm-01-004": 1.2,
+	"npc_generic": 1.85, "bush": 1.1, "flowers": 0.6, "mushrooms": 0.5, "stump": 0.8, "tree_birch": 5.6, "well": 2.4, "barrel": 1.0, "haystack": 1.3,
+	"hero_cls-01": 1.95, "hero_cls-02": 1.95, "hero_cls-04": 1.85, "hero_cls-05": 1.9, "enemy_enm-01-002": 1.5,
+	"npc_elder_mira": 1.65, "npc_npc-802": 1.8, "npc_npc-102": 1.85, "hero_cls-03": 1.9, "enemy_enm-01-001": 1.85, "enemy_enm-01-003": 1.1, "enemy_enm-01-004": 1.2,
 }
 
 static func _aabb_of(node: Node3D) -> AABB:
+	# Skinned (rigged) models: the mesh AABB is in bind space and can be off by the armature scale (Meshy: cm bones, 0.01
+	# armature). Measure the skeleton instead and extend the span to the full body height (bones end at the head centre).
+	var skels := node.find_children("*", "Skeleton3D", true, false)
+	if not skels.is_empty():
+		var sk := skels[0] as Skeleton3D
+		var chain := Transform3D.IDENTITY
+		var p: Node = sk
+		while p != null and p != node:
+			if p is Node3D:
+				chain = (p as Node3D).transform * chain
+			p = p.get_parent()
+		if node is Node3D and p == node:
+			chain = (node as Node3D).transform * chain if false else chain
+		var lo := Vector3(1e9, 1e9, 1e9)
+		var hi := Vector3(-1e9, -1e9, -1e9)
+		for i in sk.get_bone_count():
+			var pos: Vector3 = chain * sk.get_bone_global_pose(i).origin
+			lo = lo.min(pos)
+			hi = hi.max(pos)
+		var span := hi.y - lo.y
+		var full := span / 0.87
+		return AABB(Vector3(lo.x, lo.y - 0.02 * full, lo.z), Vector3(hi.x - lo.x, full, hi.z - lo.z))
 	var acc := [AABB(), false]
 	_aabb_walk(node, Transform3D.IDENTITY, acc)
 	return acc[0]
@@ -94,12 +118,37 @@ static func load_glb(name: String, height := 0.0) -> Node3D:
 	body.name = "Body"
 	holder.add_child(body)
 	body.add_child(inst)
+	_attach_animations(inst)
 	var box := _aabb_of(inst)  # inst itself has identity transform here
 	if box.size.y > 0.001:
 		var k := h / box.size.y
 		inst.scale = Vector3.ONE * k
 		inst.position = Vector3(-box.get_center().x * k, -box.position.y * k, -box.get_center().z * k)
 	return holder
+
+static var _anim_cache: Dictionary = {}
+
+## Meshy humanoids share one 24-bone skeleton, so one baked animation set (res://assets/anims/humanoid/*.res) drives all.
+static func _attach_animations(inst: Node) -> void:
+	var skel := inst.find_children("*", "Skeleton3D", true, false)
+	var players := inst.find_children("*", "AnimationPlayer", true, false)
+	if skel.is_empty() or players.is_empty():
+		return
+	if _anim_cache.is_empty():
+		for n in ["idle", "walk", "run", "attack", "cast", "hit", "dead"]:
+			var path := "res://assets/anims/humanoid/%s.res" % n
+			if ResourceLoader.exists(path):
+				_anim_cache[n] = load(path)
+	if _anim_cache.is_empty():
+		return
+	var ap := players[0] as AnimationPlayer
+	for old in ap.get_animation_library_list():
+		ap.remove_animation_library(old)
+	var lib := AnimationLibrary.new()
+	for k in _anim_cache.keys():
+		lib.add_animation(k, _anim_cache[k])
+	ap.add_animation_library("", lib)
+	ap.set_meta("humanoid", true)
 
 static func prop(scene_file: String) -> Node3D:
 	var base := scene_file.get_file()
@@ -175,8 +224,10 @@ static func enemy(ref: String) -> Node3D:
 		_mesh(body, _sphere(0.08, 8), _mat(Color(0.1, 0.1, 0.1), 0.3), Vector3(0.28 * sx, 1.0, 0.68))
 	return root
 
-static func npc() -> Node3D:
-	var real := load_glb("npc_generic")
+static func npc(npc_id := "") -> Node3D:
+	var real := load_glb("npc_" + npc_id.to_lower()) if npc_id != "" else null
+	if real == null:
+		real = load_glb("npc_generic")
 	if real != null:
 		return real
 	var root := Node3D.new()
@@ -186,3 +237,7 @@ static func npc() -> Node3D:
 	_mesh(body, CapsuleMesh.new(), _mat(Color(0.95, 0.55, 0.2), 0.7), Vector3(0, 0.9, 0), Vector3(0.7, 0.9, 0.7))
 	_mesh(body, _sphere(0.28), _mat(Color(1.0, 0.85, 0.7), 0.7), Vector3(0, 1.85, 0))
 	return root
+
+## Dressing models used by View3D's scatter (no 2D counterpart): real GLB or null.
+static func dressing(name: String) -> Node3D:
+	return load_glb(name)

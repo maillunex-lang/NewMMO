@@ -12,7 +12,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	await process_frame
-	var main := root.get_child(0)
+	var main := current_scene
 	if main == null:
 		push_error("No main root child")
 		quit(1)

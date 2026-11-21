@@ -18,7 +18,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	await process_frame
-	var main := root.get_child(0)
+	var main := current_scene
 	var valley := main.get_node("DawnValley")
 	for m in get_nodes_in_group("monsters"):  # wandering monsters make anchor positions (and detours) nondeterministic
 		m.set_physics_process(false)

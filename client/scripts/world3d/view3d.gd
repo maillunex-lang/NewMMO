@@ -18,9 +18,14 @@ var environment: Environment = null
 var preset := "high"
 var zoom := 13.0
 var fx: Fx3D = null
+var grass: Grass = null
+var _road_tex: Texture2D = null
 
+var _static_nodes: Array = []      # props / dressing (freed on model reload)
+var _road_segs: Array = []         # [Vector2 a, Vector2 b] in metres
 var _fade_items: Array = []        # {meshes, pos, alpha} tall props that can hide the hero
 var _fade_t := 0.0
+var _movers: Array = []
 var _views: Dictionary = {}        # instance_id -> {node, view, kind, last, tag}
 var _scan_t := 0.0
 var _cam_target := Vector3.ZERO
@@ -32,9 +37,20 @@ func setup(p_valley: Node2D, p_player: Node2D) -> void:
 	player = p_player
 	preset = GfxQuality.load_preset()
 	_build_environment()
+	_build_road_mask()
 	_build_ground()
-	_build_paths()
+	_collect_road_segments()
 	_build_props()
+	_build_dressing()
+	grass = Grass.new()
+	grass.name = "Grass"
+	add_child(grass)
+	if OS.get_environment("NEWMMO_GRASS") != "0":
+		grass.setup(preset, _road_tex, MAP_SIZE / PX_PER_M)
+	add_to_group("view3d")
+	var packs := get_node_or_null("/root/AssetPacks")
+	if packs != null and packs.has_signal("packs_ready"):
+		packs.packs_ready.connect(reload_models)
 	_build_camera()
 	fx = Fx3D.new()
 	fx.name = "Fx3D"
@@ -67,7 +83,7 @@ func _build_environment() -> void:
 	environment.background_mode = Environment.BG_SKY
 	environment.sky = sky
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	environment.ambient_light_energy = 0.55
+	environment.ambient_light_energy = 0.85
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	environment.tonemap_exposure = 0.85
 	environment.adjustment_enabled = true
@@ -86,25 +102,27 @@ func _build_environment() -> void:
 	sun.light_color = Color(1.0, 0.95, 0.82)
 	sun.light_energy = 1.15
 	sun.shadow_bias = 0.04
+	sun.shadow_opacity = 0.55
 	add_child(sun)
 
-func _ground_material() -> StandardMaterial3D:
+func _noise_tex() -> NoiseTexture2D:
 	var noise := FastNoiseLite.new()
-	noise.frequency = 0.012
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	noise.frequency = 0.02
 	noise.fractal_octaves = 3
 	var tex := NoiseTexture2D.new()
 	tex.noise = noise
-	tex.width = 256
-	tex.height = 256
+	tex.width = 512
+	tex.height = 512
 	tex.seamless = true
-	var grad := Gradient.new()
-	grad.colors = PackedColorArray([Color(0.16, 0.5, 0.14), Color(0.32, 0.68, 0.2)])
-	tex.color_ramp = grad
-	var m := StandardMaterial3D.new()
-	m.albedo_texture = tex
-	m.uv1_triplanar = true
-	m.uv1_scale = Vector3(0.05, 0.05, 0.05)
-	m.roughness = 0.95
+	return tex
+
+func _ground_material() -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = load("res://shaders/ground.gdshader")
+	m.set_shader_parameter("noise_tex", _noise_tex())
+	m.set_shader_parameter("road_mask", _road_tex)
+	m.set_shader_parameter("map_size", MAP_SIZE / PX_PER_M)
 	return m
 
 func _build_ground() -> void:
@@ -116,44 +134,115 @@ func _build_ground() -> void:
 	mi.position = Vector3(MAP_SIZE.x / PX_PER_M / 2.0, 0, MAP_SIZE.y / PX_PER_M / 2.0)
 	add_child(mi)
 
-## Dirt roads: ribbons along the generated/manual Line2D paths.
-func _build_paths() -> void:
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.82, 0.62, 0.36)
-	mat.roughness = 1.0
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var any := false
+## Road mask: the location's Line2D paths drawn white-on-black into a small viewport (8 px per metre). The ground
+## shader turns it into a dirt road and the grass shader keeps blades off it.
+func _build_road_mask() -> void:
+	var px_per_m := 8.0
+	var vp := SubViewport.new()
+	vp.size = Vector2i(int(MAP_SIZE.x / PX_PER_M * px_per_m), int(MAP_SIZE.y / PX_PER_M * px_per_m))
+	vp.disable_3d = true
+	vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+	var bg := ColorRect.new()
+	bg.color = Color.BLACK
+	bg.size = Vector2(vp.size)
+	vp.add_child(bg)
+	var k := px_per_m / PX_PER_M
 	for n in valley.find_children("*", "Line2D", true, false):
 		var line := n as Line2D
-		var pts: PackedVector2Array = line.points
-		if pts.size() < 2:
+		if line.points.size() < 2:
 			continue
-		var half := maxf(0.7, line.width / PX_PER_M / 2.0)
-		var left: Array[Vector3] = []
-		var right: Array[Vector3] = []
-		for i in range(pts.size()):
-			var a := _to3(line.to_global(pts[i]))
-			var b := _to3(line.to_global(pts[min(i + 1, pts.size() - 1)]))
-			var prev := _to3(line.to_global(pts[max(i - 1, 0)]))
-			var dir := (b - prev)
-			dir.y = 0
-			if dir.length() < 0.001:
-				dir = Vector3.RIGHT
-			dir = dir.normalized()
-			var nrm := Vector3(-dir.z, 0, dir.x) * half
-			left.append(a + nrm + Vector3(0, 0.03, 0))
-			right.append(a - nrm + Vector3(0, 0.03, 0))
-		for i in range(left.size() - 1):
-			for v in [left[i], right[i], left[i + 1], right[i], right[i + 1], left[i + 1]]:
-				st.set_normal(Vector3.UP)
-				st.add_vertex(v)
-			any = true
-	if any:
-		var mi := MeshInstance3D.new()
-		mi.mesh = st.commit()
-		mi.material_override = mat
-		add_child(mi)
+		for pass_i in 2:
+			var c := Line2D.new()
+			var pts := PackedVector2Array()
+			for p in line.points:
+				pts.append(line.to_global(p) * k)
+			c.points = pts
+			c.width = (3.9 if pass_i == 0 else 2.7) * px_per_m
+			c.default_color = Color(0.5, 0.5, 0.5) if pass_i == 0 else Color.WHITE
+			c.joint_mode = Line2D.LINE_JOINT_ROUND
+			c.begin_cap_mode = Line2D.LINE_CAP_ROUND
+			c.end_cap_mode = Line2D.LINE_CAP_ROUND
+			c.antialiased = true
+			vp.add_child(c)
+	add_child(vp)
+	_road_tex = vp.get_texture()
+
+func _collect_road_segments() -> void:
+	_road_segs.clear()
+	for n in valley.find_children("*", "Line2D", true, false):
+		var line := n as Line2D
+		for i in range(line.points.size() - 1):
+			_road_segs.append([line.to_global(line.points[i]) / PX_PER_M, line.to_global(line.points[i + 1]) / PX_PER_M])
+
+func _road_dist(p: Vector2) -> float:
+	var best := 1e9
+	for seg in _road_segs:
+		var a: Vector2 = seg[0]
+		var b: Vector2 = seg[1]
+		var ab := b - a
+		var t := clampf((p - a).dot(ab) / maxf(ab.length_squared(), 0.0001), 0.0, 1.0)
+		best = minf(best, p.distance_to(a + ab * t))
+	return best
+
+## Variety: wild flowers, mushrooms, bushes and stumps scattered off the roads, plus a well/barrels/haystack by the cottage.
+func _build_dressing() -> void:
+	var d: float = float(GfxQuality.settings(preset)["vegetation"])
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 99
+	var blockers: Array = []
+	for n in valley.find_children("*", "StaticBody2D", true, false):
+		blockers.append((n as Node2D).global_position / PX_PER_M)
+	var map_m := MAP_SIZE / PX_PER_M
+	for spec in [["flowers", 170, 0.9], ["mushrooms", 36, 1.0], ["bush", 70, 1.2], ["stump", 12, 1.0]]:
+		var placed := 0
+		var tries := 0
+		var want := int(float(spec[1]) * d)
+		while placed < want and tries < want * 12:
+			tries += 1
+			var p := Vector2(rng.randf_range(2.0, map_m.x - 2.0), rng.randf_range(2.0, map_m.y - 2.0))
+			if _road_dist(p) < 2.4:
+				continue
+			var near := false
+			for b in blockers:
+				if (b as Vector2).distance_to(p) < 1.8:
+					near = true
+					break
+			if near:
+				continue
+			var m := ModelLibrary.dressing(str(spec[0]))
+			if m == null:
+				break
+			m.position = Vector3(p.x, 0, p.y)
+			m.rotation.y = rng.randf() * TAU
+			var sc: float = float(spec[2]) * rng.randf_range(0.75, 1.3)
+			m.scale = Vector3(sc, sc, sc)
+			add_child(m)
+			_static_nodes.append(m)
+			placed += 1
+	# cottage yard
+	for n in valley.find_children("*", "StaticBody2D", true, false):
+		if str(n.scene_file_path).get_file() == "cottage.tscn":
+			var c := (n as Node2D).global_position / PX_PER_M
+			for item in [["well", Vector2(-6.0, 1.2), 0.0], ["barrel", Vector2(-3.6, 2.6), 0.4], ["barrel", Vector2(-4.2, 3.2), 1.2], ["haystack", Vector2(5.6, -1.6), 0.8]]:
+				var m := ModelLibrary.dressing(str(item[0]))
+				if m != null:
+					m.position = Vector3(c.x + (item[1] as Vector2).x, 0, c.y + (item[1] as Vector2).y)
+					m.rotation.y = float(item[2])
+					add_child(m)
+					_static_nodes.append(m)
+
+func reload_models() -> void:
+	for n in _static_nodes:
+		if is_instance_valid(n):
+			n.queue_free()
+	_static_nodes.clear()
+	_fade_items.clear()
+	for id in _views.keys():
+		_views[id]["view"].queue_free()
+	_views.clear()
+	_build_props()
+	_build_dressing()
+	_scan_actors()
 
 func _build_props() -> void:
 	var rng := RandomNumberGenerator.new()
@@ -166,7 +255,11 @@ func _build_props() -> void:
 		var is_tree := sf.get_file().begins_with("tree")
 		if is_tree and density < 1.0 and rng.randf() > density:
 			continue
-		var model := ModelLibrary.prop(sf)
+		var model: Node3D = null
+		if sf.get_file() == "tree.tscn" and rng.randf() < 0.3:
+			model = ModelLibrary.dressing("tree_birch")  # variety: birches among the oaks
+		if model == null:
+			model = ModelLibrary.prop(sf)
 		if model == null:
 			continue
 		var p := (n as Node2D).global_position
@@ -175,6 +268,7 @@ func _build_props() -> void:
 		var s := rng.randf_range(0.9, 1.25) if is_tree else 1.0
 		model.scale = Vector3(s, s, s)
 		add_child(model)
+		_static_nodes.append(model)
 		if is_tree or sf.get_file() == "cottage.tscn":
 			_fade_items.append({"meshes": model.find_children("*", "MeshInstance3D", true, false), "pos": model.position, "alpha": 0.0})
 
@@ -211,7 +305,7 @@ func _make_view(n: Node2D, kind: String) -> void:
 		"hero":
 			view = ModelLibrary.hero(_class_of(n))
 		"npc":
-			view = ModelLibrary.npc()
+			view = ModelLibrary.npc(str(n.get("npc_id")) if n.get("npc_id") != null else "")
 			label = str(n.get("display_name"))
 		"enemy":
 			view = ModelLibrary.enemy(str(n.get("ref")) if n.get("ref") != null else _ref_of_local_monster(n))
@@ -237,7 +331,13 @@ func _make_view(n: Node2D, kind: String) -> void:
 		bar = _hp_bar()
 		bar.position = Vector3(0, 2.4, 0)
 		view.add_child(bar)
-	_views[n.get_instance_id()] = {"node": n, "view": view, "kind": kind, "last": view.position, "tag": tag, "bar": bar, "bob": 0.0}
+	var ap := view.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	if ap != null and not ap.has_meta("humanoid"):
+		ap = null
+	_views[n.get_instance_id()] = {"node": n, "view": view, "kind": kind, "last": view.position, "tag": tag, "bar": bar, "bob": 0.0,
+		"ap": ap, "anim": "", "lock": 0.0, "dead_t": 0.0}
+	if ap != null:
+		_play(_views[n.get_instance_id()], "idle", 1.0)
 	view.position = _to3(n.global_position)
 
 func _class_of(n: Node) -> String:
@@ -294,8 +394,11 @@ func _process(delta: float) -> void:
 	_sync_actors(delta)
 	_update_camera(delta)
 	_update_fades(delta)
+	if grass != null:
+		grass.tick(delta, _cam_target, _movers)
 
 func _sync_actors(delta: float) -> void:
+	var movers: Array = []
 	var pp := player.global_position if player != null else Vector2.ZERO
 	# closest interactable name
 	var closest_id := -1
@@ -318,26 +421,77 @@ func _sync_actors(delta: float) -> void:
 		v.position = target
 		var moving := delta_pos.length() > 0.004
 		var kind: String = e["kind"]
+		if moving and (kind == "hero" or kind == "enemy"):
+			movers.append([id, Vector2(target.x, target.z)])
 		if kind == "poi":
 			(e["tag"] as Label3D).visible = id == closest_id
 			v.rotation.y += delta * 1.2
 			continue
-		# facing from motion, else from the 2D animator's direction index
+		# facing (+Z is the model's front): from motion, else from the 2D node's 8-way direction index
+		var yaw := v.rotation.y
 		if moving:
-			v.rotation.y = lerp_angle(v.rotation.y, -(atan2(delta_pos.z, delta_pos.x) + PI / 2.0), 1.0 - exp(-14.0 * delta))
+			yaw = atan2(delta_pos.x, delta_pos.z)
+		elif n.get("animator") != null and n.get("animator").get("_dir") != null:
+			yaw = PI / 2.0 - float(n.get("animator").get("_dir")) * PI / 4.0
+		v.rotation.y = lerp_angle(v.rotation.y, yaw, 1.0 - exp(-14.0 * delta))
+		var speed := delta_pos.length() / maxf(delta, 0.001)
+		var dead_now := bool(n.get("dead")) if n.get("dead") != null else bool(n.get("online_dead")) if n.get("online_dead") != null else false
+		if e["ap"] != null:
+			_drive_humanoid(e, moving, speed, dead_now, delta)
 		var body := v.get_node_or_null("Body") as Node3D
-		if body != null:
+		if body != null and e["ap"] == null:
 			e["bob"] = float(e["bob"]) + (delta * (11.0 if moving else 2.2))
 			body.position.y = absf(sin(float(e["bob"]))) * (0.12 if moving else 0.03)
 		# server puppet state
 		var dead := bool(n.get("dead")) if n.get("dead") != null else false
-		v.visible = not dead
+		v.visible = not dead or (e["ap"] != null and float(e["dead_t"]) < 2.6)
 		var bar := e["bar"] as MeshInstance3D
 		if bar != null and n.get("max_hp") != null:
 			var ratio := clampf(float(n.get("hp")) / maxf(1.0, float(n.get("max_hp"))), 0.0, 1.0)
 			bar.scale = Vector3(maxf(ratio, 0.001), 1, 1)
 		if kind == "hero" and n.has_method("is_attacking_now"):
 			pass
+	_movers = movers
+
+func _play(e: Dictionary, anim: String, speed: float) -> void:
+	var ap := e["ap"] as AnimationPlayer
+	if ap == null or not ap.has_animation(anim):
+		return
+	if e["anim"] != anim:
+		ap.play(anim, 0.15, speed)
+		e["anim"] = anim
+
+func _drive_humanoid(e: Dictionary, moving: bool, speed: float, dead_now: bool, delta: float) -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	if dead_now:
+		e["dead_t"] = float(e["dead_t"]) + delta
+		_play(e, "dead", 1.6)
+		return
+	e["dead_t"] = 0.0
+	if e["anim"] == "dead":
+		e["anim"] = ""
+	if now < float(e["lock"]):
+		return
+	if moving:
+		_play(e, "run" if speed > 3.6 else "walk", clampf(speed / 4.5, 0.7, 1.4))
+	else:
+		_play(e, "idle", 1.0)
+
+## One-shot action clips (cast / attack / hit) fired by combat events; the state machine resumes afterwards.
+func play_action(node: Node2D, anim: String) -> void:
+	if node == null or not _views.has(node.get_instance_id()):
+		return
+	var e: Dictionary = _views[node.get_instance_id()]
+	if e["ap"] == null or bool(e["dead_t"] > 0.0):
+		return
+	var ap := e["ap"] as AnimationPlayer
+	if not ap.has_animation(anim):
+		return
+	var speed := 2.4 if anim != "hit" else 2.6
+	e["anim"] = ""
+	ap.play(anim, 0.08, speed)
+	e["anim"] = anim
+	e["lock"] = Time.get_ticks_msec() / 1000.0 + ap.get_animation(anim).length / speed * (0.55 if anim != "hit" else 0.4)
 
 func _update_camera(delta: float) -> void:
 	if camera == null:

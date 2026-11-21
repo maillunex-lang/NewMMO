@@ -1,16 +1,151 @@
 {
   "style": "stylized fantasy game asset, vibrant saturated colors, hand-painted texture, soft rounded chunky shapes, clean silhouette, low poly, no base plate",
   "assets": {
-    "tree_oak":   {"prompt": "fantasy oak tree with thick trunk and lush bright green round canopy", "poly": 3000, "tex": "bright saturated green leaves, warm brown bark"},
-    "tree_pine":  {"prompt": "fantasy pine tree, layered fluffy teal-green boughs, slim trunk", "poly": 3000, "tex": "rich emerald and teal needles, brown trunk"},
-    "rock":       {"prompt": "mossy boulder cluster, rounded chunky rocks", "poly": 1200, "tex": "cool grey stone with bright green moss patches"},
-    "cottage":    {"prompt": "cozy fantasy village cottage with red tiled roof, timber frame, chimney, wooden door", "poly": 6000, "tex": "cream plaster walls, saturated red roof, warm wood"},
-    "fence":      {"prompt": "short rustic wooden fence section with three posts", "poly": 800, "tex": "warm honey-brown wood"},
-    "lantern":    {"prompt": "iron lamp post with glowing warm yellow lantern", "poly": 1000, "tex": "dark iron, glowing golden lantern"},
-    "crystal":    {"prompt": "cluster of glowing blue magic crystals", "poly": 800, "tex": "luminous cyan and blue crystal, glowing"},
-    "hero_cls-03": {"prompt": "fantasy mage hero, full body, standing in A-pose, purple and blue robe with golden trim, pointed hat, holding a glowing staff, friendly proportions", "poly": 12000, "tex": "vivid violet robe, gold trim, blue glowing staff gem", "rig": true},
-    "enemy_enm-01-001": {"prompt": "fantasy road bandit, full body, standing in A-pose, hooded leather outfit, orange scarf, dagger", "poly": 9000, "tex": "brown leather, orange scarf", "rig": true},
-    "enemy_enm-01-004": {"prompt": "cute but hostile green slime monster blob with big eyes", "poly": 2500, "tex": "bright jelly green, glossy"},
-    "enemy_enm-01-003": {"prompt": "stylized grey wolf monster, four legs, snarling, glowing eyes", "poly": 7000, "tex": "silver grey fur, glowing pale blue eyes", "rig": false}
+    "tree_oak": {
+      "prompt": "fantasy oak tree with thick trunk and lush bright green round canopy",
+      "poly": 3000,
+      "tex": "bright saturated green leaves, warm brown bark"
+    },
+    "tree_pine": {
+      "prompt": "fantasy pine tree, layered fluffy teal-green boughs, slim trunk",
+      "poly": 3000,
+      "tex": "rich emerald and teal needles, brown trunk"
+    },
+    "rock": {
+      "prompt": "mossy boulder cluster, rounded chunky rocks",
+      "poly": 1200,
+      "tex": "cool grey stone with bright green moss patches"
+    },
+    "cottage": {
+      "prompt": "cozy fantasy village cottage with red tiled roof, timber frame, chimney, wooden door",
+      "poly": 6000,
+      "tex": "cream plaster walls, saturated red roof, warm wood"
+    },
+    "fence": {
+      "prompt": "short rustic wooden fence section with three posts",
+      "poly": 800,
+      "tex": "warm honey-brown wood"
+    },
+    "lantern": {
+      "prompt": "iron lamp post with glowing warm yellow lantern",
+      "poly": 1000,
+      "tex": "dark iron, glowing golden lantern"
+    },
+    "crystal": {
+      "prompt": "cluster of glowing blue magic crystals",
+      "poly": 800,
+      "tex": "luminous cyan and blue crystal, glowing"
+    },
+    "hero_cls-03": {
+      "prompt": "fantasy mage in short violet tunic with gold trim, trousers, boots, short cape and a pointed wizard hat, full body character standing in a strict T-pose with arms stretched out horizontally and legs slightly apart, symmetrical, no long skirt covering the legs, weapon or staff worn on the back, game-ready proportions",
+      "poly": 12000,
+      "tex": "vivid violet tunic, gold trim, blue glowing gem on a staff worn on the back",
+      "rig": true
+    },
+    "enemy_enm-01-001": {
+      "prompt": "fantasy road bandit, full body, standing in A-pose, hooded leather outfit, orange scarf, dagger",
+      "poly": 9000,
+      "tex": "brown leather, orange scarf",
+      "rig": true
+    },
+    "enemy_enm-01-004": {
+      "prompt": "cute but hostile green slime monster blob with big eyes",
+      "poly": 2500,
+      "tex": "bright jelly green, glossy"
+    },
+    "enemy_enm-01-003": {
+      "prompt": "stylized grey wolf monster, four legs, snarling, glowing eyes",
+      "poly": 7000,
+      "tex": "silver grey fur, glowing pale blue eyes",
+      "rig": false
+    },
+    "hero_cls-01": {
+      "prompt": "fantasy guardian knight in polished steel plate armor with blue cloak and round helmet, full body character standing in a strict T-pose with arms stretched out horizontally and legs slightly apart, symmetrical, no long skirt covering the legs, weapon or staff worn on the back, game-ready proportions",
+      "poly": 12000,
+      "tex": "polished steel, royal blue cloth, gold trim",
+      "rig": true
+    },
+    "hero_cls-02": {
+      "prompt": "fantasy berserker warrior, bare muscular arms, fur shoulder pads, red war paint, leather trousers, full body character standing in a strict T-pose with arms stretched out horizontally and legs slightly apart, symmetrical, no long skirt covering the legs, weapon or staff worn on the back, game-ready proportions",
+      "poly": 12000,
+      "tex": "red and dark brown leather, fur, tanned skin",
+      "rig": true
+    },
+    "hero_cls-04": {
+      "prompt": "fantasy ranger in a green hooded leather jerkin, trousers and boots with a quiver, bow worn on the back, full body character standing in a strict T-pose with arms stretched out horizontally and legs slightly apart, symmetrical, no long skirt covering the legs, weapon or staff worn on the back, game-ready proportions",
+      "poly": 12000,
+      "tex": "forest green leather, brown details",
+      "rig": true
+    },
+    "hero_cls-05": {
+      "prompt": "fantasy light oracle priest in a white and gold short tabard over trousers, shoulder cape, glowing sun emblem, full body character standing in a strict T-pose with arms stretched out horizontally and legs slightly apart, symmetrical, no long skirt covering the legs, weapon or staff worn on the back, game-ready proportions",
+      "poly": 12000,
+      "tex": "ivory white cloth with gold trim, warm glowing emblem",
+      "rig": true
+    },
+    "npc_elder_mira": {
+      "prompt": "elderly village elder woman with grey hair bun, shawl, long dress is NOT allowed use trousers, full body character standing in a strict T-pose with arms stretched out horizontally and legs slightly apart, symmetrical, no long skirt covering the legs, weapon or staff worn on the back, game-ready proportions",
+      "poly": 9000,
+      "tex": "warm earthy colors, green shawl",
+      "rig": true
+    },
+    "npc_npc-802": {
+      "prompt": "fantasy guild quest-giver woman in a practical brown coat with a satchel and notebook, trousers and boots, full body character standing in a strict T-pose with arms stretched out horizontally and legs slightly apart, symmetrical, no long skirt covering the legs, weapon or staff worn on the back, game-ready proportions",
+      "poly": 9000,
+      "tex": "warm brown coat, teal scarf",
+      "rig": true
+    },
+    "npc_npc-102": {
+      "prompt": "fantasy scholar archivist man in a blue long coat with scrolls and round glasses, trousers, full body character standing in a strict T-pose with arms stretched out horizontally and legs slightly apart, symmetrical, no long skirt covering the legs, weapon or staff worn on the back, game-ready proportions",
+      "poly": 9000,
+      "tex": "deep blue coat, cream scrolls",
+      "rig": true
+    },
+    "enemy_enm-01-002": {
+      "prompt": "cunning goblin toll collector in a ragged vest holding a crooked toll sign, green skin, big ears, full body character standing in a strict T-pose with arms stretched out horizontally and legs slightly apart, symmetrical, no long skirt covering the legs, weapon or staff worn on the back, game-ready proportions",
+      "poly": 9000,
+      "tex": "green skin, rusty orange vest",
+      "rig": true
+    },
+    "bush": {
+      "prompt": "round leafy bush with small pink berries",
+      "poly": 900,
+      "tex": "saturated green leaves, bright pink berries"
+    },
+    "flowers": {
+      "prompt": "patch of colorful wildflowers with green stems",
+      "poly": 700,
+      "tex": "yellow, pink and white blossoms on green"
+    },
+    "mushrooms": {
+      "prompt": "cluster of fantasy red capped mushrooms with white dots",
+      "poly": 600,
+      "tex": "bright red caps white dots"
+    },
+    "stump": {
+      "prompt": "old tree stump with moss and a few small roots",
+      "poly": 700,
+      "tex": "warm brown bark, green moss"
+    },
+    "tree_birch": {
+      "prompt": "fantasy birch tree with white bark and golden yellow-green leaves",
+      "poly": 3000,
+      "tex": "white bark with dark marks, golden green leaves"
+    },
+    "well": {
+      "prompt": "cozy stone village well with a small wooden roof and bucket",
+      "poly": 2500,
+      "tex": "grey stone, warm wood roof"
+    },
+    "barrel": {
+      "prompt": "wooden barrel with iron hoops",
+      "poly": 500,
+      "tex": "warm wood, dark iron"
+    },
+    "haystack": {
+      "prompt": "round golden haystack bale",
+      "poly": 600,
+      "tex": "golden yellow straw"
+    }
   }
 }

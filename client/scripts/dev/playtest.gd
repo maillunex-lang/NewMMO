@@ -38,8 +38,18 @@ func _run() -> void:
 	print("PT world active=", wc.is_active() if wc else "no wc")
 	await create_timer(2.0).timeout
 	_shot("00_start")
+	var v3 := get_first_node_in_group("view3d")
+	if v3 != null and OS.get_environment("NEWMMO_PT_DEBUG3D") == "1":
+		for id in v3._views.keys():
+			var e: Dictionary = v3._views[id]
+			if e["kind"] in ["hero", "enemy"]:
+				var vw: Node3D = e["view"]
+				var ab := ModelLibrary._aabb_of(vw)
+				print("PT3D ", e["kind"], " pos=", vw.position, " vis=", vw.visible, " scale=", vw.scale, " aabb=", ab, " ap=", e["ap"] != null, " anim=", e["anim"])
 	if OS.get_environment("NEWMMO_PT_AUTO") != "0":
 		player.toggle_auto_combat()
+	if OS.get_environment("NEWMMO_PT_WALK") == "1":
+		player.move_to_world(player.global_position + Vector2(260, 140))
 	var errs := {}
 	var casts := [0]
 	sess.net.command_error.connect(func(p): errs[str(p.get("code"))] = int(errs.get(str(p.get("code")), 0)) + 1)

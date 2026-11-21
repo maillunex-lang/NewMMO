@@ -91,6 +91,9 @@ run_godot_capture "World client smoke" "WORLD_SMOKE_OK" -- \
 run_godot_capture "Autopath smoke (routes around props, auto-interact)" "AUTOPATH_SMOKE_OK" -- \
   --headless --path "$ROOT/client" --script res://scripts/dev/autopath_smoke.gd
 
+run_godot_capture "Grass footprint smoke (hold 0.7 s, then recover)" "GRASS_SMOKE_OK" -- \
+  --headless --path "$ROOT/client" --script res://scripts/dev/grass_smoke.gd
+
 echo "== Server tests =="
 (cd "$ROOT/server" && go test ./...)
 

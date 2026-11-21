@@ -12,7 +12,7 @@ func _run() -> void:
 		return
 	for i in range(40):
 		await process_frame
-	var main := root.get_child(0)
+	var main := current_scene
 	var qm: Node = main.get_node("QuestManager")
 	var player: Node = main.get_node("DawnValley/Player")
 	if qm == null or player == null:

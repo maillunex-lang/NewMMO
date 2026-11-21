@@ -400,6 +400,8 @@ func on_event(type: String, caster: Node2D, target: Node2D, e: Dictionary) -> vo
 		"cast":
 			var style := style_for(str(e.get("skill", "")))
 			_last_skill_style[int(e.get("caster", 0))] = style
+			var ranged_cls := str(e.get("skill", "")).substr(0, 6) in ["CLS-03", "CLS-04", "CLS-05"]
+			get_tree().call_group("view3d", "play_action", caster, "cast" if ranged_cls else "attack")
 			if cpos != Vector3.INF:
 				cast_circle(cpos, style)
 				var skill: Dictionary = _skills.get(str(e.get("skill", "")), {})
@@ -416,6 +418,7 @@ func on_event(type: String, caster: Node2D, target: Node2D, e: Dictionary) -> vo
 			var style := str(_last_skill_style.get(int(e.get("caster", 0)), "physical"))
 			var crit := bool(e.get("crit", false))
 			impact(tpos + Vector3(0, 1.0, 0), style, crit)
+			get_tree().call_group("view3d", "play_action", target, "hit")
 			var mine := target != null and target.is_in_group("player")
 			damage_number(tpos, str(int(e.get("amount", 0))) + ("!" if crit else ""),
 				Color(1.0, 0.85, 0.2) if crit else (Color(1.0, 0.4, 0.4) if mine else Color.WHITE), crit)
