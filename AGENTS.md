@@ -58,3 +58,9 @@ Any location generator must:
 ## Execution priorities
 
 Follow **`docs/ROADMAP_EXECUTION.md`** (EX-P00 → EX-P13). Do not start all stages at once. Do not re-implement completed checklist items. Default next step after docs/setup work: wait for owner command **«делай»**.
+
+## Multi-agent work
+
+When several AI executors work in parallel, follow `docs/director/DIRECTOR.md`: write **lanes** (`docs/director/lanes.json`),
+mandatory commit trailers (`Lane:`, `Task:`), `git pull --rebase` before push, tasks issued by the director in `docs/director/TASKS.md`.
+Canon, contracts, tools, CI and roadmap are director-only. Still `main` only; no force-push.

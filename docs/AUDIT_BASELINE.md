@@ -317,3 +317,21 @@ Local `tools/smoke_stage1.sh` also skips mq01.
 | `ROADMAP_EXECUTION.md` EX-P00 marked complete | Yes (same commit) |
 
 **Next stage proposal:** EX-P01 (content parsers + JSON Schema) — **await owner «делай»**.
+
+---
+
+## 9. Addendum 2026-11-21 (after EX-P01/EX-P02) — what changed since this audit
+
+| Item | Audit-time state | Now |
+|------|------------------|-----|
+| R-CI (no content lint) | missing | **Resolved**: CI jobs `content-lint`, `lane-check`; canon + client-sync + docs-link checks |
+| R-DIA / C-DIA-001 | open | **Resolved A** (`DIA.*` only) |
+| C-GODOT-001 | open | **Resolved B** (target 4.7.2, no upgrade yet) |
+| Canon parsers/schema | missing | EX-P01 `tools/content/` (stdlib), 25 schemas in `content/schemas/` |
+| ID registry / crossrefs / volumes | missing | EX-P02 `crossrefs.json`, golden counts, graph checks |
+| R-POI | ad-hoc POI ids | **Still open** (C-POI-001): crossref confirms stubs are non-canon; mapping contract = director task D-002 |
+| Client data vs canon | unverified | `check_client_sync.py`: **0 errors** (28 info: stub POI targets, canon lacks final period in 15 lines) |
+| New canon conflicts found & closed | — | C-SET-001 (`SET-*` clash → settlements `STL-*`), C-ITEMQ-001 (36 `ITEM-Q-*` registered in `11` §12.1) |
+
+Still true from §7: no authoritative server, no PostgreSQL, no SQ/DNG/EVT gameplay, no Android metrics, no admin, no VPS.
+Next stages and multi-agent process: `docs/ROADMAP_EXECUTION.md`, `docs/director/DIRECTOR.md`.

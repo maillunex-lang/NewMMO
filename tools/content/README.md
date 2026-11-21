@@ -27,3 +27,7 @@ CT-008 dialogue stage coverage per quest, CT-009 loot table ↔ enemy and probab
 
 Not covered (later stages): CT-009 loot *weights sum* / infinite-currency rules need balance data (EX-P08);
 per-region reachability of dungeon rooms/POI graph beyond declared links (EX-P09).
+
+Other checks: `check_client_sync.py` (client/data quests+dialogues vs canon declarations; stub POI ids are INFO per C-POI-001),
+`check_docs_links.py` (repo paths referenced from docs must exist; canon specs `docs/content/NN_*` skipped — they describe planned structure).
+Multi-agent gate lives in `tools/director/` (`lane_check.py`).

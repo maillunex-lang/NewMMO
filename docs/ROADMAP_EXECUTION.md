@@ -6,7 +6,7 @@
 **Главный канон-оркестратор:** `docs/content/14_CONTENT_INTEGRATION.md`  
 **Канон контента:** `docs/content/01_WORLD.md` … `14_CONTENT_INTEGRATION.md`  
 **Процесс:** `AGENTS.md`, `.cursor/rules/open-source-research.mdc`  
-**Обновлено:** 2026-11-21 · tip `main` — EX-P00 [x]; EX-P01 [x]; EX-P02 [x]; EX-P03 next (ждёт «делай»); EX-CONTENT-01 plan awaiting approval
+**Обновлено:** 2026-11-21 · tip `main` — EX-P00 [x]; EX-P01 [x]; EX-P02 [x] (+C-SET-001, C-ITEMQ-001 resolved, client-sync, docs-links); **EX-DIR** (мульти-агентный протокол) [x]; EX-P03 next (ждёт ответов владельца и «делай»); EX-CONTENT-01 plan awaiting approval
 
 ---
 
@@ -27,7 +27,8 @@
 6. Отметить этап `[x]` в **этом файле** (+ коммит SHA, дата, результат тестов)
 7. Актуализировать связанные docs (`AUDIT*`, `docs/content/README.md`, итерационные отчёты)
 8. `git commit` + `git push origin main`
-9. Короткий отчёт владельцу; **один** следующий этап — только после команды «делай»
+9. Если работают несколько исполнителей — протокол `docs/director/DIRECTOR.md` (lanes, trailers `Lane:`/`Task:`, `git pull --rebase` перед push)
+10. Короткий отчёт владельцу; **один** следующий этап — только после команды «делай»
 
 **Запреты:** не переписывать канон 01–14 молча; конфликты → `docs/content/CONFLICTS.md`; не делать все 240 квестов за раз; не выдавать docs за готовую игру; клиент не авторитетен для боя/лута/валюты/квестов.
 
@@ -94,18 +95,31 @@
 **Зависит от:** EX-P01  
 **Артефакты:** `crossrefs.json`, `content.manifest.json`, `validation-report.json`  
 **Приёмка:**
-- [x] объявления vs ссылки (4889 сущностей; ссылки на hard-namespace резолвятся) — `crossrefs.json`
+- [x] объявления vs ссылки (4925 сущностей; все ссылки на hard-namespace резолвятся, 0 unresolved) — `crossrefs.json`
 - [x] объёмы 6/8/32/5/96/120/120/12/18 — golden counts в `lint.py`
 - [x] CONFLICTS при расхождениях — C-SET-001 RESOLVED, C-ITEMQ-001 OPEN
 - [x] manifest: `content.manifest.json` (sha256 файлов, content_hash, sha256 `crossrefs.json`)
 **Тесты:** CT-002…CT-009 (static)  
-**Статус:** [x] `59f5cbd` (2026-11-21) — 32 unittest OK; `lint.py`: 0 ERROR / 37 WARN (36 = C-ITEMQ-001 allowlist, 1 = `DLG-SCN-01-01`)
+**Статус:** [x] `59f5cbd` + доводка (2026-11-21) — 35 unittest OK; `lint.py`: 0 ERROR / 1 WARN (`DLG-SCN-01-01`), allowlist пуст
+**Сделано сверх реестра (после владельца «вариант A»):** C-ITEMQ-001 A — 36 `ITEM-Q-*` зарегистрированы в `11` §12.1 (`8a61c6b`), проверка «объявлено == выдаётся квестами», allowlist пуст; `check_client_sync.py` (client/data ↔ канон: 0 ERROR) и `check_docs_links.py` (0 битых путей) в CI.
 **Сделано сверх реестра:** C-SET-001 A применён (`715558c`): 18 поселений `SET-RR-NN`→`STL-RR-NN` в `03`, строки реестра в `03`/`14`; наборы брони не тронуты; allowlist C-SET-001 удалён
 **Частично (честно):** CT-009 — проверены связи loot↔enemy и вероятности 0..100, но не суммы весов/«бесконечная валюта» (нужны данные баланса, EX-P08); CT-006/007 — только ссылки, не граф комнат/расписания (EX-P09/P10)
 
+### EX-DIR — Multi-agent protocol (AI-директор)
+**Зависит от:** EX-P02  
+**Цель:** безопасная параллельная работа Cursor / ChatGPT / Codex без взаимных поломок  
+**Артефакты:** `docs/director/DIRECTOR.md`, `lanes.json`, `TASKS.md`, `prompts/_TEMPLATE.md`, `docs/contracts/`, `tools/director/lane_check.py`, CI job `lane-check`  
+**Приёмка:**
+- [x] Lanes (client / server / research / director) без пересечений; protected-пути только директору
+- [x] Обязательные trailers `Lane:` / `Task:`; gate проверяет файлы коммита против lane (11 unittest)
+- [x] Hard rules для исполнителей, цикл задач, формат отчёта, откат
+- [ ] Ответы владельца на вопросы в `docs/director/TASKS.md` (доступ к git, Godot/Go, режим main vs PR) — **блокер выдачи задач**
+**Статус:** [x] протокол/инструменты; задачи **не выданы** (все PROPOSED)
+
 ### EX-P03 — PostgreSQL migrations + content loader
 **Зависит от:** EX-P02; backup/dry-run policy  
-**OSS research:** migrate libs / sqlc / goose — отчёт → ждать ОК  
+**OSS research:** migrate libs / sqlc / goose — отчёт (задача T-001, ChatGPT/research) → ждать ОК владельца
+**Контракты до старта:** D-001 content export (director) в `docs/contracts/`  
 **Приёмка:** миграции из §16 (адаптированные), rollback, content_builds loader  
 **Тесты:** migrate up/down на локальном/Compose Postgres  
 **Статус:** [ ]
@@ -205,6 +219,9 @@
 | 2026-11-21 | EX-P01 parsers + schema + CI | `ea7f7e9` | unittest 16 OK; lint 0 ERROR | stdlib only; C-SET-001 найден, не правился канон |
 | 2026-11-21 | EX-P02 C-SET-001 STL rename | `715558c` | unittest 18 OK | одноразовая правка `03` по approve владельца |
 | 2026-11-21 | EX-P02 crossrefs + CT-003…009 | `59f5cbd` | unittest 32 OK; lint 0 ERROR | C-ITEMQ-001 найден (36 ITEM-Q без объявления) |
+| 2026-11-21 | C-ITEMQ-001 A (по решению владельца) | `8a61c6b` | unittest 32 OK | 36 `ITEM-Q-*` в `11` §12.1, имена — рабочие |
+| 2026-11-21 | Полная сверка связей: client-sync + docs-links + CI | см. `git log` | unittest 35 OK; client-sync 0 ERR; docs-links 0 | клиент == канон; 1 doc-путь починен (`AUDIT.md`) |
+| 2026-11-21 | EX-DIR multi-agent protocol | см. `git log` | unittest 11 OK (lane_check) | задачи не выданы, ждём ответов владельца |
 
 ---
 
@@ -215,6 +232,9 @@
 | R-GODOT | Target 4.7.2; pin 4.3 | C-GODOT-001 B — не апгрейдить до отдельной проверки |
 | R-AUTH | Квесты на клиенте | EX-P04 обязателен до «готово онлайн» |
 | R-DIA | `DLG-*` в 13/14 | **RESOLVED A** — канон только `DIA.*`; `DLG-*` obsolete |
+| R-POI | Клиентские stub POI ≠ `POI-01-*` | OPEN (C-POI-001) → задача D-002 (контракт маппинга) |
+| R-MULTI | 3 исполнителя ломают друг друга | EX-DIR: lanes + trailers + CI `lane-check` + rebase-before-push; откат директором |
+| R-NAMES | Названия `ITEM-Q-*` рабочие (от названий квестов) | Владелец утверждает финальные имена; не блокер для P03 |
 | R-EQ | `EQ-CC-RR-SS-RR` | Typed fields, не слепой regex |
 | R-APK | Нет Android templates в CI VM | Честно блокировать APK stage |
 | R-VPS | 8GB / 18 events | Caps + staged rollout |
@@ -223,9 +243,11 @@
 
 ## 6. Следующий этап (предложение)
 
-**EX-P00, EX-P01, EX-P02 закрыты.** По очереди владельца:
+**EX-P00, EX-P01, EX-P02, EX-DIR закрыты.** Что дальше:
 
-1. **EX-P03** — PostgreSQL migrations + content loader. Сначала OSS research (goose / golang-migrate / sqlc…) → `docs/research/` → **ждать OK** до установки. Перед ним желательно решение по **C-ITEMQ-001** (влияет на схему предметов); allowlist истекает 2027-01-31.
-2. **EX-CONTENT-01** — только после утверждения `docs/CONTENT_EXPANSION_PLAN.md`.
+1. **Владелец отвечает** на 4 вопроса в `docs/director/TASKS.md` (доступ исполнителей, Godot/Go, main vs PR).
+2. **Первый параллельный батч** (разные lanes, без зависимостей): T-001 research БД-миграций (ChatGPT) · T-004 compliance-ревью клиентского UI (Cursor) · T-005 Go-скелет без зависимостей (Codex). Параллельно директор: D-001 (content export contract), D-002 (POI mapping).
+3. **EX-P03** (миграции + loader) — после отчёта T-001 и **OK владельца на выбор инструмента** + контракт D-001.
+4. **EX-CONTENT-01** — только после утверждения `docs/CONTENT_EXPANSION_PLAN.md`.
 
 Не начинать P03+ без команды **«делай»**.

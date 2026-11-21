@@ -44,8 +44,11 @@ def check(root, allow=()):
                 if in_code:
                     continue
                 cands = [(m, True) for m in LINK_RE.findall(line)] + [(m, False) for m in TICK_RE.findall(line)]
+                arrow = line.find("→")
                 for raw, is_link in cands:
                     t = raw.split("#")[0].strip()
+                    if "NNN" in t or (arrow >= 0 and line.find(raw) > arrow):
+                        continue  # placeholder, or planned output after «→»
                     if not t or t.startswith(SKIP_PREFIX) or any(c in t for c in "*<>{}$ ") or ".." in t.replace("../", "") or t.endswith("/") and not is_link:
                         continue
                     if not is_link and not PATH_HINT.match(t):

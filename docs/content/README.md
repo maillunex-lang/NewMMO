@@ -33,6 +33,8 @@ Files in `docs/content/` are the **approved narrative and content canon** for Lu
 ## Implementation snapshot
 
 - **Baseline audit:** [`../AUDIT_BASELINE.md`](../AUDIT_BASELINE.md) (EX-P00).
-- **Conflicts:** [`CONFLICTS.md`](CONFLICTS.md) (e.g. DIA vs DLG).
+- **Machine checks (EX-P01/P02):** `python3 tools/content/lint.py` — parsers, JSON Schema (`content/schemas/`), ID registry, crossrefs, quest/enemy/dungeon/event/dialogue/loot static checks; `check_client_sync.py` — client data vs canon. Canon currently: **0 ERROR**, 1 WARN (`DLG-SCN-01-01` in `07`).
+- **Conflicts:** [`CONFLICTS.md`](CONFLICTS.md) — C-DIA-001 (A), C-GODOT-001 (B), C-SET-001 (A: `STL-*`), C-ITEMQ-001 (A: `11` §12.1) resolved; notes C-POI-001, C-DLG-REMNANT, C-ITM-00 open.
+- **Volumes verified:** 8 FAC, 6 REG, 48 LOC, 72 POI, 18 STL, 32 NPC, 5 CLS, 96 ENM, 120 MQ, 120 SQ, 12 DNG, 18 EVT, 3 END, 270 EQ, 30 SET, 36 MAT, 96 LOOT, 36 ITEM-Q, 3122 dialogue lines.
 - **Done (partial):** REG-01 MQ-01-01…05 local client stub; Stage 1 visual Dawn Valley.
 - **Not done:** authoritative Go/Postgres quests, SQ, DNG, EVT, full 240 quests, Android metrics.

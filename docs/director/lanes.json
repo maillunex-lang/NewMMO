@@ -1,0 +1,15 @@
+{
+  "_comment": "Write-lane contract for multi-agent work. A commit tagged `Lane: X` may only change files matching lanes.X.write. Paths in `protected` are director-only. Enforced by tools/director/lane_check.py (CI job lane-check).",
+  "lanes": {
+    "client":   { "agent": "cursor",  "write": ["client/**"] },
+    "server":   { "agent": "codex",   "write": ["server/**", "deploy/**"] },
+    "research": { "agent": "chatgpt", "write": ["docs/research/**", "docs/reviews/**"] },
+    "director": { "agent": "director", "write": ["**"] }
+  },
+  "protected": [
+    "docs/content/**", "content/**", "tools/**", "AGENTS.md", ".github/**", ".cursor/**",
+    "docs/contracts/**", "docs/director/**", "docs/ROADMAP*.md", "docs/AUDIT*.md", "docs/GDD.md",
+    "docs/ARCHITECTURE.md", "README.md", ".gitignore", "client/data/**"
+  ],
+  "protected_note": "client/data/** is protected because it mirrors canon (checked by tools/content/check_client_sync.py); the client lane changes it only through a director-issued task that lists it under `extra_write`."
+}
