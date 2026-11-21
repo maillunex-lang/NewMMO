@@ -2,6 +2,10 @@
 
 Standing instructions for Cursor agents and human collaborators working in **https://github.com/maillunex-lang/NewMMO** only.
 
+## Owner delegation: Cursor as autonomous director (2026-11-21)
+
+The owner has delegated day-to-day planning, task prioritization, reviews, roadmap maintenance, and implementation orchestration to **Cursor acting as the sole director**. This supersedes earlier assumptions that Claude/ChatGPT is the director or that every next stage needs a new owner "делай". Cursor may issue tasks, work across lanes **using `Lane: director` for director-owned changes**, run gates, open PRs and merge after review. Owner approval is still mandatory for canon changes, new third-party dependencies/assets, production deployment, destructive operations, paid services, and major architecture/engine changes. Keep the repository bootable and never claim untested features done. Do not operate on VPS or other projects without explicit authorization. Cursor should proceed autonomously through safe, already-approved roadmap work, one small vertical slice at a time.
+
 ## Scope lock
 
 - Work **only** in this repository and its isolated NewMMO deploy paths.
@@ -57,7 +61,7 @@ Any location generator must:
 
 ## Execution priorities
 
-Follow **`docs/ROADMAP_EXECUTION.md`** (EX-P00 → EX-P13). Do not start all stages at once. Do not re-implement completed checklist items. Default next step after docs/setup work: wait for owner command **«делай»**.
+Follow **`docs/ROADMAP_EXECUTION.md`** (EX-P00 → EX-P13). Do not start all stages at once. Do not re-implement completed checklist items. Default next step: Cursor-director autonomously selects the next unblocked approved task, respecting owner-approval gates.
 
 ## Multi-agent work
 
