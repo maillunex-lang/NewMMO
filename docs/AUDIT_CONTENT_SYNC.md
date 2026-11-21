@@ -17,6 +17,8 @@
 | 08_QUESTS_MAIN.md | 120 MQ contracts | **MQ-01-01…05 only** |
 | 09_QUESTS_SIDE.md | Side quests | Deferred |
 | 10_DIALOGUES.md | Dialogue IDs | DIA.MQ-01-01…05 + NPC greetings |
+| 11_ITEMS_LOOT.md | Items / loot / materials | Synced 2026-11-21; not in client runtime (quest evidence IDs referenced) |
+| 12_DUNGEONS.md | 12 instances | Synced 2026-11-21; DNG-01-001/002 not built |
 
 ## Gaps before this iteration
 

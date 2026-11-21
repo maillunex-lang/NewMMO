@@ -22,8 +22,11 @@ Files in `docs/content/` are the **approved narrative and content canon** for Lu
 | `08_QUESTS_MAIN.md` | Main quests (120) |
 | `09_QUESTS_SIDE.md` | Side quests |
 | `10_DIALOGUES.md` | Dialogues |
+| `11_ITEMS_LOOT.md` | Items, materials, loot tables |
+| `12_DUNGEONS.md` | 12 dungeon instances |
 
 ## Implementation status (client)
 
 - **In progress:** REG-01 Долина Рассвета — main quests `MQ-01-01`…`MQ-01-05` (local stub pending authoritative server).
-- **Not started:** MQ-01-06…20, side quests, other regions.
+- **Synced, not implemented:** `11_ITEMS_LOOT.md`, `12_DUNGEONS.md` (canon only; no dungeon scenes / inventory system yet).
+- **Not started:** MQ-01-06…20, side quests, `DNG-01-001`/`002`, item/loot runtime, other regions.
