@@ -10,6 +10,7 @@ var dead := false
 var hp := 0
 var max_hp := 1
 var display_name := ""
+var ref := ""
 
 @onready var animator: DirectionalAnimator = $DirectionalAnimator
 @onready var hp_bar: ProgressBar = $HpBar
@@ -34,6 +35,7 @@ func setup(view: Dictionary, sheet: Texture2D, frame: int, offset_y: float, bar_
 	entity_id = int(view.get("id", 0))
 	kind = str(view.get("kind", "enemy"))
 	display_name = str(view.get("name", ""))
+	ref = str(view.get("ref", ""))
 	global_position = Vector2(float(view.get("x", 0)), float(view.get("y", 0)))
 	target_pos = global_position
 

@@ -8,6 +8,7 @@ extends Node2D
 @onready var quest_manager: Node = $QuestManager
 @onready var camera: Camera2D = $DawnValley/Player/Camera2D
 var _autopath: AutoPath = null
+var view3d: View3D = null
 
 func _ready() -> void:
 	add_to_group("game_world")
@@ -23,6 +24,11 @@ func _ready() -> void:
 	_autopath.build($DawnValley)
 	player.auto_path = _autopath
 	_try_attach_online_session()
+	if OS.get_environment("NEWMMO_RENDER") != "2d":
+		view3d = View3D.new()
+		view3d.name = "View3D"
+		add_child(view3d)
+		view3d.setup($DawnValley, player)
 	if quest_manager and quest_manager.has_signal("dialogue_flow_requested"):
 		quest_manager.dialogue_flow_requested.connect(_on_flow)
 	if quest_manager and quest_manager.has_signal("dialogue_server_node"):
@@ -63,10 +69,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	var pos := Vector2.ZERO
 	if event is InputEventScreenTouch and event.pressed:
 		tap = true
-		pos = get_global_mouse_position()
+		pos = view3d.pick_ground(event.position) if view3d != null else get_global_mouse_position()
 	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		tap = true
-		pos = get_global_mouse_position()
+		pos = view3d.pick_ground(event.position) if view3d != null else get_global_mouse_position()
 	if tap and player and player.has_method("move_to_world"):
 		player.move_to_world(pos)
 
