@@ -134,6 +134,21 @@ def _typed_checks(decls, reg, report):
         if not t["fields"].get("percents"):
             report.add("ERROR", "CT009_NO_WEIGHTS", "no drop probabilities parsed", t["file"], t["line"], t["id"])
 
+    # quest evidence: declared ITEM-Q set must equal the set granted by quest rewards (bijection)
+    granted = {}
+    for q in by_kind["quest_main"]:
+        for ev in q["fields"]["reward"].get("evidence", []):
+            granted[ev] = q["id"]
+    declared = {d["id"]: d for d in by_kind["quest_item"] if d["id"].startswith("ITEM-Q-")}
+    for ev, qid in sorted(granted.items()):
+        if ev not in declared:
+            report.add("ERROR", "CT009_EVIDENCE_UNDECLARED", f"{ev} granted by {qid} but not registered in 11", reg[qid]["file"], reg[qid]["line"], ev)
+    for ev, d in sorted(declared.items()):
+        if ev not in granted:
+            report.add("ERROR", "CT009_EVIDENCE_UNUSED", "registered but no quest grants it", d["file"], d["line"], ev)
+        elif d["fields"].get("quest") != granted[ev] or granted[ev] != "MQ-" + ev[7:]:
+            report.add("ERROR", "CT009_EVIDENCE_QUEST", f"item says {d['fields'].get('quest')}, granted by {granted[ev]}", d["file"], d["line"], ev)
+
     # CT-006 dungeons: entrance POI exists in same region; boss/miniboss declared, right tier, same region
     for d in by_kind["dungeon"]:
         f = d["fields"]

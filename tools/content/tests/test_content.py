@@ -67,10 +67,9 @@ class RealCanon(Sandbox):
         self.assertEqual(res["counts"]["settlement"], 18)
         self.assertTrue(all(d["id"].startswith("STL-") for d in res["decls"] if d["kind"] == "settlement"))
 
-    def test_repo_allowlist_only_itemq_gap(self):  # C-SET-001 entries are gone
+    def test_repo_allowlist_is_empty(self):  # C-SET-001, C-ITEMQ-001 RESOLVED
         with open(ALLOW, encoding="utf-8") as fh:
-            entries = json.load(fh)["entries"]
-        self.assertEqual([e["conflict"] for e in entries], ["C-ITEMQ-001"])
+            self.assertEqual(json.load(fh)["entries"], [])
 
     def _dup_with_allow(self, expires):
         self.edit("08_QUESTS_MAIN.md", "#### `MQ-01-02` — Два свидетеля", "#### `MQ-01-01` — Два свидетеля")
@@ -141,19 +140,21 @@ class CrossrefsAndGraphs(Sandbox):  # CT-002..CT-009 (static)
     def codes(self, res):
         return {i["code"] for i in self.errors(res)}
 
-    def test_canon_resolves_all_refs_except_known_gap(self):
-        res = self.run_lint()
+    def test_canon_resolves_all_refs(self):
+        res = self.run_lint(allow=None)
         xr = res["crossrefs"]
-        self.assertTrue(all(k.startswith("ITEM-Q-") for k in xr["unresolved"]), list(xr["unresolved"])[:3])
-        self.assertEqual(len(xr["unresolved"]), 36)
-        self.assertEqual(len(xr["entities"]), 4889)
+        self.assertEqual(xr["unresolved"], {})
+        self.assertEqual(len(xr["entities"]), 4925)
         self.assertEqual(xr["entities"]["NPC-802"]["kind"], "npc")
         self.assertTrue(xr["entities"]["NPC-802"]["referenced_from"])
+        self.assertTrue(res["publishable"])
 
-    def test_without_allowlist_itemq_gap_blocks(self):
+    def test_evidence_registry_bijection(self):  # C-ITEMQ-001 A
         res = self.run_lint(allow=None)
-        self.assertEqual(len(self.errors(res, "CT002_UNRESOLVED_REF")), 36)
-        self.assertFalse(res["publishable"])
+        self.assertEqual(sum(1 for d in res["decls"] if d["kind"] == "quest_item"), 36)
+        self.edit("11_ITEMS_LOOT.md", "| `ITEM-Q-01-02` |", "| `ITEM-Q-01-09` |")
+        codes = self.codes(self.run_lint(allow=None))
+        self.assertTrue({"CT009_EVIDENCE_UNDECLARED", "CT009_EVIDENCE_UNUSED"} <= codes)
 
     def test_unresolved_npc_reference(self):
         self.edit("01_WORLD.md", "# LUNEX MMORPG — 01 WORLD", "# LUNEX MMORPG — 01 WORLD\n\nТут `NPC-999` и `LOC-01-099`.")

@@ -1,12 +1,4 @@
 {
-  "_comment": "Known canon gaps downgraded ERROR->WARN. Entry: code, id or id_pattern, conflict ref, owner, expires (14 \u00a717.1 step 7). Expired entries become ERROR.",
-  "entries": [
-    {
-      "code": "CT002_UNRESOLVED_REF",
-      "id_pattern": "^ITEM-Q-",
-      "conflict": "C-ITEMQ-001",
-      "owner": "owner (maillunex-lang)",
-      "expires": "2027-01-31"
-    }
-  ]
+  "_comment": "Known canon gaps downgraded ERROR->WARN. Entry: code, id or id_pattern, conflict ref, owner, expires (14 \u00a717.1 step 7). Expired entries become ERROR. Currently empty: C-SET-001 and C-ITEMQ-001 are RESOLVED.",
+  "entries": []
 }

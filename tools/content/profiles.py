@@ -180,6 +180,7 @@ def _quest_blocks(blocks, head_re, kind, file, obj_re, flag_re):
             m = _REWARD_GOLD.search(txt)
             if m:
                 rw["gold"] = int(m.group(1))
+            rw["evidence"] = sorted(set(re.findall(r"ITEM-Q-\d\d-\d\d", txt)))
             rw["reputation"] = [{"faction": fa, "delta": int(d)} for d, fa in _REWARD_REP.findall(txt)]
     if cur:
         out.append(cur)
@@ -253,7 +254,7 @@ def p_items(b, f):
                  {"класс": "class_name", "слот": "slot", "название": "name", "базовый уровень": "level"})
     out += _rows(b, r"REC-\d\d-\d{3}", "recipe", f, {})
     out += _rows(b, r"LOOT-ENM-\d\d-\d{3}", "loot_table", f, {"противник": "enemy_raw"})
-    out += _rows(b, r"ITEM-Q-\d\d-\d\d", "quest_item", f, {"название": "name"})
+    out += _rows(b, r"ITEM-Q-\d\d-\d\d", "quest_item", f, {"квест": "quest", "название": "name", "тип": "type"})
     out += _rows(b, r"ITEM-SQ-\d\d-\d{3}", "quest_item", f, {"название": "name"})
     for d in out:
         if d["kind"] == "loot_table":

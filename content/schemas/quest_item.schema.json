@@ -29,11 +29,22 @@
     },
     "fields": {
       "type": "object",
-      "required": [],
+      "required": [
+        "name",
+        "quest",
+        "type"
+      ],
       "properties": {
         "name": {
           "type": "string",
           "minLength": 1
+        },
+        "quest": {
+          "type": "string",
+          "pattern": "^MQ-0[1-6]-\\d\\d$"
+        },
+        "type": {
+          "const": "quest_evidence"
         }
       }
     }
