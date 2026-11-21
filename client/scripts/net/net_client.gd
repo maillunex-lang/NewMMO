@@ -331,6 +331,10 @@ func _dispatch_typed(type_name: String, payload: Dictionary, request_id: String)
 		"combat.loot.result":
 			_ack_pending(request_id)
 			loot_result.emit(payload)
+			# One message carries the bag change too (a second same-revision delta would look like a gap).
+			var changes: Variant = payload.get("changes", [])
+			if typeof(changes) == TYPE_ARRAY and (changes as Array).size() > 0:
+				inventory_delta.emit({"inventory_revision": payload.get("inventory_revision", 0), "changes": changes})
 		"command.error":
 			_handle_command_error(payload, request_id)
 		"dungeon.state.delta", "event.snapshot", "event.contribution":

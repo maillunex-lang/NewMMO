@@ -25,7 +25,7 @@ idempotency check (`idempotency_keys`: same `request_id` + payload ⇒ stored re
 Exporter additions (`tools/content/profiles.py`, additive fields on `loot_table` payload): `category, gold_min, gold_max, mat1_pct, mat3_pct, special_item?, special_pct?`.
 
 ## 5. Messages
-`combat.loot.request {enemy_id}` → `combat.loot.result {enemy_id, loot_table_id, gold, items[], gold_total, inventory_revision, changes[]}` then, if stacks changed, `inventory.delta {inventory_revision, changes[]}` (same `request_id`). Errors: `BAD_REQUEST` (extra keys, bad uuid), `NOT_FOUND`, `UNSUPPORTED_EVENT`, `REGION_CLOSED`, `RATE_LIMITED`, `IDEMPOTENCY_CONFLICT`, `INTERNAL`.
+`combat.loot.request {enemy_id}` → `combat.loot.result {enemy_id, loot_table_id, gold, items[], gold_total, inventory_revision, changes[]}` — **one message only**: `changes[]` carries the bag change (a second `inventory.delta` at the same revision would be seen as a revision gap by clients). The client re-emits `changes` to the bag UI. Errors: `BAD_REQUEST` (extra keys, bad uuid), `NOT_FOUND`, `UNSUPPORTED_EVENT`, `REGION_CLOSED`, `RATE_LIMITED`, `IDEMPOTENCY_CONFLICT`, `INTERNAL`.
 
 ## 6. Out of scope
 Equipment drops/equip UI, dungeon & world-boss loot, loot shared among a party, vendor sell, drop pity, server-verified kills (EX-P09).

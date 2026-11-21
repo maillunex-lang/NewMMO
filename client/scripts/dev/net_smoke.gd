@@ -286,13 +286,9 @@ func _test_loot_request_and_result() -> void:
 		"items": [{"item_id": "MAT-01-001", "quantity": 1}], "gold_total": 3,
 		"inventory_revision": 2, "changes": [{"container": "materials", "slot": 0, "item_id": "MAT-01-001", "quantity": 1}],
 	}, 2, rid))
-	ft.inject_text(_s2c("inventory.delta", {
-		"inventory_revision": 2,
-		"changes": [{"container": "materials", "slot": 0, "item_id": "MAT-01-001", "quantity": 1}],
-	}, 2, rid))
 	client.poll(0.0)
 	_assert(results.size() == 1 and int(results[0].get("gold", 0)) == 3, "loot_result emitted")
-	_assert(deltas.size() == 1, "inventory.delta after loot")
+	_assert(deltas.size() == 1 and int(deltas[0].get("inventory_revision", 0)) == 2, "bag delta derived from loot result")
 	_assert(client.get_pending_count() == 0, "loot acked")
 	print("CASE loot_request_and_result OK")
 
