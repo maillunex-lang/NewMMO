@@ -4,7 +4,7 @@
 
 ## 1. Scope
 Player skills on the server simulation: `world.cast.request` with canon checks, damage/heal/shield, resources, cooldowns and GCD, server-observed enemy death with personal loot (closes **R-KILL** for the open world once the client casts through the server — client work is T-038d), enemy respawn.
-**Not yet (after c2):** statuses (slow/stun/taunt), area/cone/line/point/ground skills, buffs/mitigation/cleanse/haste/teleport/stealth etc., party/ally targeting, quest kill objectives, dungeon on the sim (T-038e).
+**Not yet (after c2):** statuses (slow/stun/taunt), area/cone/line/point/ground skills, buffs/mitigation/cleanse/haste/teleport/stealth etc., party/ally targeting, quest kill objectives, boss-specific dungeon phases. Dungeon room combat reuses the simulation under the private-stream rules in `dungeon-engine.md`.
 
 ## 2. Command
 `world.cast.request {skill_id, target_id?}` — a **mutation** (`request_id` required, UUID; 5/s mutation bucket). `target_id` (zone entity id) is required for single-target damage and optional/self for shield/heal; any other key ⇒ `BAD_REQUEST` (the server never accepts damage, crit, cooldown or position).

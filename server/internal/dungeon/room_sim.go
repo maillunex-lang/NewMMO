@@ -8,6 +8,19 @@ import (
 	"github.com/maillunex-lang/NewMMO/server/internal/world"
 )
 
+// ValidateCombat checks that every room can start with the published combat data.
+func (r *Registry) ValidateCombat(catalog *combatdata.Catalog) error {
+	for _, id := range r.IDs() {
+		def := r.byID[id]
+		for _, room := range def.Rooms {
+			if _, err := room.NewRoomZone(RoomView{}, catalog); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // NewRoomZone builds one private combat simulation for the active room. Defeated
 // spawns in the persisted room state stay absent when the simulation is rebuilt.
 func (r Room) NewRoomZone(state RoomView, catalog *combatdata.Catalog) (*world.Zone, error) {

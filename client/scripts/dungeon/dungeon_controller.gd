@@ -1,10 +1,5 @@
 extends Node
-## T-037: client side of the dungeon engine (docs/contracts/dungeon-engine.md).
-## The server owns every fact (doors, puzzle, rewards). This node only
-##  - asks (enter / interact / report / claim / leave),
-##  - shows the server snapshot: current room visible, finished objects dimmed, spawns for live enemies,
-##  - moves the existing Player node into the dungeon scene and back.
-## Enemy deaths are *reported* (interim R-KILL-DNG until the server combat engine).
+## Renders dungeon state and attaches the private server combat stream.
 
 signal dungeon_entered(dungeon_id: String)
 signal dungeon_left(reason: String)
@@ -31,7 +26,6 @@ var _home_parent: Node = null
 var _home_pos := Vector2.ZERO
 var _home_limits := Rect2i()
 var _world_root: Node = null
-var _spawned: Dictionary = {}   # spawn_id -> Node
 var _last_room := ""
 var _claiming := false
 
@@ -62,12 +56,6 @@ func interact(object_id: String) -> void:
 		claim()
 		return
 	_net.request_dungeon_interact(str(_snapshot.get("instance_id", "")), object_id)
-
-func report_enemy_defeated(spawn_id: String) -> void:
-	if _snapshot.is_empty() or _net == null:
-		return
-	_spawned.erase(spawn_id)
-	_net.request_dungeon_enemy_defeated(str(_snapshot.get("instance_id", "")), spawn_id)
 
 func claim() -> void:
 	if _snapshot.is_empty() or _net == null or _claiming:
@@ -103,10 +91,21 @@ func bind_net(net: RefCounted) -> void:
 		_net.dungeon_snapshot.connect(_on_snapshot)
 	if not _net.dungeon_reward.is_connected(_on_reward):
 		_net.dungeon_reward.connect(_on_reward)
+	if not _net.session_ready.is_connected(_resume):
+		_net.session_ready.connect(_resume)
 	if _net.has_signal("command_error") and not _net.command_error.is_connected(_on_error):
 		_net.command_error.connect(_on_error)
 
+func _resume(_session: Dictionary) -> void:
+	if is_inside():
+		_net.request_dungeon_enter(str(_snapshot.get("dungeon_id")), str(_snapshot.get("mode", "NORMAL")))
+
 func _on_snapshot(snap: Dictionary) -> void:
+	var same_run: bool = snap.get("instance_id") == _snapshot.get("instance_id")
+	if same_run and int(snap.get("event_seq", 0)) < int(_snapshot.get("event_seq", 0)):
+		return
+	if not same_run and not _snapshot.is_empty() and str(snap.get("status")) in ["CLOSED", "EXPIRED", "ABANDONED"]:
+		return
 	_snapshot = snap
 	var status := str(snap.get("status", ""))
 	if status in ["CLOSED", "EXPIRED", "ABANDONED"]:
@@ -115,8 +114,14 @@ func _on_snapshot(snap: Dictionary) -> void:
 	if _scene == null:
 		_enter_scene(snap)
 	_apply(snap)
+	if _scene != null and snap.has("combat"):
+		var world := get_tree().get_first_node_in_group("world_controller")
+		if world != null:
+			world.enter_dungeon_combat(snap["combat"])
 
 func _on_reward(reward: Dictionary) -> void:
+	if reward.get("instance_id") != _snapshot.get("instance_id"):
+		return
 	_claiming = false
 	var player := _get_player()
 	if player != null and player.has_method("apply_server_loot"):
@@ -163,8 +168,6 @@ func _enter_scene(snap: Dictionary) -> void:
 		cam.limit_right = 800
 		cam.limit_bottom = 600
 	_player.reparent(_scene.get_node("Playground"), false)
-	if not _player.died.is_connected(_on_player_died):
-		_player.died.connect(_on_player_died)
 	# Pause the overworld while inside (its Player child is already moved out).
 	_home_parent.process_mode = Node.PROCESS_MODE_DISABLED
 	_home_parent.visible = false
@@ -173,13 +176,10 @@ func _enter_scene(snap: Dictionary) -> void:
 
 func _exit_scene(reason: String) -> void:
 	_snapshot = {}
-	_spawned.clear()
 	_last_room = ""
 	if _scene == null:
 		return
 	if _player != null and is_instance_valid(_player) and _home_parent != null:
-		if _player.died.is_connected(_on_player_died):
-			_player.died.disconnect(_on_player_died)
 		_player.reparent(_home_parent, false)
 		_player.global_position = _home_pos
 		var cam := _player.get_node_or_null("Camera2D") as Camera2D
@@ -193,6 +193,9 @@ func _exit_scene(reason: String) -> void:
 		_home_parent.visible = true
 	_scene.queue_free()
 	_scene = null
+	var world := get_tree().get_first_node_in_group("world_controller")
+	if world != null:
+		world.exit_dungeon_combat()
 	dungeon_left.emit(reason)
 
 func _apply(snap: Dictionary) -> void:
@@ -200,7 +203,7 @@ func _apply(snap: Dictionary) -> void:
 		return
 	var rooms: Dictionary = snap.get("rooms", {})
 	var current := str(snap.get("room_id", ""))
-	# Room change first: it clears the previous room's enemies, then this room's spawns are created below.
+	# Update the active room before applying the new combat snapshot.
 	var changed := current != _last_room
 	if changed:
 		_last_room = current
@@ -217,8 +220,6 @@ func _apply(snap: Dictionary) -> void:
 			var oid := str(o.get("dungeon_object_id"))
 			var done: bool = bool(rv.get("objects", {}).get(oid, false))
 			o.modulate = Color(1, 1, 1, 0.35) if done else Color(1, 1, 1, 1)
-		if active:
-			_sync_spawns(node, rv.get("spawns", {}))
 	if changed:
 		room_changed.emit(current)
 	if str(snap.get("status", "")) == "COMPLETED":
@@ -228,43 +229,9 @@ func _enter_room(room_id: String) -> void:
 	var node := _scene.get_node_or_null("Rooms/%s" % room_id.get_slice("-", 3)) as Node2D
 	if node == null:
 		return
-	# A new room (or a respawn at a checkpoint): clear leftovers, place the player at the room entry.
-	for sid in _spawned.keys():
-		if is_instance_valid(_spawned[sid]):
-			_spawned[sid].queue_free()
-	_spawned.clear()
-	var entry := node.get_node_or_null("Entry") as Node2D
-	if entry != null and _player != null:
-		_player.global_position = entry.global_position
-		if _player.has_method("heal") and "max_hp" in _player:
-			_player.heal(_player.max_hp)
 	var kind := str(node.get_meta("kind", ""))
 	if ROOM_HINTS.has(kind):
 		_hint(tr(ROOM_HINTS[kind]))
-
-func _sync_spawns(room_node: Node2D, spawns: Dictionary) -> void:
-	for marker in room_node.get_node("Spawns").get_children():
-		var sid := str(marker.name)
-		if bool(spawns.get(sid, false)) or _spawned.has(sid):
-			continue
-		var path := str(marker.get_meta("monster_scene", ""))
-		if path == "":
-			continue
-		var packed: PackedScene = load(path)
-		if packed == null:
-			continue
-		var m: Node2D = packed.instantiate()
-		m.set("dungeon_spawn_id", sid)
-		for key in marker.get_meta("overrides", {}).keys():
-			m.set(key, marker.get_meta("overrides")[key])
-		_scene.get_node("Playground").add_child(m)
-		m.global_position = marker.global_position
-		_spawned[sid] = m
-
-func _on_player_died() -> void:
-	if _snapshot.is_empty() or _net == null:
-		return
-	_net.request_dungeon_player_defeated(str(_snapshot.get("instance_id", "")))
 
 func _hint(text: String) -> void:
 	var player := _get_player()

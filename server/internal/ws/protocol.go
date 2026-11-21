@@ -260,7 +260,7 @@ func isMutation(typ string) bool {
 	case "quest.accept.request", "quest.turnin.request", "world.interact.request",
 		"dialogue.open.request", "dialogue.choice.request",
 		"inventory.move.request", "combat.loot.request", "dungeon.enter.request",
-		"dungeon.interact.request", "dungeon.encounter.report", "dungeon.claim.request", "dungeon.leave.request",
+		"dungeon.interact.request", "dungeon.claim.request", "dungeon.leave.request",
 		"world.cast.request":
 		return true
 	}

@@ -170,18 +170,12 @@ func request_inventory_move(from_container: String, from_slot: int, to_container
 func request_loot(enemy_id: String) -> String:
 	return send_mutation("combat.loot.request", {"enemy_id": enemy_id})
 
-## T-037 dungeon requests (dungeon-engine.md §4). Outcomes are reported, never decided, by the client.
+## Dungeon requests (dungeon-engine.md §4). Combat uses the world stream.
 func request_dungeon_enter(dungeon_id: String, mode: String = "NORMAL") -> String:
 	return send_mutation("dungeon.enter.request", {"dungeon_id": dungeon_id, "mode": mode})
 
 func request_dungeon_interact(instance_id: String, object_id: String) -> String:
 	return send_mutation("dungeon.interact.request", {"instance_id": instance_id, "object_id": object_id})
-
-func request_dungeon_enemy_defeated(instance_id: String, spawn_id: String) -> String:
-	return send_mutation("dungeon.encounter.report", {"instance_id": instance_id, "outcome": "enemy_defeated", "spawn_id": spawn_id})
-
-func request_dungeon_player_defeated(instance_id: String) -> String:
-	return send_mutation("dungeon.encounter.report", {"instance_id": instance_id, "outcome": "player_defeated"})
 
 func request_dungeon_claim(instance_id: String) -> String:
 	return send_mutation("dungeon.claim.request", {"instance_id": instance_id})
@@ -194,16 +188,24 @@ func request_dungeon_leave(instance_id: String) -> String:
 func world_join(zone_id: String) -> void:
 	_send_c2s("world.join.request", {"zone_id": zone_id}, "")
 
-func world_move(seq: int, x: float, y: float) -> void:
-	_send_c2s("world.move.request", {"seq": seq, "x": x, "y": y}, "")
+func world_move(seq: int, x: float, y: float, encounter: String = "") -> void:
+	var payload := {"seq": seq, "x": x, "y": y}
+	if encounter != "":
+		payload["encounter_id"] = encounter
+	_send_c2s("world.move.request", payload, "")
 
-func world_stop(seq: int) -> void:
-	_send_c2s("world.stop.request", {"seq": seq}, "")
+func world_stop(seq: int, encounter: String = "") -> void:
+	var payload := {"seq": seq}
+	if encounter != "":
+		payload["encounter_id"] = encounter
+	_send_c2s("world.stop.request", payload, "")
 
-func request_world_cast(skill_id: String, target_id: int = 0) -> String:
+func request_world_cast(skill_id: String, target_id: int = 0, encounter: String = "") -> String:
 	var payload := {"skill_id": skill_id}
 	if target_id > 0:
 		payload["target_id"] = target_id
+	if encounter != "":
+		payload["encounter_id"] = encounter
 	return send_mutation("world.cast.request", payload)
 
 func request_snapshot(scopes: Array = []) -> void:

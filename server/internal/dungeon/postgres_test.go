@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"log/slog"
 	"os"
 	"strconv"
 	"sync"
@@ -15,6 +16,7 @@ import (
 	"github.com/maillunex-lang/NewMMO/server/internal/auth"
 	"github.com/maillunex-lang/NewMMO/server/internal/loot"
 	"github.com/maillunex-lang/NewMMO/server/internal/quest"
+	"github.com/maillunex-lang/NewMMO/server/internal/world"
 )
 
 type zeroRoller struct{}
@@ -155,11 +157,30 @@ func TestDungeonEnginePostgres(t *testing.T) {
 		t.Fatalf("foreign instance id: %v", err)
 	}
 
+	current := r1.(Snapshot)
+	if _, err := call("dungeon.encounter.report", map[string]any{"instance_id": iid, "outcome": "enemy_defeated", "spawn_id": "DNG-01-001-R02-E1"}); !errors.Is(err, ErrBadRequest) {
+		t.Fatalf("client combat outcome was accepted: %v", err)
+	}
 	interact := func(obj string) Snapshot {
-		return snap("dungeon.interact.request", map[string]any{"instance_id": iid, "object_id": obj})
+		current = snap("dungeon.interact.request", map[string]any{"instance_id": iid, "object_id": obj})
+		return current
+	}
+	combat := func(outcome world.EncounterOutcome) Snapshot {
+		t.Helper()
+		before := current
+		var err error
+		current, err = engine.updateEncounter(ctx, accountID, characterID, before, outcome, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		replayed, err := engine.updateEncounter(ctx, accountID, characterID, before, outcome, false)
+		if err != nil || replayed.EventSeq != current.EventSeq {
+			t.Fatalf("combat replay = %+v, %v; want event seq %d", replayed, err, current.EventSeq)
+		}
+		return current
 	}
 	kill := func(spawn string) Snapshot {
-		return snap("dungeon.encounter.report", map[string]any{"instance_id": iid, "outcome": "enemy_defeated", "spawn_id": spawn})
+		return combat(world.EncounterOutcome{Kills: []world.Kill{{Spawn: spawn}}})
 	}
 	for _, s := range []string{"DNG-01-001-R02-E1", "DNG-01-001-R02-E2", "DNG-01-001-R02-E3"} {
 		kill(s)
@@ -180,7 +201,7 @@ func TestDungeonEnginePostgres(t *testing.T) {
 		t.Fatalf("checkpoint: %#v", s)
 	}
 	// Wipe on the final boss, then retry.
-	s = snap("dungeon.encounter.report", map[string]any{"instance_id": iid, "outcome": "player_defeated"})
+	s = combat(world.EncounterOutcome{PlayerDefeated: true})
 	if s.Attempts != 1 || s.RoomID != "DNG-01-001-R06" {
 		t.Fatalf("wipe: %#v", s)
 	}
@@ -260,6 +281,7 @@ func TestDungeonEnginePostgres(t *testing.T) {
 	if err := pool.QueryRow(ctx, `SELECT status FROM public.dungeon_instances WHERE instance_id=$1::uuid`, s2.InstanceID).Scan(&status); err != nil || status != StatusExpired {
 		t.Fatalf("expired status=%q err=%v", status, err)
 	}
+	exerciseCombatSession(t, ctx, engine, accountID, characterID, s3.InstanceID)
 	// Leave abandons an active instance; a completed one cannot be left unclaimed (checked in unit flow).
 	left := snap("dungeon.leave.request", map[string]any{"instance_id": s3.InstanceID})
 	if left.Status != StatusAbandoned {
@@ -273,5 +295,99 @@ func TestDungeonEnginePostgres(t *testing.T) {
 	var clears int
 	if err := pool.QueryRow(ctx, `SELECT normal_clear_count FROM public.dungeon_progress WHERE character_id=$1 AND dungeon_id='DNG-01-001'`, characterID).Scan(&clears); err != nil || clears != 1 {
 		t.Fatalf("clears=%d err=%v", clears, err)
+	}
+}
+
+func exerciseCombatSession(t *testing.T, ctx context.Context, engine *Engine, accountID string, characterID int64, instanceID string) {
+	t.Helper()
+	var pushed Snapshot
+	newSession := func() *Session {
+		loader := func(context.Context, string, int64) (world.PlayerInfo, error) {
+			return world.PlayerInfo{ClassID: "CLS-03", Level: 7}, nil
+		}
+		s := engine.NewSession(ctx, roomTestCatalog(), loader, accountID, characterID,
+			func(string, any) bool { return true }, func(typ string, _ int64, payload any) bool {
+				if typ != "dungeon.snapshot" {
+					t.Errorf("unexpected critical push: %s", typ)
+				}
+				pushed = payload.(Snapshot)
+				return true
+			}, slog.Default())
+		s.stop = func() {} // Advance the real zone ticks from the test.
+		return s
+	}
+	call := func(s *Session, typ string, payload map[string]any) Snapshot {
+		t.Helper()
+		_, result, err := s.Handle(ctx, typ, newUUID(), payload)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return result.(Snapshot)
+	}
+	enter := func(s *Session) Snapshot {
+		t.Helper()
+		return call(s, "dungeon.enter.request", map[string]any{"dungeon_id": "DNG-01-001", "mode": "NORMAL"})
+	}
+	s := newSession()
+	if snapshot := enter(s); snapshot.InstanceID != instanceID || snapshot.Combat == nil {
+		t.Fatalf("live instance did not start combat stream: %+v", snapshot)
+	}
+	wave := call(s, "dungeon.interact.request", map[string]any{"instance_id": instanceID, "object_id": "OBJ-DNG-01-001-ENTRY"})
+	cast := func(s *Session, encounter string, enemy world.EntityID) error {
+		t.Helper()
+		_, _, handled, err := s.HandleWorld(ctx, "world.cast.request", newUUID(), map[string]any{
+			"encounter_id": encounter, "skill_id": "CLS-03-SK01", "target_id": float64(enemy),
+		})
+		if !handled {
+			t.Fatal("dungeon cast escaped to the overworld")
+		}
+		return err
+	}
+	tick := func(s *Session, count int) {
+		t.Helper()
+		for range count {
+			s.pending = s.zone.TickEncounter(s.ref)
+			if err := s.flushCombat(ctx); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	approach := func(s *Session) {
+		t.Helper()
+		_, _, handled, err := s.HandleWorld(ctx, "world.move.request", "", map[string]any{
+			"encounter_id": s.encounter, "seq": float64(1), "x": float64(530), "y": float64(260),
+		})
+		if !handled || err != nil {
+			t.Fatalf("move handled=%v, err=%v", handled, err)
+		}
+		tick(s, 28)
+	}
+	approach(s)
+	if err := cast(s, wave.Combat.Encounter, wave.Combat.Entities[0].ID); err != nil {
+		t.Fatal(err)
+	}
+	tick(s, 1)
+	if !pushed.Rooms[wave.RoomID].Spawns["DNG-01-001-R02-E1"] {
+		t.Fatal("server cast did not persist a defeated spawn")
+	}
+	s.clear()
+	s = newSession()
+	resumed := enter(s)
+	if resumed.RoomID != wave.RoomID || len(resumed.Combat.Entities) != 3 {
+		t.Fatalf("reconnect did not restore remaining spawns: %+v", resumed)
+	}
+	if err := cast(s, wave.Combat.Encounter, resumed.Combat.Entities[0].ID); !errors.Is(err, ErrStateConflict) {
+		t.Fatalf("old encounter cast: %v", err)
+	}
+	call(s, "dungeon.interact.request", map[string]any{"instance_id": instanceID, "object_id": "OBJ-DNG-01-001-A"})
+	approach(s)
+	for _, enemy := range resumed.Combat.Entities[:2] {
+		if err := cast(s, resumed.Combat.Encounter, enemy.ID); err != nil {
+			t.Fatal(err)
+		}
+		tick(s, 8)
+	}
+	if pushed.RoomID != "DNG-01-001-R03" || pushed.Combat == nil || pushed.Combat.Encounter == resumed.Combat.Encounter {
+		t.Fatalf("last server kill did not open a fresh stream for R03: %+v", pushed)
 	}
 }

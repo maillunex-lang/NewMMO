@@ -74,6 +74,15 @@ Recorded by EX-P00 audit. **Do not silently pick a side in code.** Owner decides
 | Interim | The owner confirmed that the first authoritative combat slice keeps the existing three flame interactions without a deadline. |
 | Owner decision needed | Specify the duration and trigger when introducing the ritual timer. |
 
+## C-DNG-002 — phase-2 crystals and safe zones for DNG-01-001
+
+| Field | Value |
+|-------|--------|
+| Status | **OPEN** (T-038e boss phases) |
+| Problem | `06_ENEMIES.md` requires two interactive crystals to interrupt `AB-ENM-01-301-C` and two safe zones out of four. The current R06 scene and registry contain only the three distinct ritual flames from `12_DUNGEONS.md` §4.1. There is no approved crystal placement or safe-zone geometry for this scene. |
+| Interim | Private combat uses the shared basic and signature abilities. The three flames retain their existing progression role. |
+| Owner decision needed | Confirm separate phase-2 crystals and whether the director may choose the safe-zone geometry within the existing room. |
+
 ## Other open notes
 
 | ID | Note |

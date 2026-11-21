@@ -85,6 +85,7 @@ type Snapshot struct {
 	Rooms      map[string]RoomView `json:"rooms"`
 	Attempts   int                 `json:"attempts"`
 	Revision   int64               `json:"revision"`
+	Combat     *RoomSnapshot       `json:"combat,omitempty"`
 }
 
 type Reward struct {
@@ -111,6 +112,9 @@ type instance struct {
 
 // Handle dispatches one dungeon.* client message; it returns the S→C message type and payload.
 func (e *Engine) Handle(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any) (string, any, error) {
+	if typ == "dungeon.encounter.report" {
+		return "", nil, ErrBadRequest
+	}
 	reqUUID, err := parseUUID(requestID)
 	if err != nil {
 		return "", nil, ErrBadRequest
@@ -136,12 +140,12 @@ func (e *Engine) Handle(ctx context.Context, accountID string, characterID int64
 	if err != nil {
 		return "", nil, ErrInternal
 	}
-	var storedHash string
+	var storedHash, storedType string
 	var stored []byte
-	switch err := tx.QueryRow(ctx, `SELECT payload_sha256, result FROM public.idempotency_keys
-		WHERE character_id=$1 AND request_id=$2`, characterID, reqUUID).Scan(&storedHash, &stored); {
+	switch err := tx.QueryRow(ctx, `SELECT message_type, payload_sha256, result FROM public.idempotency_keys
+		WHERE character_id=$1 AND request_id=$2`, characterID, reqUUID).Scan(&storedType, &storedHash, &stored); {
 	case err == nil:
-		if storedHash != hash {
+		if storedType != typ || storedHash != hash {
 			return "", nil, ErrIdempotencyConflict
 		}
 		var replay any
@@ -164,21 +168,6 @@ func (e *Engine) Handle(ctx context.Context, accountID string, characterID int64
 				return nil, ErrBadRequest
 			}
 			return in.m.Interact(def, obj)
-		})
-	case "dungeon.encounter.report":
-		result, err = e.mutate(ctx, tx, characterID, rev, payload, func(def Definition, in *instance) ([]Event, error) {
-			outcome, _ := payload["outcome"].(string)
-			spawn, _ := payload["spawn_id"].(string)
-			switch outcome {
-			case "enemy_defeated":
-				if spawn == "" {
-					return nil, ErrBadRequest
-				}
-				return in.m.EnemyDefeated(def, spawn)
-			case "player_defeated":
-				return in.m.PlayerDefeated(def)
-			}
-			return nil, ErrBadRequest
 		})
 	case "dungeon.leave.request":
 		result, err = e.leave(ctx, tx, characterID, rev, payload)
