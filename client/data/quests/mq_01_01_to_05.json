@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "chapter": "MQ-01",
+  "region": "REG-01",
+  "reputation_faction": "FAC-08",
+  "tutorial_flag": "TUTORIAL-COMPLETE",
+  "quests": [
+    {
+      "id": "MQ-01-01",
+      "title": "Необычный приказ",
+      "journal": "Несовпадение караванной накладной. Получить у NPC-802 опечатанное поручение и прочитать несоответствие на карте Исчезнувший тракт.",
+      "type": "dialogue",
+      "level": 1,
+      "location": "LOC-01-001",
+      "contact": "NPC-802",
+      "requires": ["TUTORIAL-COMPLETE"],
+      "objectives": [
+        {"id": "OBJ-01-01-1", "text": "Поговорить с NPC-802", "event": "npc_interact", "target": "NPC-802", "count": 1},
+        {"id": "OBJ-01-01-2", "text": "Осмотреть доску поручений", "event": "world_interact", "target": "POI-BOARD-01", "count": 1},
+        {"id": "OBJ-01-01-3", "text": "Подтвердить принятие расследования", "event": "world_interact", "target": "POI-ACCEPT-01", "count": 1}
+      ],
+      "reward": {"xp": 100, "gold": 12, "reputation": 20, "flags": ["QF-MQ-01-01-DONE", "QF-MQ-01-01-REWARD"]}
+    },
+    {
+      "id": "MQ-01-02",
+      "title": "Два свидетеля",
+      "journal": "Две даты отправления обоза. Опросить двух свидетелей о Исчезнувший тракт, сопоставить даты и выбрать противоречащую запись.",
+      "type": "investigation",
+      "level": 1,
+      "location": "LOC-01-001",
+      "contact": "NPC-802",
+      "requires": ["QF-MQ-01-01-DONE"],
+      "objectives": [
+        {"id": "OBJ-01-02-1", "text": "Получить показание A", "event": "npc_interact", "target": "POI-WITNESS-A", "count": 1},
+        {"id": "OBJ-01-02-2", "text": "Получить показание B", "event": "npc_interact", "target": "POI-WITNESS-B", "count": 1},
+        {"id": "OBJ-01-02-3", "text": "Сопоставить дату на столе улик", "event": "world_interact", "target": "POI-EVIDENCE-TABLE", "count": 1}
+      ],
+      "reward": {"xp": 100, "gold": 12, "reputation": 20, "evidence": "ITEM-Q-01-02", "flags": ["QF-MQ-01-02-DONE", "QF-MQ-01-02-REWARD"]}
+    },
+    {
+      "id": "MQ-01-03",
+      "title": "След на дороге",
+      "journal": "Мост, которого нет на земле. Пройти к двум контрольным точкам Исчезнувший тракт и измерить расхождение следов Отголоска.",
+      "type": "explore",
+      "level": 2,
+      "location": "LOC-01-002",
+      "contact": "NPC-102",
+      "requires": ["QF-MQ-01-02-DONE"],
+      "objectives": [
+        {"id": "OBJ-01-03-1", "text": "Достичь маркера A", "event": "world_interact", "target": "POI-MARKER-A", "count": 1},
+        {"id": "OBJ-01-03-2", "text": "Достичь маркера B", "event": "world_interact", "target": "POI-MARKER-B", "count": 1},
+        {"id": "OBJ-01-03-3", "text": "Активировать измерительный кристалл", "event": "world_interact", "target": "POI-MEASURE-CRYSTAL", "count": 1}
+      ],
+      "reward": {"xp": 100, "gold": 12, "reputation": 20, "flags": ["QF-MQ-01-03-DONE", "QF-MQ-01-03-REWARD"]}
+    },
+    {
+      "id": "MQ-01-04",
+      "title": "Цена ошибки",
+      "journal": "Раненые у Полевого Брода. Найти пострадавших жителей, вывести их из опасного участка и передать медикам.",
+      "type": "rescue",
+      "level": 2,
+      "location": "LOC-01-003",
+      "contact": "NPC-102",
+      "requires": ["QF-MQ-01-03-DONE"],
+      "objectives": [
+        {"id": "OBJ-01-04-1", "text": "Найти 2 группы жителей", "event": "world_interact", "target": "POI-RESIDENT-GROUP", "count": 2},
+        {"id": "OBJ-01-04-2", "text": "Стабилизировать 2 точки", "event": "world_interact", "target": "POI-STABILIZE", "count": 2},
+        {"id": "OBJ-01-04-3", "text": "Довести обе группы до укрытия", "event": "escort_checkpoint", "target": "POI-SHELTER", "count": 1}
+      ],
+      "reward": {"xp": 100, "gold": 12, "reputation": 20, "flags": ["QF-MQ-01-04-DONE", "QF-MQ-01-04-REWARD"]}
+    },
+    {
+      "id": "MQ-01-05",
+      "title": "Ложная улика",
+      "journal": "Поддельная печать дорожного ведомства. Проверить три следа и исключить ложное обвинение в исчезновении Исчезнувший тракт.",
+      "type": "investigation",
+      "level": 3,
+      "location": "LOC-01-002",
+      "contact": "NPC-802",
+      "requires": ["QF-MQ-01-04-DONE"],
+      "objectives": [
+        {"id": "OBJ-01-05-1", "text": "Осмотреть 3 улики", "event": "world_interact", "target": "POI-CLUE", "count": 3},
+        {"id": "OBJ-01-05-2", "text": "Исключить подложную", "event": "world_interact", "target": "POI-FORGERY-REJECT", "count": 1},
+        {"id": "OBJ-01-05-3", "text": "Передать заключение NPC-102", "event": "npc_interact", "target": "NPC-102", "count": 1}
+      ],
+      "reward": {"xp": 100, "gold": 12, "reputation": 20, "evidence": "ITEM-Q-01-05", "flags": ["QF-MQ-01-05-DONE", "QF-MQ-01-05-REWARD"]}
+    }
+  ]
+}

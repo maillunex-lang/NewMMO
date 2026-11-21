@@ -1,5 +1,5 @@
 extends Node2D
-## Stage 1 coordinator: input routing, NPC dialogue, local combat world.
+## Stage 1 + MQ-01-01…05 coordinator.
 
 @onready var player: CharacterBody2D = $DawnValley/Player
 @onready var dialogue: Control = $CanvasLayer/Dialogue
@@ -7,12 +7,12 @@ extends Node2D
 @onready var camera: Camera2D = $DawnValley/Player/Camera2D
 
 func _ready() -> void:
-	for npc in get_tree().get_nodes_in_group("npcs"):
-		if npc.has_signal("dialogue_requested"):
-			npc.dialogue_requested.connect(_on_npc_dialogue)
+	if quest_manager and quest_manager.has_signal("dialogue_flow_requested"):
+		quest_manager.dialogue_flow_requested.connect(_on_flow)
 	if dialogue and dialogue.has_signal("closed"):
 		dialogue.closed.connect(_on_dialogue_closed)
-	# Soft camera limits around dawn valley ground
+	if dialogue and dialogue.has_signal("action_chosen"):
+		dialogue.action_chosen.connect(_on_dialogue_action)
 	if camera:
 		camera.limit_left = -80
 		camera.limit_top = -80
@@ -47,19 +47,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	if tap and player and player.has_method("move_to_world"):
 		player.move_to_world(pos)
 
-func _on_npc_dialogue(npc: Node) -> void:
-	var tex: Texture2D = load("res://assets/ui/portrait_mira.png")
-	dialogue.open_dialogue(
-		npc.npc_id,
-		npc.display_name,
-		npc.lines,
-		npc.important_dialogue,
-		tex
-	)
+func _on_flow(npc_id: String, flow_ids: PackedStringArray, mode: String) -> void:
+	var tex: Texture2D = load("res://assets/ui/portrait_mira.png") if npc_id == "NPC-102" else load("res://assets/ui/portrait_player.png")
+	var name := npc_id
+	if quest_manager and quest_manager.has_method("npc_display_name"):
+		name = quest_manager.npc_display_name(npc_id)
+	dialogue.open_flow(npc_id, name, flow_ids, tex, mode)
 
-func _on_dialogue_closed(npc_id: String) -> void:
-	if quest_manager and quest_manager.has_method("on_dialogue_finished"):
-		quest_manager.on_dialogue_finished(npc_id, player)
+func _on_dialogue_action(action: String, npc_id: String) -> void:
+	if quest_manager and quest_manager.has_method("on_dialogue_action"):
+		quest_manager.on_dialogue_action(action, npc_id, player)
+
+func _on_dialogue_closed(_npc_id: String) -> void:
 	if player and player.has_method("pause_automation"):
-		# Re-enable automation control after important dialogue; auto stays off until toggled.
 		player.pause_automation(false)

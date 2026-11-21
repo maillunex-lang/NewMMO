@@ -165,6 +165,9 @@ func add_gold(amount: int) -> void:
 
 func try_interact() -> void:
 	for a in interact_area.get_overlapping_areas():
+		if a.has_method("on_interact"):
+			a.on_interact(self)
+			return
 		var host := a.get_parent()
 		if host and host.has_method("on_interact"):
 			host.on_interact(self)

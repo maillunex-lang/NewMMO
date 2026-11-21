@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/env/dawn_valley_ground.png" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/props/tree.tscn" id="2"]
@@ -7,13 +7,17 @@
 [ext_resource type="PackedScene" path="res://scenes/props/cottage.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/props/lantern.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://scenes/props/fence.tscn" id="7"]
-[ext_resource type="PackedScene" path="res://scenes/npc/elder_mira.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://scenes/npc/feira_niss.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/monsters/slime.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://scenes/monsters/wolf.tscn" id="10"]
 [ext_resource type="PackedScene" path="res://scenes/monsters/bandit.tscn" id="11"]
+[ext_resource type="PackedScene" path="res://scenes/npc/ilra_venn.tscn" id="12"]
+[ext_resource type="PackedScene" path="res://scenes/world/interactable.tscn" id="13"]
 
 [node name="DawnValley" type="Node2D"]
 y_sort_enabled = true
+metadata/loc_ids = PackedStringArray("LOC-01-001", "LOC-01-002", "LOC-01-003")
+metadata/region = "REG-01"
 
 [node name="Ground" type="Node2D" parent="."]
 
@@ -102,23 +106,133 @@ position = Vector2(900, 760)
 [node name="NPCSpawns" type="Node2D" parent="."]
 y_sort_enabled = true
 
-[node name="ElderMira" parent="NPCSpawns" instance=ExtResource("8")]
+[node name="FeiraNiss" parent="NPCSpawns" instance=ExtResource("8")]
 position = Vector2(560, 660)
+
+[node name="IlraVenn" parent="NPCSpawns" instance=ExtResource("12")]
+position = Vector2(820, 740)
+
+[node name="Gameplay" type="Node2D" parent="."]
+y_sort_enabled = true
+metadata/editor_layer = "gameplay"
+
+[node name="Board" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(620, 640)
+interact_id = "POI-BOARD-01"
+display_name = "Доска поручений"
+event_type = "world_interact"
+
+[node name="AcceptSeal" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(660, 680)
+interact_id = "POI-ACCEPT-01"
+display_name = "Опечатанное поручение"
+event_type = "world_interact"
+important = true
+
+[node name="WitnessA" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(480, 720)
+interact_id = "POI-WITNESS-A"
+display_name = "Свидетель A"
+event_type = "npc_interact"
+
+[node name="WitnessB" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(700, 700)
+interact_id = "POI-WITNESS-B"
+display_name = "Свидетель B"
+event_type = "npc_interact"
+
+[node name="EvidenceTable" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(600, 720)
+interact_id = "POI-EVIDENCE-TABLE"
+display_name = "Стол улик"
+event_type = "world_interact"
+
+[node name="MarkerA" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(980, 700)
+interact_id = "POI-MARKER-A"
+display_name = "Маркер A"
+event_type = "world_interact"
+
+[node name="MarkerB" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(1120, 780)
+interact_id = "POI-MARKER-B"
+display_name = "Маркер B"
+event_type = "world_interact"
+
+[node name="MeasureCrystal" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(1040, 820)
+interact_id = "POI-MEASURE-CRYSTAL"
+display_name = "Измерительный кристалл"
+event_type = "world_interact"
+important = true
+
+[node name="Resident1" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(400, 1000)
+interact_id = "POI-RESIDENT-GROUP"
+display_name = "Жители 1"
+event_type = "world_interact"
+
+[node name="Resident2" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(520, 1080)
+interact_id = "POI-RESIDENT-GROUP"
+display_name = "Жители 2"
+event_type = "world_interact"
+
+[node name="Stabilize1" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(460, 1040)
+interact_id = "POI-STABILIZE"
+display_name = "Стабилизация 1"
+event_type = "world_interact"
+
+[node name="Stabilize2" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(560, 1020)
+interact_id = "POI-STABILIZE"
+display_name = "Стабилизация 2"
+event_type = "world_interact"
+
+[node name="Shelter" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(540, 900)
+interact_id = "POI-SHELTER"
+display_name = "Укрытие медиков"
+event_type = "escort_checkpoint"
+important = true
+
+[node name="Clue1" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(900, 860)
+interact_id = "POI-CLUE"
+display_name = "Улика 1"
+event_type = "world_interact"
+
+[node name="Clue2" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(960, 900)
+interact_id = "POI-CLUE"
+display_name = "Улика 2"
+event_type = "world_interact"
+
+[node name="Clue3" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(1020, 880)
+interact_id = "POI-CLUE"
+display_name = "Улика 3"
+event_type = "world_interact"
+
+[node name="ForgeryReject" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(940, 840)
+interact_id = "POI-FORGERY-REJECT"
+display_name = "Отбросить подделку"
+event_type = "world_interact"
+important = true
 
 [node name="MonsterSpawns" type="Node2D" parent="."]
 y_sort_enabled = true
 
 [node name="Slime1" parent="MonsterSpawns" instance=ExtResource("9")]
-position = Vector2(920, 780)
+position = Vector2(1240, 780)
 
 [node name="Slime2" parent="MonsterSpawns" instance=ExtResource("9")]
-position = Vector2(1040, 740)
+position = Vector2(1340, 740)
 
 [node name="Slime3" parent="MonsterSpawns" instance=ExtResource("9")]
-position = Vector2(980, 860)
-
-[node name="Slime4" parent="MonsterSpawns" instance=ExtResource("9")]
-position = Vector2(1140, 700)
+position = Vector2(1300, 860)
 
 [node name="Wolf1" parent="MonsterSpawns" instance=ExtResource("10")]
 position = Vector2(1480, 480)

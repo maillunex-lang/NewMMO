@@ -18,14 +18,16 @@ func _run() -> void:
 		quit(1)
 		return
 	var player := main.get_node_or_null("DawnValley/Player")
-	var mira := main.get_node_or_null("DawnValley/NPCSpawns/ElderMira")
+	var feira := main.get_node_or_null("DawnValley/NPCSpawns/FeiraNiss")
+	var ilra := main.get_node_or_null("DawnValley/NPCSpawns/IlraVenn")
 	var quest := main.get_node_or_null("QuestManager")
 	var hud := main.get_node_or_null("CanvasLayer/HUD")
 	var slime := main.get_node_or_null("DawnValley/MonsterSpawns/Slime1")
 	var failed := false
 	for item in [
 		["player", player],
-		["mira", mira],
+		["feira", feira],
+		["ilra", ilra],
 		["quest", quest],
 		["hud", hud],
 		["slime", slime],
