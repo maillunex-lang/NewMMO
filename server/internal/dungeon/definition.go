@@ -30,13 +30,14 @@ type RoomLayout struct {
 }
 
 type Room struct {
-	ID              string      `json:"id"`
-	Kind            string      `json:"kind"` // entrance | fight | puzzle | miniboss | rest | boss | exit
-	Objects         []string    `json:"objects"`
-	OptionalObjects []string    `json:"optional_objects"`
-	Spawns          []Spawn     `json:"spawns"`
-	Clear           Clear       `json:"clear"`
-	Layout          *RoomLayout `json:"layout"`
+	ID              string            `json:"id"`
+	Kind            string            `json:"kind"` // entrance | fight | puzzle | miniboss | rest | boss | exit
+	Objects         []string          `json:"objects"`
+	OptionalObjects []string          `json:"optional_objects"`
+	Spawns          []Spawn           `json:"spawns"`
+	Clear           Clear             `json:"clear"`
+	Layout          *RoomLayout       `json:"layout"`
+	Witness         *world.WitnessDef `json:"witness,omitempty"`
 }
 
 type Definition struct {

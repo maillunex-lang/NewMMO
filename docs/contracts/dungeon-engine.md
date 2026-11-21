@@ -1,12 +1,12 @@
 # Contract: dungeon engine (EX-P09 / T-036)
 
-**Owner:** director · **Version:** 2 (solo server combat in `DNG-01-001`) · Canon: `12_DUNGEONS.md` §2–§4.1, §7, §9–§10. Data: `content/dungeons/dng-01-001.json`. Protocol: `websocket-protocol.md` rev 1.6. No new dependencies.
+**Owner:** director · **Version:** 2 (solo server combat in `DNG-01-001`) · Canon: `12_DUNGEONS.md` §2–§4.1, §7, §9–§10. Data: `content/dungeons/dng-01-001.json`. Protocol: `websocket-protocol.md` rev 1.7. No new dependencies.
 
 ## 1. Scope and honest interims
 Implemented now: **solo `NORMAL`**, data-driven state machine (reused for the other 11 dungeons by adding definitions), linear doors, server-checked puzzle sequence, checkpoints, personal reward claim, first-clear, server-observed combat, reconnect (idempotent re-enter), idle expiry.
 **Not yet (recorded, not hidden):**
 - No parties/queue/ready-check (no party system yet) → `max_party=1`; `STORY_SOLO`, `VETERAN`, pity (8 dry clears), class RARE equipment drop, reward mail: deferred (equipment instances/mail do not exist).
-- Boss-specific phases and the mini-boss mechanic remain future slices. The owner confirmed the three final flame interactions as the clear condition for the first server-combat slice (C-DNG-001).
+- The first and third boss phases still use the shared combat behavior. The mini-boss mechanic remains a future slice. The owner confirmed the three final flame interactions as the clear condition for the first server-combat slice (C-DNG-001).
 
 ## 2. States (canon §3)
 Instance: `ACTIVE → BOSS_ACTIVE → COMPLETED → CLOSED`, plus `EXPIRED`, `ABANDONED`. Room: `LOCKED → AVAILABLE → IN_PROGRESS → CLEARED`. Every transition is atomic, appends `dungeon_event_log` with a monotonic `event_seq`, and never skips a step. A door opens only when the server-evaluated `clear` condition of the room holds (`objects` all interacted; `spawns_all` all non-optional spawns defeated in server combat; `puzzle` solved).
@@ -36,6 +36,12 @@ Migration `00012_dungeons.sql`: `dungeon_instances` (one active instance per cha
 The registry stores each room's floor width and height, entry point, and each spawn's position. Coordinates are pixels in the editable dungeon scene. The registry gate checks the room, enemy ID and position of each spawn against the scene. Room simulations use the existing 10 Hz combat rules and 180 px/s movement. Automatic respawns are disabled in rooms, with persisted defeat flags used when rebuilding a room. On enter, room changes and checkpoint resets, `dungeon.snapshot.combat` contains a world snapshot and a new opaque `encounter_id`. Room commands (`world.move.request`, `world.stop.request`, `world.cast.request`) include that ID, as do the room's `world.delta` and `world.event` messages. An old stream ID is rejected. Leaving or claiming ends the private stream. Re-entering rebuilds combat from persisted room outcomes, with live HP and positions reset.
 
 The server applies kills and wipes atomically against the expected `event_seq` and pushes `dungeon.snapshot` when progression changes. A player defeat wins over a concurrent kill in that tick. The retired `dungeon.encounter.report` returns `UNKNOWN_TYPE`. Private kills never call the open-world loot hook. Pre-existing instance progress remains readable.
+
+## 5.2 Double Witness (final arena, 35–70% HP)
+
+The server starts `AB-ENM-01-301-C` after aggro, during phase 2. Each cast marks two diagonal quadrants safe for 2.2 s and damages only players outside them on the resolution tick. The 25 s cooldown begins at cast start. One pair of regular regional enemies joins on the first cast. These temporary summons never grant loot or room progress.
+
+Both arena crystals can be broken once in the same encounter during a cast. A successful break requires the current `encounter_id`, a living player and authoritative distance at most 100 px. Breaking the second crystal interrupts the attack. The registry verifies both crystal placements against the scene. Wipes and reconnects reset the live fight, including crystals. The three flames remain required for progression.
 
 ## 6. Acceptance
 Closed door until clear condition; wrong object in room ⇒ `INVALID_TARGET`; puzzle reset/solved; wipe → checkpoint rules; reconnect returns same state; idle expiry; replayed server outcomes never advance twice, and parallel claims never double rewards; first clear once; inventory-full claim retryable; one active instance per character; event log append-only. CI `server-db`.

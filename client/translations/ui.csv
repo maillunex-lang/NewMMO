@@ -91,3 +91,5 @@ world.hint.out_of_range,Слишком далеко от цели.,Target is out
 world.hint.no_resource,Не хватает ресурса.,Not enough resource.
 world.hint.no_target,Нет цели рядом.,No target nearby.
 world.hint.unsupported,Это умение пока недоступно.,This skill is not available yet.
+dungeon.witness.crystal,Кристалл арены,Arena crystal
+dungeon.witness.cover,Встаньте в подсвеченную зону или разбейте оба кристалла.,Reach a highlighted area or break both crystals.

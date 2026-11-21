@@ -41,9 +41,10 @@ type ZoneDef struct {
 		MaxX float64 `json:"max_x"`
 		MaxY float64 `json:"max_y"`
 	} `json:"bounds"`
-	PlayerSpawn Vec        `json:"player_spawn"`
-	Enemies     []SpawnDef `json:"enemies"`
-	NoRespawn   bool       `json:"-"`
+	PlayerSpawn Vec         `json:"player_spawn"`
+	Enemies     []SpawnDef  `json:"enemies"`
+	NoRespawn   bool        `json:"-"`
+	Witness     *WitnessDef `json:"-"`
 }
 
 func (d ZoneDef) Config() Config {
@@ -177,19 +178,43 @@ func NewZone(def ZoneDef, cat *combatdata.Catalog) (*Zone, error) {
 	z := &Zone{def: def, sim: New(def.Config()), sessions: map[string]*session{}}
 	z.sim.SetCombat(NewCombat(cat))
 	for _, e := range def.Enemies {
-		en, ok := cat.Enemies[e.EnemyID]
-		if !ok {
-			return nil, fmt.Errorf("zone %s spawn %s: unknown enemy %s", def.ZoneID, e.SpawnID, e.EnemyID)
+		enemy, err := loadZoneEnemy(cat, e.EnemyID)
+		if err != nil {
+			return nil, fmt.Errorf("zone %s spawn %s: %w", def.ZoneID, e.SpawnID, err)
 		}
-		st, ok := cat.Stats(e.EnemyID, damage.NoScale)
-		if !ok {
-			return nil, fmt.Errorf("zone %s spawn %s: no stats for %s", def.ZoneID, e.SpawnID, e.EnemyID)
+		enemy.spawn(z.sim, e.SpawnID, Vec{e.X, e.Y})
+	}
+	if def.Witness != nil {
+		if err := z.sim.setupWitness(*def.Witness, cat); err != nil {
+			return nil, fmt.Errorf("zone %s: %w", def.ZoneID, err)
 		}
-		id := z.sim.AddEnemy(e.SpawnID, e.EnemyID, en.Name, en.Level, st.MaxHP, Vec{e.X, e.Y})
-		z.sim.SetEnemyStats(id, st)
-		z.sim.SetEnemyDef(id, EnemyDef{AI: en.AI, Element: en.Element, A: en.Abilities["A"], B: en.Abilities["B"]})
 	}
 	return z, nil
+}
+
+type zoneEnemy struct {
+	enemy combatdata.Enemy
+	ref   string
+	stats damage.EnemyStatsOut
+}
+
+func loadZoneEnemy(cat *combatdata.Catalog, ref string) (zoneEnemy, error) {
+	enemy, ok := cat.Enemies[ref]
+	if !ok {
+		return zoneEnemy{}, fmt.Errorf("unknown enemy %s", ref)
+	}
+	stats, ok := cat.Stats(ref, damage.NoScale)
+	if !ok {
+		return zoneEnemy{}, fmt.Errorf("no stats for %s", ref)
+	}
+	return zoneEnemy{enemy: enemy, ref: ref, stats: stats}, nil
+}
+
+func (e zoneEnemy) spawn(s *Sim, spawnID string, pos Vec) EntityID {
+	id := s.AddEnemy(spawnID, e.ref, e.enemy.Name, e.enemy.Level, e.stats.MaxHP, pos)
+	s.SetEnemyStats(id, e.stats)
+	s.SetEnemyDef(id, EnemyDef{AI: e.enemy.AI, Element: e.enemy.Element, A: e.enemy.Abilities["A"], B: e.enemy.Abilities["B"]})
+	return id
 }
 
 func (z *Zone) ID() string { return z.def.ZoneID }
@@ -334,7 +359,19 @@ func (z *Zone) tickLocked() {
 	events := z.sim.DrainEvents()
 	for _, s := range z.sessions {
 		if mine := z.sim.EventsFor(s.entity, events); len(mine) > 0 {
-			s.push("world.event", map[string]any{"tick": z.sim.Tick(), "events": mine})
+			payload := map[string]any{"tick": z.sim.Tick(), "events": mine}
+			critical := false
+			for _, event := range mine {
+				switch event.Type {
+				case "witness_telegraph", "witness_crystal", "witness_end":
+					critical = true
+				}
+			}
+			if critical && s.crit != nil {
+				s.crit("world.event", 0, payload)
+			} else {
+				s.push("world.event", payload)
+			}
 		}
 	}
 	for ref, s := range z.sessions {

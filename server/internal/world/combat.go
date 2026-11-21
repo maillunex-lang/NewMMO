@@ -63,16 +63,18 @@ var (
 )
 
 type Event struct {
-	Type   string   `json:"type"` // cast | damage | heal | shield | death | respawn
-	Caster EntityID `json:"caster,omitempty"`
-	Target EntityID `json:"target,omitempty"`
-	Skill  string   `json:"skill,omitempty"`
-	Amount int      `json:"amount,omitempty"`
-	Crit   bool     `json:"crit,omitempty"`
-	HP     int      `json:"hp"`
-	AimX   float64  `json:"aim_x,omitempty"` // telegraph centre
-	AimY   float64  `json:"aim_y,omitempty"`
-	Radius float64  `json:"radius,omitempty"` // telegraph radius (world units)
+	Type      string   `json:"type"` // cast | damage | heal | shield | death | respawn
+	Caster    EntityID `json:"caster,omitempty"`
+	Target    EntityID `json:"target,omitempty"`
+	Skill     string   `json:"skill,omitempty"`
+	Amount    int      `json:"amount,omitempty"`
+	Crit      bool     `json:"crit,omitempty"`
+	HP        int      `json:"hp"`
+	AimX      float64  `json:"aim_x,omitempty"` // telegraph centre
+	AimY      float64  `json:"aim_y,omitempty"`
+	ObjectID  string   `json:"object_id,omitempty"`
+	SafeAreas []Rect2  `json:"safe_areas,omitempty"`
+	Radius    float64  `json:"radius,omitempty"` // telegraph radius (world units)
 }
 
 type Contributor struct {
@@ -174,6 +176,12 @@ func (s *Sim) stepCombat() {
 		return
 	}
 	dt := s.cfg.Dt()
+	var castingBoss EntityID
+	if w := s.witness; w != nil {
+		if boss := s.entities[w.boss]; boss != nil && !boss.Dead && s.stepWitness(boss) {
+			castingBoss = boss.ID
+		}
+	}
 	for _, e := range s.entities {
 		switch e.Kind {
 		case KindPlayer:
@@ -213,7 +221,7 @@ func (s *Sim) stepCombat() {
 				e.selfDirty = true
 			}
 		case KindEnemy:
-			if !e.Dead {
+			if !e.Dead && e.ID != castingBoss {
 				s.stepEnemy(e)
 			}
 			if e.Dead && !s.cfg.NoRespawn && s.tick >= e.respawnAt {
@@ -358,6 +366,12 @@ func (s *Sim) killEnemy(v *Entity) {
 	v.respawnAt = s.tick + s.ticks(s.combat.RespawnS)
 	v.changed = s.tick
 	s.emit(Event{Type: "death", Target: v.ID, HP: 0})
+	if s.witness != nil && s.witness.boss == v.ID {
+		s.endWitness()
+	}
+	if v.temporary {
+		return
+	}
 	k := Kill{EnemyID: v.Ref, Spawn: v.Spawn}
 	need := int(math.Ceil(s.combat.MinContribHP * float64(v.MaxHP)))
 	for ref, dmg := range v.contrib {

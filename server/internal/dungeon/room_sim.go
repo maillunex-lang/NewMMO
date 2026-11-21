@@ -55,6 +55,24 @@ func (r Room) zoneDef(defeated map[string]bool) (world.ZoneDef, error) {
 			})
 		}
 	}
+	if w := r.Witness; w != nil {
+		hasBoss := false
+		for _, spawn := range r.Spawns {
+			hasBoss = hasBoss || (spawn.ID == w.BossSpawn && spawn.EnemyID == "ENM-01-301")
+		}
+		if !hasBoss || len(w.Crystals) != 2 || w.AddEnemy == "" {
+			return world.ZoneDef{}, fmt.Errorf("room %s: phase 2 requires a boss, two crystals and a reinforcement", r.ID)
+		}
+		ids := make(map[string]bool, len(w.Crystals))
+		for _, crystal := range w.Crystals {
+			if crystal.ID == "" || ids[crystal.ID] || contains(r.Objects, crystal.ID) ||
+				contains(r.OptionalObjects, crystal.ID) || bounds.Clamp(crystal.Position) != crystal.Position {
+				return world.ZoneDef{}, fmt.Errorf("room %s: invalid witness crystal %s", r.ID, crystal.ID)
+			}
+			ids[crystal.ID] = true
+		}
+		d.Witness = w
+	}
 	return d, d.Validate()
 }
 

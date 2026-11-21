@@ -37,7 +37,10 @@
      "clear": {"spawns_all": true}},
     {"id": "DNG-01-001-R05", "kind": "rest", "layout": {"width": 760, "height": 560, "entry": {"x": 90, "y": 460}}, "objects": ["CP-DNG-01-001-02"], "optional_objects": ["LORE-DNG-01-001-01"], "spawns": [],
      "clear": {"objects": ["CP-DNG-01-001-02"]}},
-    {"id": "DNG-01-001-R06", "kind": "boss", "layout": {"width": 760, "height": 560, "entry": {"x": 90, "y": 460}}, "objects": ["OBJ-DNG-01-001-FINAL-1", "OBJ-DNG-01-001-FINAL-2", "OBJ-DNG-01-001-FINAL-3"],
+    {"id": "DNG-01-001-R06", "kind": "boss",
+     "witness": {"boss_spawn": "DNG-01-001-R06-BOSS", "add_enemy": "ENM-01-001", "crystals": [
+       {"id": "OBJ-DNG-01-001-CRYSTAL-1", "position": {"x": 280, "y": 75}},
+       {"id": "OBJ-DNG-01-001-CRYSTAL-2", "position": {"x": 475, "y": 75}}]}, "layout": {"width": 760, "height": 560, "entry": {"x": 90, "y": 460}}, "objects": ["OBJ-DNG-01-001-FINAL-1", "OBJ-DNG-01-001-FINAL-2", "OBJ-DNG-01-001-FINAL-3"],
      "spawns": [{"id": "DNG-01-001-R06-BOSS", "enemy_id": "ENM-01-301", "position": {"x": 420, "y": 260}}],
      "clear": {"objects": ["OBJ-DNG-01-001-FINAL-1", "OBJ-DNG-01-001-FINAL-2", "OBJ-DNG-01-001-FINAL-3"], "spawns_all": true}},
     {"id": "DNG-01-001-R07", "kind": "exit", "layout": {"width": 760, "height": 560, "entry": {"x": 90, "y": 460}}, "objects": ["EXIT-DNG-01-001"], "spawns": [], "clear": {}}

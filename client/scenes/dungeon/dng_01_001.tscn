@@ -240,6 +240,18 @@ display_name = "Огонь 3"
 dungeon_object_id = "OBJ-DNG-01-001-FINAL-3"
 important = false
 
+[node name="OBJ-DNG-01-001-CRYSTAL-1" parent="Rooms/R06/Objects" instance=ExtResource("2")]
+position = Vector2(280, 75)
+display_name = "dungeon.witness.crystal"
+dungeon_object_id = "OBJ-DNG-01-001-CRYSTAL-1"
+metadata/witness_crystal = true
+
+[node name="OBJ-DNG-01-001-CRYSTAL-2" parent="Rooms/R06/Objects" instance=ExtResource("2")]
+position = Vector2(475, 75)
+display_name = "dungeon.witness.crystal"
+dungeon_object_id = "OBJ-DNG-01-001-CRYSTAL-2"
+metadata/witness_crystal = true
+
 [node name="Spawns" type="Node2D" parent="Rooms/R06"]
 
 [node name="DNG-01-001-R06-BOSS" type="Marker2D" parent="Rooms/R06/Spawns"]

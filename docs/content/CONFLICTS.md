@@ -78,10 +78,9 @@ Recorded by EX-P00 audit. **Do not silently pick a side in code.** Owner decides
 
 | Field | Value |
 |-------|--------|
-| Status | **OPEN** (T-038e boss phases) |
-| Problem | `06_ENEMIES.md` requires two interactive crystals to interrupt `AB-ENM-01-301-C` and two safe zones out of four. The current R06 scene and registry contain only the three distinct ritual flames from `12_DUNGEONS.md` §4.1. There is no approved crystal placement or safe-zone geometry for this scene. |
-| Interim | Private combat uses the shared basic and signature abilities. The three flames retain their existing progression role. |
-| Owner decision needed | Confirm separate phase-2 crystals and whether the director may choose the safe-zone geometry within the existing room. |
+| Status | **RESOLVED** (2026-11-21, T-038e) |
+| Owner decision | Use two separate interactable crystals with existing art. Place safe zones inside the current R06 arena. |
+| Applied | The server highlights one of the two diagonal pairs of room quadrants for the canon 2.2 s. Both crystals can be destroyed once per encounter to interrupt the cast. The three ritual flames keep their existing progression role. |
 
 ## Other open notes
 
