@@ -22,6 +22,7 @@ class DungeonRegistry(unittest.TestCase):
             d = json.load(open(SRC, encoding="utf-8"))
             mutate(d)
             json.dump(d, open(os.path.join(tmp, "content", "dungeons", "x.json"), "w", encoding="utf-8"))
+            os.symlink(os.path.join(ROOT, "client"), os.path.join(tmp, "client"))
             return [c for c, _ in cdr.run(tmp, os.path.join(ROOT, "docs", "content"))]
         finally:
             shutil.rmtree(tmp)
@@ -46,6 +47,13 @@ class DungeonRegistry(unittest.TestCase):
         self.assertIn("DR_ROOMS", codes)
         self.assertIn("DR_CHECKPOINT", codes)
         self.assertIn("DR_PUZZLE", codes)
+
+    def test_scene_drift_detected(self):
+        def m(d):
+            d["rooms"][1]["objects"].append("OBJ-DNG-01-001-NEW")
+            d["rooms"][1]["spawns"][0]["enemy_id"] = "ENM-01-002"
+        codes = self._run_with(m)
+        self.assertIn("DR_SCENE", codes)
 
 
 if __name__ == "__main__":

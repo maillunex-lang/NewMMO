@@ -1,0 +1,258 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/dungeon/dungeon_scene.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/world/interactable.tscn" id="2"]
+
+[node name="DungeonDng01001" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Playground" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Rooms" type="Node2D" parent="."]
+
+[node name="R01" type="Node2D" parent="Rooms"]
+metadata/kind = "entrance"
+metadata/room_id = "DNG-01-001-R01"
+
+[node name="Floor" type="ColorRect" parent="Rooms/R01"]
+z_index = -1000
+offset_right = 760.0
+offset_bottom = 560.0
+color = Color(0.16,0.14,0.2, 1)
+
+[node name="Entry" type="Marker2D" parent="Rooms/R01"]
+position = Vector2(90, 460)
+
+[node name="Objects" type="Node2D" parent="Rooms/R01"]
+y_sort_enabled = true
+
+[node name="OBJ-DNG-01-001-ENTRY" parent="Rooms/R01/Objects" instance=ExtResource("2")]
+position = Vector2(200, 200)
+display_name = "Входная печать"
+dungeon_object_id = "OBJ-DNG-01-001-ENTRY"
+important = false
+
+[node name="Spawns" type="Node2D" parent="Rooms/R01"]
+
+[node name="R02" type="Node2D" parent="Rooms"]
+metadata/kind = "fight"
+metadata/room_id = "DNG-01-001-R02"
+
+[node name="Floor" type="ColorRect" parent="Rooms/R02"]
+z_index = -1000
+offset_right = 760.0
+offset_bottom = 560.0
+color = Color(0.2,0.14,0.14, 1)
+
+[node name="Entry" type="Marker2D" parent="Rooms/R02"]
+position = Vector2(90, 460)
+
+[node name="Objects" type="Node2D" parent="Rooms/R02"]
+y_sort_enabled = true
+
+[node name="OBJ-DNG-01-001-A" parent="Rooms/R02/Objects" instance=ExtResource("2")]
+position = Vector2(200, 200)
+display_name = "Первый символ"
+dungeon_object_id = "OBJ-DNG-01-001-A"
+important = false
+
+[node name="Spawns" type="Node2D" parent="Rooms/R02"]
+
+[node name="DNG-01-001-R02-E1" type="Marker2D" parent="Rooms/R02/Spawns"]
+position = Vector2(420, 260)
+metadata/monster_scene = "res://scenes/monsters/bandit.tscn"
+metadata/overrides = {}
+metadata/enemy_id = "ENM-01-001"
+
+[node name="DNG-01-001-R02-E2" type="Marker2D" parent="Rooms/R02/Spawns"]
+position = Vector2(530, 260)
+metadata/monster_scene = "res://scenes/monsters/bandit.tscn"
+metadata/overrides = {}
+metadata/enemy_id = "ENM-01-001"
+
+[node name="DNG-01-001-R02-E3" type="Marker2D" parent="Rooms/R02/Spawns"]
+position = Vector2(640, 260)
+metadata/monster_scene = "res://scenes/monsters/wolf.tscn"
+metadata/overrides = {}
+metadata/enemy_id = "ENM-01-002"
+
+[node name="R03" type="Node2D" parent="Rooms"]
+metadata/kind = "puzzle"
+metadata/room_id = "DNG-01-001-R03"
+
+[node name="Floor" type="ColorRect" parent="Rooms/R03"]
+z_index = -1000
+offset_right = 760.0
+offset_bottom = 560.0
+color = Color(0.14,0.18,0.22, 1)
+
+[node name="Entry" type="Marker2D" parent="Rooms/R03"]
+position = Vector2(90, 460)
+
+[node name="Objects" type="Node2D" parent="Rooms/R03"]
+y_sort_enabled = true
+
+[node name="OBJ-DNG-01-001-B1" parent="Rooms/R03/Objects" instance=ExtResource("2")]
+position = Vector2(200, 200)
+display_name = "Лампада 1"
+dungeon_object_id = "OBJ-DNG-01-001-B1"
+important = false
+
+[node name="OBJ-DNG-01-001-B2" parent="Rooms/R03/Objects" instance=ExtResource("2")]
+position = Vector2(350, 320)
+display_name = "Лампада 2"
+dungeon_object_id = "OBJ-DNG-01-001-B2"
+important = false
+
+[node name="OBJ-DNG-01-001-B3" parent="Rooms/R03/Objects" instance=ExtResource("2")]
+position = Vector2(500, 200)
+display_name = "Лампада 3"
+dungeon_object_id = "OBJ-DNG-01-001-B3"
+important = false
+
+[node name="CACHE-DNG-01-001-01" parent="Rooms/R03/Objects" instance=ExtResource("2")]
+position = Vector2(650, 320)
+display_name = "Тайник"
+dungeon_object_id = "CACHE-DNG-01-001-01"
+important = false
+
+[node name="Spawns" type="Node2D" parent="Rooms/R03"]
+
+[node name="DNG-01-001-R03-E1" type="Marker2D" parent="Rooms/R03/Spawns"]
+position = Vector2(420, 260)
+metadata/monster_scene = "res://scenes/monsters/slime.tscn"
+metadata/overrides = {}
+metadata/enemy_id = "ENM-01-003"
+
+[node name="DNG-01-001-R03-E2" type="Marker2D" parent="Rooms/R03/Spawns"]
+position = Vector2(530, 260)
+metadata/monster_scene = "res://scenes/monsters/slime.tscn"
+metadata/overrides = {}
+metadata/enemy_id = "ENM-01-003"
+
+[node name="R04" type="Node2D" parent="Rooms"]
+metadata/kind = "miniboss"
+metadata/room_id = "DNG-01-001-R04"
+
+[node name="Floor" type="ColorRect" parent="Rooms/R04"]
+z_index = -1000
+offset_right = 760.0
+offset_bottom = 560.0
+color = Color(0.24,0.14,0.1, 1)
+
+[node name="Entry" type="Marker2D" parent="Rooms/R04"]
+position = Vector2(90, 460)
+
+[node name="Objects" type="Node2D" parent="Rooms/R04"]
+y_sort_enabled = true
+
+[node name="OBJ-DNG-01-001-MINI" parent="Rooms/R04/Objects" instance=ExtResource("2")]
+position = Vector2(200, 200)
+display_name = "Печать лампады"
+dungeon_object_id = "OBJ-DNG-01-001-MINI"
+important = false
+
+[node name="Spawns" type="Node2D" parent="Rooms/R04"]
+
+[node name="DNG-01-001-R04-MINI" type="Marker2D" parent="Rooms/R04/Spawns"]
+position = Vector2(420, 260)
+metadata/monster_scene = "res://scenes/monsters/wolf.tscn"
+metadata/overrides = {"max_hp": 260.0,"attack_damage": 14.0,"display_name": "Хранитель первой лампады"}
+metadata/enemy_id = "ENM-01-201"
+
+[node name="R05" type="Node2D" parent="Rooms"]
+metadata/kind = "rest"
+metadata/room_id = "DNG-01-001-R05"
+
+[node name="Floor" type="ColorRect" parent="Rooms/R05"]
+z_index = -1000
+offset_right = 760.0
+offset_bottom = 560.0
+color = Color(0.14,0.22,0.16, 1)
+
+[node name="Entry" type="Marker2D" parent="Rooms/R05"]
+position = Vector2(90, 460)
+
+[node name="Objects" type="Node2D" parent="Rooms/R05"]
+y_sort_enabled = true
+
+[node name="CP-DNG-01-001-02" parent="Rooms/R05/Objects" instance=ExtResource("2")]
+position = Vector2(200, 200)
+display_name = "Привал"
+dungeon_object_id = "CP-DNG-01-001-02"
+important = false
+
+[node name="LORE-DNG-01-001-01" parent="Rooms/R05/Objects" instance=ExtResource("2")]
+position = Vector2(350, 320)
+display_name = "Хроника"
+dungeon_object_id = "LORE-DNG-01-001-01"
+important = false
+
+[node name="Spawns" type="Node2D" parent="Rooms/R05"]
+
+[node name="R06" type="Node2D" parent="Rooms"]
+metadata/kind = "boss"
+metadata/room_id = "DNG-01-001-R06"
+
+[node name="Floor" type="ColorRect" parent="Rooms/R06"]
+z_index = -1000
+offset_right = 760.0
+offset_bottom = 560.0
+color = Color(0.26,0.1,0.14, 1)
+
+[node name="Entry" type="Marker2D" parent="Rooms/R06"]
+position = Vector2(90, 460)
+
+[node name="Objects" type="Node2D" parent="Rooms/R06"]
+y_sort_enabled = true
+
+[node name="OBJ-DNG-01-001-FINAL-1" parent="Rooms/R06/Objects" instance=ExtResource("2")]
+position = Vector2(200, 200)
+display_name = "Огонь 1"
+dungeon_object_id = "OBJ-DNG-01-001-FINAL-1"
+important = false
+
+[node name="OBJ-DNG-01-001-FINAL-2" parent="Rooms/R06/Objects" instance=ExtResource("2")]
+position = Vector2(350, 320)
+display_name = "Огонь 2"
+dungeon_object_id = "OBJ-DNG-01-001-FINAL-2"
+important = false
+
+[node name="OBJ-DNG-01-001-FINAL-3" parent="Rooms/R06/Objects" instance=ExtResource("2")]
+position = Vector2(500, 200)
+display_name = "Огонь 3"
+dungeon_object_id = "OBJ-DNG-01-001-FINAL-3"
+important = false
+
+[node name="Spawns" type="Node2D" parent="Rooms/R06"]
+
+[node name="DNG-01-001-R06-BOSS" type="Marker2D" parent="Rooms/R06/Spawns"]
+position = Vector2(420, 260)
+metadata/monster_scene = "res://scenes/monsters/bandit.tscn"
+metadata/overrides = {"max_hp": 520.0,"attack_damage": 18.0,"display_name": "Криптарий Угасшего Огня"}
+metadata/enemy_id = "ENM-01-301"
+
+[node name="R07" type="Node2D" parent="Rooms"]
+metadata/kind = "exit"
+metadata/room_id = "DNG-01-001-R07"
+
+[node name="Floor" type="ColorRect" parent="Rooms/R07"]
+z_index = -1000
+offset_right = 760.0
+offset_bottom = 560.0
+color = Color(0.18,0.18,0.12, 1)
+
+[node name="Entry" type="Marker2D" parent="Rooms/R07"]
+position = Vector2(90, 460)
+
+[node name="Objects" type="Node2D" parent="Rooms/R07"]
+y_sort_enabled = true
+
+[node name="EXIT-DNG-01-001" parent="Rooms/R07/Objects" instance=ExtResource("2")]
+position = Vector2(200, 200)
+display_name = "Выход"
+dungeon_object_id = "EXIT-DNG-01-001"
+important = false
+
+[node name="Spawns" type="Node2D" parent="Rooms/R07"]

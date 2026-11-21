@@ -18,6 +18,10 @@ const MUTATION_TYPES := {
 	"inventory.move.request": true,
 	"combat.loot.request": true,
 	"dungeon.enter.request": true,
+	"dungeon.interact.request": true,
+	"dungeon.encounter.report": true,
+	"dungeon.claim.request": true,
+	"dungeon.leave.request": true,
 }
 
 static func is_mutation(type_name: String) -> bool:

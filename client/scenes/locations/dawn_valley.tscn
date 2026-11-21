@@ -258,3 +258,9 @@ metadata/editor_layer = "manual"
 
 [node name="Generated" type="Node2D" parent="."]
 metadata/editor_layer = "generated"
+
+[node name="DungeonEntrance" parent="Gameplay" instance=ExtResource("13")]
+position = Vector2(1500, 520)
+interact_id = "POI-01-006"
+display_name = "Склеп Первого Огня"
+dungeon_entry_id = "DNG-01-001"

@@ -102,5 +102,8 @@ func _try_attach_online_session() -> void:
 	if str(net.content_build_id) != "":
 		build = str(net.content_build_id)
 	quest_manager.enable_online(net, build)
+	var dc := get_node_or_null("DungeonController")
+	if dc != null and dc.has_method("bind_net"):
+		dc.bind_net(net)
 	if inventory_ui and inventory_ui.has_method("bind_net"):
 		inventory_ui.bind_net(net)

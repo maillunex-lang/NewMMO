@@ -8,11 +8,59 @@ matching boss/miniboss. Exit 1 on any error.
 import glob
 import json
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import lint  # noqa: E402
+
+
+def check_scene(root, d, name, err):
+    """The editable client scene must mirror the registry (rooms, objects, spawns, enemies)."""
+    slug = d["dungeon_id"].lower().replace("-", "_")
+    path = os.path.join(root, "client", "scenes", "dungeon", slug + ".tscn")
+    if not os.path.exists(path):
+        err("DR_SCENE", f"{name}: client scene {os.path.relpath(path, root)} missing")
+        return
+    text = open(path, encoding="utf-8").read()
+    # node blocks: [node name="X" ... parent="Rooms/R01/Objects" ...] followed by its properties
+    blocks = re.split(r"\n(?=\[node )", text)
+    objs, spawns, rooms = {}, {}, set()
+    for b in blocks:
+        header = b.split("\n", 1)[0]
+        if not header.startswith("[node "):
+            continue
+        nm = re.search(r'name="([^"]+)"', header).group(1)
+        pm = re.search(r'parent="([^"]*)"', header)
+        parent = pm.group(1) if pm else ""
+        if parent == "Rooms":
+            rooms.add(nm)
+        om = re.search(r'dungeon_object_id = "([^"]+)"', b)
+        if om:
+            objs[om.group(1)] = parent
+        if parent.endswith("/Spawns"):
+            em = re.search(r'metadata/enemy_id = "([^"]+)"', b)
+            spawns[nm] = em.group(1) if em else None
+    want_rooms = {r["id"].split("-")[-1] for r in d["rooms"]}
+    if rooms != want_rooms:
+        err("DR_SCENE", f"{name}: scene rooms {sorted(rooms)} != registry {sorted(want_rooms)}")
+    for r in d["rooms"]:
+        rn = r["id"].split("-")[-1]
+        for o in r.get("objects", []) + r.get("optional_objects", []):
+            if objs.get(o) != f"Rooms/{rn}/Objects":
+                err("DR_SCENE", f"{name}: object {o} missing/misplaced in scene room {rn}")
+        for s in r.get("spawns", []):
+            if s["id"] not in spawns:
+                err("DR_SCENE", f"{name}: spawn {s['id']} missing in scene")
+            elif spawns[s["id"]] != s["enemy_id"]:
+                err("DR_SCENE", f"{name}: spawn {s['id']} enemy {spawns[s['id']]} != registry {s['enemy_id']}")
+    all_obj = {o for r in d["rooms"] for o in r.get("objects", []) + r.get("optional_objects", [])}
+    all_sp = {s["id"] for r in d["rooms"] for s in r.get("spawns", [])}
+    for o in set(objs) - all_obj:
+        err("DR_SCENE", f"{name}: scene object {o} not in registry")
+    for s in set(spawns) - all_sp:
+        err("DR_SCENE", f"{name}: scene spawn {s} not in registry")
 
 
 def run(root, content_dir):
@@ -77,6 +125,7 @@ def run(root, content_dir):
         cps = d.get("checkpoint_room_ids", [])
         if not cps or cps[0] != want[0] or any(c not in want for c in cps):
             err("DR_CHECKPOINT", f"{name}: checkpoints {cps}")
+        check_scene(root, d, name, err)
         pz = d.get("puzzle", {})
         if pz and any(objs.get(o) != pz.get("room") for o in pz.get("order", [])):
             err("DR_PUZZLE", f"{name}: puzzle objects are not all in {pz.get('room')}")
