@@ -9,3 +9,6 @@
 !*.example
 build/
 dist/
+.runtime/
+client/.godot/
+client/build/
