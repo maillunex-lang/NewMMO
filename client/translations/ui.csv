@@ -24,3 +24,39 @@ ui.reward_gold,золото,gold
 ui.reward_rep,репутация,reputation
 ui.objective_fmt,%s (%d/%d),%s (%d/%d)
 ui.quest_complete_prefix,✓ ,✓ 
+ui.auth.login_title,Вход,Sign in
+ui.auth.register_title,Регистрация,Register
+ui.auth.characters_title,Персонажи,Characters
+ui.auth.create_title,Новый персонаж,New character
+ui.auth.login_placeholder,Логин,Login
+ui.auth.password_placeholder,Пароль,Password
+ui.auth.remember_login,Запомнить логин,Remember login
+ui.auth.login,Войти,Sign in
+ui.auth.goto_register,Регистрация,Register
+ui.auth.register,Создать аккаунт,Create account
+ui.auth.goto_login,Ко входу,Back to sign in
+ui.auth.enter,В мир,Enter world
+ui.auth.create_character,Создать,Create
+ui.auth.logout,Выйти,Log out
+ui.auth.name_placeholder,Имя персонажа,Character name
+ui.auth.create,Создать,Create
+ui.auth.back,Назад,Back
+ui.auth.wait,Ожидание…,Please wait…
+ui.auth.register_ok,Аккаунт создан — войдите,Account created — sign in
+ui.auth.select_character,Выберите персонажа,Select a character
+ui.auth.ticket_ready,Билет готов (ожидание подключения),Ticket ready (awaiting connect)
+ui.auth.error_generic,Ошибка,Error
+ui.auth.error_classes,Нет данных классов,Class data missing
+ui.auth.error_class,Выберите класс,Select a class
+error.invalid_credentials,Неверный логин или пароль,Invalid login or password
+error.login_taken,Логин занят,Login taken
+error.rate_limited,Слишком много попыток — подождите,Too many attempts — wait
+error.limit_reached,Лимит персонажей достигнут,Character limit reached
+error.name_taken,Имя занято,Name taken
+error.bad_request,Некорректный запрос,Bad request
+error.unauthenticated,Требуется вход,Sign in required
+error.forbidden,Доступ запрещён,Forbidden
+error.not_found,Не найдено,Not found
+error.internal,Внутренняя ошибка,Internal error
+error.transport,Сеть недоступна,Network unavailable
+error.conflict,Конфликт,Conflict

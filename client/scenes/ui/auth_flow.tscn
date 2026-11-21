@@ -1,0 +1,252 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Theme" path="res://themes/lunex_hud.tres" id="1"]
+[ext_resource type="Script" path="res://scripts/ui/auth_flow_controller.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area_margins.gd" id="3"]
+
+[node name="AuthFlow" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1")
+script = ExtResource("2")
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3")
+base_margin = 24
+
+[node name="Chrome" type="Control" parent="SafeArea"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="LoginPanel" type="PanelContainer" parent="SafeArea/Chrome"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -180.0
+offset_right = 260.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="SafeArea/Chrome/LoginPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="SafeArea/Chrome/LoginPanel/VBox"]
+layout_mode = 2
+text = "Вход"
+horizontal_alignment = 1
+
+[node name="LoginEdit" type="LineEdit" parent="SafeArea/Chrome/LoginPanel/VBox"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+placeholder_text = "Логин"
+
+[node name="PasswordEdit" type="LineEdit" parent="SafeArea/Chrome/LoginPanel/VBox"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+placeholder_text = "Пароль"
+secret = true
+
+[node name="RememberLogin" type="CheckBox" parent="SafeArea/Chrome/LoginPanel/VBox"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Запомнить логин"
+
+[node name="Buttons" type="HBoxContainer" parent="SafeArea/Chrome/LoginPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="LoginBtn" type="Button" parent="SafeArea/Chrome/LoginPanel/VBox/Buttons"]
+custom_minimum_size = Vector2(140, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Войти"
+
+[node name="GotoRegisterBtn" type="Button" parent="SafeArea/Chrome/LoginPanel/VBox/Buttons"]
+custom_minimum_size = Vector2(140, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Регистрация"
+
+[node name="Status" type="Label" parent="SafeArea/Chrome/LoginPanel/VBox"]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="RegisterPanel" type="PanelContainer" parent="SafeArea/Chrome"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -160.0
+offset_right = 260.0
+offset_bottom = 160.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="SafeArea/Chrome/RegisterPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="SafeArea/Chrome/RegisterPanel/VBox"]
+layout_mode = 2
+text = "Регистрация"
+horizontal_alignment = 1
+
+[node name="LoginEdit" type="LineEdit" parent="SafeArea/Chrome/RegisterPanel/VBox"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+placeholder_text = "Логин"
+
+[node name="PasswordEdit" type="LineEdit" parent="SafeArea/Chrome/RegisterPanel/VBox"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+placeholder_text = "Пароль"
+secret = true
+
+[node name="Buttons" type="HBoxContainer" parent="SafeArea/Chrome/RegisterPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="RegisterBtn" type="Button" parent="SafeArea/Chrome/RegisterPanel/VBox/Buttons"]
+custom_minimum_size = Vector2(140, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Создать"
+
+[node name="GotoLoginBtn" type="Button" parent="SafeArea/Chrome/RegisterPanel/VBox/Buttons"]
+custom_minimum_size = Vector2(140, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Ко входу"
+
+[node name="Status" type="Label" parent="SafeArea/Chrome/RegisterPanel/VBox"]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="CharacterListPanel" type="PanelContainer" parent="SafeArea/Chrome"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -220.0
+offset_right = 320.0
+offset_bottom = 220.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="SafeArea/Chrome/CharacterListPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="SafeArea/Chrome/CharacterListPanel/VBox"]
+layout_mode = 2
+text = "Персонажи"
+horizontal_alignment = 1
+
+[node name="List" type="ItemList" parent="SafeArea/Chrome/CharacterListPanel/VBox"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Buttons" type="HBoxContainer" parent="SafeArea/Chrome/CharacterListPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="EnterBtn" type="Button" parent="SafeArea/Chrome/CharacterListPanel/VBox/Buttons"]
+custom_minimum_size = Vector2(120, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "В мир"
+
+[node name="CreateBtn" type="Button" parent="SafeArea/Chrome/CharacterListPanel/VBox/Buttons"]
+custom_minimum_size = Vector2(120, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Создать"
+
+[node name="LogoutBtn" type="Button" parent="SafeArea/Chrome/CharacterListPanel/VBox/Buttons"]
+custom_minimum_size = Vector2(120, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Выйти"
+
+[node name="Status" type="Label" parent="SafeArea/Chrome/CharacterListPanel/VBox"]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="CharacterCreatePanel" type="PanelContainer" parent="SafeArea/Chrome"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -180.0
+offset_right = 280.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="SafeArea/Chrome/CharacterCreatePanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="SafeArea/Chrome/CharacterCreatePanel/VBox"]
+layout_mode = 2
+text = "Новый персонаж"
+horizontal_alignment = 1
+
+[node name="NameEdit" type="LineEdit" parent="SafeArea/Chrome/CharacterCreatePanel/VBox"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+placeholder_text = "Имя"
+
+[node name="ClassOption" type="OptionButton" parent="SafeArea/Chrome/CharacterCreatePanel/VBox"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+
+[node name="Buttons" type="HBoxContainer" parent="SafeArea/Chrome/CharacterCreatePanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CreateBtn" type="Button" parent="SafeArea/Chrome/CharacterCreatePanel/VBox/Buttons"]
+custom_minimum_size = Vector2(140, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Создать"
+
+[node name="BackBtn" type="Button" parent="SafeArea/Chrome/CharacterCreatePanel/VBox/Buttons"]
+custom_minimum_size = Vector2(140, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Назад"
+
+[node name="Status" type="Label" parent="SafeArea/Chrome/CharacterCreatePanel/VBox"]
+layout_mode = 2
+autowrap_mode = 3
