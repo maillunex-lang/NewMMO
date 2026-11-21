@@ -239,3 +239,20 @@ func TestDeadPlayerCannotCastAndCritIsReproducible(t *testing.T) {
 		t.Fatalf("crit rate off: %d/400 (cap 35%%)", crits)
 	}
 }
+
+func TestCastPublishesStationaryEnemyDeathOnNextTick(t *testing.T) {
+	s, p, e := combatSim("CLS-01", 1, Vec{160, 100})
+	s.entities[e].HP = 20
+	s.SnapshotFor(p)
+	if _, err := s.Cast(p, "CLS-01-SK01", e); err != nil {
+		t.Fatal(err)
+	}
+	s.Step()
+	delta, _ := s.DeltaFor(p)
+	for _, view := range delta.Upsert {
+		if view.ID == e && view.HP == 0 && view.Dead {
+			return
+		}
+	}
+	t.Fatalf("delta missed the death of a stationary enemy: %+v", delta)
+}

@@ -1,12 +1,12 @@
 # Contract: dungeon engine (EX-P09 / T-036)
 
-**Owner:** director · **Version:** 2 (solo server combat in `DNG-01-001`) · Canon: `12_DUNGEONS.md` §2–§4.1, §7, §9–§10. Data: `content/dungeons/dng-01-001.json`. Protocol: `websocket-protocol.md` rev 1.8. No new dependencies.
+**Owner:** director · **Version:** 2 (solo server combat in `DNG-01-001`) · Canon: `12_DUNGEONS.md` §2–§4.1, §7, §9–§10. Data: `content/dungeons/dng-01-001.json`. Protocol: `websocket-protocol.md` rev 1.9. No new dependencies.
 
 ## 1. Scope and honest interims
 Implemented now: **solo `NORMAL`**, data-driven state machine (reused for the other 11 dungeons by adding definitions), linear doors, server-checked puzzle sequence, checkpoints, personal reward claim, first-clear, server-observed combat, reconnect (idempotent re-enter), idle expiry.
 **Not yet (recorded, not hidden):**
 - No parties/queue/ready-check (no party system yet) → `max_party=1`; `STORY_SOLO`, `VETERAN`, pity (8 dry clears), class RARE equipment drop, reward mail: deferred (equipment instances/mail do not exist).
-- The third boss phase still uses the shared combat behavior. The mini-boss mechanic remains a future slice. The owner confirmed the three final flame interactions as the clear condition for the first server-combat slice (C-DNG-001).
+- The mini-boss interaction remains optional. The owner confirmed the three final flame interactions as the clear condition for the first server-combat slice (C-DNG-001).
 
 ## 2. States (canon §3)
 Instance: `ACTIVE → BOSS_ACTIVE → COMPLETED → CLOSED`, plus `EXPIRED`, `ABANDONED`. Room: `LOCKED → AVAILABLE → IN_PROGRESS → CLEARED`. Every transition is atomic, appends `dungeon_event_log` with a monotonic `event_seq`, and never skips a step. A door opens only when the server-evaluated `clear` condition of the room holds (`objects` all interacted; `spawns_all` all non-optional spawns defeated in server combat; `puzzle` solved).
@@ -46,6 +46,12 @@ The server locks two opposite quarter circles at the start of `AB-ENM-01-301-B`.
 The server starts `AB-ENM-01-301-C` after aggro, during phase 2. Each cast marks two diagonal quadrants safe for 2.2 s and damages only players outside them on the resolution tick. The 25 s cooldown begins at cast start. One pair of regular regional enemies joins on the first cast. These temporary summons never grant loot or room progress.
 
 Both arena crystals can be broken once in the same encounter during a cast. A successful break requires the current `encounter_id`, a living player and authoritative distance at most 100 px. Breaking the second crystal interrupts the attack. The registry verifies both crystal placements against the scene. Wipes and reconnects reset the live fight, including crystals. The three flames remain required for progression.
+
+## 5.4 Last Countdown (final arena, below 35% HP)
+
+The server previews all three numbered sectors for 4 s. The first sector faces the target at the start of preparation. The remaining sectors rotate by 120° each and use the same quarter-circle range as Broken Circle. An individual warning leads each 1.1 s strike. A safe route remains open throughout the sequence, and Godot draws the exact polygons used for the server hit checks.
+
+After the third strike the boss takes 15% extra damage for 3 s. The basic attack can run during this window. The next cycle can begin after the window expires. A boss defeat or a room reset clears any pending strikes.
 
 ## 6. Acceptance
 Closed door until clear condition; wrong object in room ⇒ `INVALID_TARGET`; puzzle reset/solved; wipe → checkpoint rules; reconnect returns same state; idle expiry; replayed server outcomes never advance twice, and parallel claims never double rewards; first clear once; inventory-full claim retryable; one active instance per character; event log append-only. CI `server-db`.

@@ -1,6 +1,6 @@
 # Contract: WebSocket protocol v1 (D-003)
 
-**Owner:** director · **Version:** `protocol_version = 1`, contract rev **1.8** (EX-P09 boss sector events) · Owner approvals (2026-11-21): **`coder/websocket v1.8.15`**, **JSON text messages**.
+**Owner:** director · **Version:** `protocol_version = 1`, contract rev **1.9** (EX-P09 final-phase previews and vulnerability) · Owner approvals (2026-11-21): **`coder/websocket v1.8.15`**, **JSON text messages**.
 Basis: canon `14_CONTENT_INTEGRATION.md` §15 (event names and required fields are kept), research `docs/research/go-websocket.md`.
 Implementers (server lane: Go; client lane: Godot `WebSocketPeer`) build against this file; changes only via a director task. Machine-readable envelope: `websocket-envelope.schema.json`.
 
@@ -98,6 +98,8 @@ Inside a dungeon, `dungeon.snapshot.combat` carries a full world snapshot with a
 Phase 2 sends critical, encounter-scoped `world.event` messages. `witness_telegraph` includes `amount` in milliseconds and two `safe_areas` in the same rectangle format as world bounds. `witness_crystal` carries the broken `object_id`. `witness_end` clears the warning on resolution, interruption, or boss defeat. Crystal interactions use `dungeon.interact.request {instance_id, object_id, encounter_id}` and acknowledge with `dungeon.snapshot`.
 
 The Broken Circle sends encounter-scoped `sector_telegraph` with `amount` in milliseconds and `sectors` as arrays of ordered `{x,y}` points. The client paints those polygons directly. `sector_end` clears the warning on resolution or boss defeat. Both ride the critical `world.event` path.
+
+Last Countdown sends critical `countdown_prepare` with all three ordered `sectors` and a 4000 ms duration. Each strike is a critical `sector_telegraph` containing one polygon for 1100 ms. The final `sector_end` is followed by `boss_vulnerable` with the 3000 ms window.
 
 **Reserved, not defined in v1** (separate contracts when EX-P08/P09 start): `movement.input`, `combat.ability.request`, `combat.result`, chat. Servers must reject unknown C→S types with `command.error UNKNOWN_TYPE` (no disconnect) and clients must ignore unknown S→C types (log only).
 

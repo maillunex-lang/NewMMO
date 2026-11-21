@@ -27,6 +27,7 @@ type witnessFight struct {
 	boss       EntityID
 	def        WitnessDef
 	ability    combatdata.Ability
+	finisher   combatdata.Ability
 	add        zoneEnemy
 	deadline   uint64
 	ready      uint64
@@ -34,6 +35,7 @@ type witnessFight struct {
 	broken     map[string]bool
 	reinforced bool
 	circle     sectorCast
+	countdown  countdownCast
 }
 
 func (s *Sim) setupWitness(def WitnessDef, cat *combatdata.Catalog) error {
@@ -54,7 +56,11 @@ func (s *Sim) setupWitness(def WitnessDef, cat *combatdata.Catalog) error {
 		if ability.ID != "AB-ENM-01-301-C" || !ability.HasCoef || ability.CooldownS <= 0 {
 			return fmt.Errorf("missing phase 2 ability for %s", boss.Ref)
 		}
-		s.witness = &witnessFight{boss: id, def: def, ability: ability, add: add, broken: map[string]bool{}}
+		finisher := cat.Enemies[boss.Ref].Abilities["D"]
+		if finisher.ID != "AB-ENM-01-301-D" || !finisher.HasCoef || finisher.TelegraphS <= 0 {
+			return fmt.Errorf("missing phase 3 ability for %s", boss.Ref)
+		}
+		s.witness = &witnessFight{boss: id, def: def, ability: ability, finisher: finisher, add: add, broken: map[string]bool{}}
 		break
 	}
 	// A persisted boss defeat restores the room without a live encounter.
@@ -91,6 +97,9 @@ func (s *Sim) stepWitness(boss *Entity) bool {
 			}
 			s.endWitness()
 		}
+		return true
+	}
+	if s.stepCountdown(boss) {
 		return true
 	}
 	if boss.ai.state != stChase || !s.inWitnessPhase(boss) ||

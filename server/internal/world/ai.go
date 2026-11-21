@@ -220,7 +220,7 @@ func (s *Sim) stepEnemy(e *Entity) {
 		}
 		e.Moving = false
 		e.Facing = facing(t.Pos.X-e.Pos.X, t.Pos.Y-e.Pos.Y, e.Facing)
-		if e.def.B.HasCoef && !s.inWitnessPhase(e) && s.tick >= a.nextB {
+		if e.def.B.HasCoef && !s.inWitnessPhase(e) && !s.inCountdownPhase(e) && s.tick >= a.nextB {
 			if s.witness != nil && s.witness.boss == e.ID && e.HP*100 > e.MaxHP*70 {
 				s.startBrokenCircle(e, t)
 			} else {

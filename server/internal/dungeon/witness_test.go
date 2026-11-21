@@ -22,6 +22,7 @@ func TestWitnessEventsAndCrystalCommandsUseRoomScope(t *testing.T) {
 		Abilities: map[string]combatdata.Ability{
 			"A": {HasCoef: true, Coef: 0.1, Scale: "AP", CooldownS: 2.5},
 			"C": {ID: "AB-ENM-01-301-C", HasCoef: true, Coef: 1.8, Scale: "SP", CooldownS: 25},
+			"D": {ID: "AB-ENM-01-301-D", HasCoef: true, Coef: 1.1, Scale: "AP", TelegraphS: 4},
 		},
 	}
 	catalog.Skills["CLS-03"][0].Coef = 1.8

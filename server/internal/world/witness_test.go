@@ -22,6 +22,7 @@ func witnessFixture(t *testing.T) (*Sim, *Entity, *Entity) {
 	catalog := &combatdata.Catalog{Enemies: map[string]combatdata.Enemy{
 		"ENM-01-301": {Abilities: map[string]combatdata.Ability{
 			"C": {ID: "AB-ENM-01-301-C", HasCoef: true, Coef: 1.8, Scale: "SP", CooldownS: 25},
+			"D": {ID: "AB-ENM-01-301-D", HasCoef: true, Coef: 1.1, Scale: "AP", TelegraphS: 4},
 		}},
 		"ENM-01-001": {Name: "Bandit", Level: 1, Category: "обычный"},
 	}}
