@@ -36,7 +36,7 @@ func TestAddress(t *testing.T) {
 func TestReadyz(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	handler := NewHandler(ctx, quietLogger())
+	handler := NewHandler(ctx, quietLogger(), Application{Ready: func(context.Context) error { return nil }})
 
 	check := func(status int, ready bool) {
 		t.Helper()
@@ -163,4 +163,25 @@ func await[T any](t *testing.T, ch <-chan T) T {
 
 func quietLogger() *slog.Logger {
 	return slog.New(slog.NewJSONHandler(io.Discard, nil))
+}
+
+func TestReadyzDependsOnDatabase(t *testing.T) {
+	called := 0
+	handler := NewHandler(t.Context(), quietLogger(), Application{Ready: func(ctx context.Context) error {
+		called++
+		if _, ok := ctx.Deadline(); !ok {
+			t.Error("database readiness has no timeout")
+		}
+		return errors.New("database down")
+	}})
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/readyz", nil))
+	if response.Code != http.StatusServiceUnavailable || called != 1 {
+		t.Fatalf("readiness returned %d with %d checks", response.Code, called)
+	}
+	response = httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/healthz", nil))
+	if response.Code != http.StatusOK || called != 1 {
+		t.Fatalf("liveness returned %d with %d database checks", response.Code, called)
+	}
 }

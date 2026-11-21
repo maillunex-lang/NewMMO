@@ -22,14 +22,19 @@ func Address(getenv func(string) string) string {
 	return net.JoinHostPort("127.0.0.1", port)
 }
 
-func Run(ctx context.Context, addr string, logger *slog.Logger) error {
+type Application struct {
+	API   http.Handler
+	Ready func(context.Context) error
+}
+
+func Run(ctx context.Context, addr string, logger *slog.Logger, app Application) error {
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		return fmt.Errorf("listen: %w", err)
 	}
 
 	server := &http.Server{
-		Handler:           NewHandler(ctx, logger),
+		Handler:           NewHandler(ctx, logger, app),
 		ErrorLog:          slog.NewLogLogger(logger.Handler(), slog.LevelError),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
@@ -73,7 +78,7 @@ func serve(ctx context.Context, server *http.Server, listener net.Listener, shut
 	}
 }
 
-func NewHandler(lifetime context.Context, logger *slog.Logger) http.Handler {
+func NewHandler(lifetime context.Context, logger *slog.Logger, app Application) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -83,8 +88,16 @@ func NewHandler(lifetime context.Context, logger *slog.Logger) http.Handler {
 			"time":    time.Now().UTC().Format(time.RFC3339),
 		})
 	})
-	mux.HandleFunc("/readyz", func(w http.ResponseWriter, _ *http.Request) {
+	if app.API != nil {
+		mux.Handle("/v1/", app.API)
+	}
+	mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) {
 		ready := lifetime.Err() == nil
+		if ready && app.Ready != nil {
+			ctx, cancel := context.WithTimeout(r.Context(), time.Second)
+			defer cancel()
+			ready = app.Ready(ctx) == nil
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-store")
 		if !ready {

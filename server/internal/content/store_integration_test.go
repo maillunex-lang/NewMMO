@@ -456,7 +456,7 @@ func TestContentRegistryPostgres(t *testing.T) {
 			SET build_id = $1, previous_build_id = $2 WHERE id = 1`, staged, base)
 		assertSQLState(t, err, "55000")
 		for _, sql := range []string{
-			`TRUNCATE public.content_builds, public.content_entities, public.content_active`,
+			`TRUNCATE public.content_builds, public.content_entities, public.content_active CASCADE`,
 			`TRUNCATE public.content_entities`,
 			`TRUNCATE public.content_active`,
 			`TRUNCATE public.content_audit`,

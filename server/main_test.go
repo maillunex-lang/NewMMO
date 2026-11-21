@@ -17,7 +17,7 @@ func TestHealthz(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
-	handler := httpservice.NewHandler(ctx, logger)
+	handler := httpservice.NewHandler(ctx, logger, httpservice.Application{})
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/healthz", nil))
 
