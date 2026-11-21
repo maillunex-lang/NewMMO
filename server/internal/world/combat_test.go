@@ -28,8 +28,8 @@ func skillSet() map[string]combatdata.Skill {
 
 func combatSim(class string, level int, enemyAt Vec) (*Sim, EntityID, EntityID) {
 	s := New(testCfg())
-	c := &Combat{Skills: skillSet(), UnitsPerMeter: 32, MeleeRangeM: 2.5, RangedRangeM: 9, RangeSlackM: 1, RespawnS: 30,
-		CombatLeaveS: 5, MinContribHP: 0.10, CritChance: 0}
+	c := DefaultCombat()
+	c.Skills, c.CritChance = skillSet(), 0
 	s.SetCombat(c)
 	p := s.AddPlayer("1", "Hero", level, 1)
 	s.SetPlayerCombat(p, class, damage.PlayerStats(class, level, damage.StartAttributes, damage.Gear{}))
@@ -166,8 +166,8 @@ func TestShieldAndHeal(t *testing.T) {
 
 func TestDeathContributionLootEligibilityAndRespawn(t *testing.T) {
 	s := New(testCfg())
-	c := &Combat{Skills: skillSet(), UnitsPerMeter: 32, MeleeRangeM: 2.5, RangedRangeM: 9, RangeSlackM: 1, RespawnS: 30,
-		CombatLeaveS: 5, MinContribHP: 0.10, CritChance: 0}
+	c := DefaultCombat()
+	c.Skills, c.CritChance = skillSet(), 0
 	s.SetCombat(c)
 	mk := func(ref string) EntityID {
 		id := s.AddPlayer(ref, ref, 1, 1)

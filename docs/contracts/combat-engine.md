@@ -1,10 +1,10 @@
-# Contract: combat engine, slice 1 (EX-P09 / T-038c1)
+# Contract: combat engine (EX-P09 / T-038c1 + c2)
 
-**Owner:** director · **Version:** 1 · Basis: canon `05_CLASSES.md` §3/§8/§12, `06_ENEMIES.md` §2–§3; research `docs/research/T-038-server-combat.md`. Builds on `world-sim.md`. No new dependencies.
+**Owner:** director · **Version:** 2 (c2 adds §6) · Basis: canon `05_CLASSES.md` §3/§8/§12, `06_ENEMIES.md` §2–§3; research `docs/research/T-038-server-combat.md`. Builds on `world-sim.md`. No new dependencies.
 
 ## 1. Scope
 Player skills on the server simulation: `world.cast.request` with canon checks, damage/heal/shield, resources, cooldowns and GCD, server-observed enemy death with personal loot (closes **R-KILL** for the open world once the client casts through the server — client work is T-038d), enemy respawn.
-**Not yet (T-038c2+):** enemy AI and attacks on players (enemies are still static targets), player death/respawn, threat, statuses (slow/stun/taunt), area/cone/line/point/ground skills, buffs/mitigation/cleanse/haste/teleport/stealth etc., party/ally targeting, quest kill objectives, dungeon on the sim (T-038e).
+**Not yet (after c2):** statuses (slow/stun/taunt), area/cone/line/point/ground skills, buffs/mitigation/cleanse/haste/teleport/stealth etc., party/ally targeting, quest kill objectives, dungeon on the sim (T-038e).
 
 ## 2. Command
 `world.cast.request {skill_id, target_id?}` — a **mutation** (`request_id` required, UUID; 5/s mutation bucket). `target_id` (zone entity id) is required for single-target damage and optional/self for shield/heal; any other key ⇒ `BAD_REQUEST` (the server never accepts damage, crit, cooldown or position).
@@ -24,3 +24,11 @@ Reply `world.cast.result {skill_id, target_id?, amount, crit?, target_hp?, self{
 
 ## 5. Acceptance
 Pure sim: golden damage (34 vs armor 10), crit cap and rate, GCD, cooldown, resource cost/gain (Rage), regen/decay, range (melee vs ranged), invalid/dead/locked/unsupported/wrong-class, shield cap and expiry, heal cap, contribution threshold for loot, respawn at home with full HP, dead caster. Zone/handler: request-id idempotency, conflict on changed content, events and `self` state in the tick, asynchronous kill hook with contributor/account. WebSocket: out-of-range, strict payload, missing request id, unsupported/locked codes, walk → cast → result + damage event + cooldown state, replay and GCD/cooldown refusal.
+
+## 6. Enemy AI, threat, damage to players, player death (T-038c2)
+- **FSM (06 §3):** `IDLE → ALERT (0.5 s) → CHASE → ATTACK / CAST → … → LEASH_RETURN → IDLE`. Patrol is not modelled yet (enemies stand at their spawn). Aggro radius 7 m (melee/tank/defender/skirmish) or 9 m (ranged/caster); leash 24 m from the spawn; with no valid target the enemy waits 8 s, then returns at double speed, **heals to full and clears threat** on arrival. Chase speed = 0.9 × player speed (interim, so a player can run away). Interim ranges: melee-like 2 m, ranged/caster 8 m (C-RANGE-001).
+- **Targeting/threat:** first player inside the aggro radius becomes the target (threat 1); damage dealt adds threat (damage = threat; heal/taunt terms come with their skills); the highest-threat valid target (alive, inside the leash) is attacked; ties by entity id.
+- **Abilities (from content `ability`):** **A** = basic attack, `coef × EnemyAP` vs the player's Armor (physical) or Resist (non-physical element / `SP` scale) at the card's interval; the engine opens with A and uses **B** after half its cooldown. **B** = signature with a **telegraph** (`telegraph_s`, at least the canon 0.8 s) announced by a `telegraph` event `{caster, skill, amount=ms, aim_x, aim_y, radius}`; when it ends every living player still inside the circle is hit, so **moving out dodges it**. Ranged/caster profiles aim at the target's position at telegraph start (radius 2 m); melee-like profiles slam around themselves (reach = 2 m attack range + 2 m). `defender` B is a self shield (15% MaxHP) instead of damage (canon: never both). Elite/boss slots C/D (summons, phases) are not executed yet.
+- **Shields** (enemy or player) absorb damage before HP.
+- **Player death:** HP 0 ⇒ `death` event, caster actions return `DEAD`, movement is ignored; after 5 s (interim) the player respawns at the zone spawn with full HP and reset resource/cooldowns (no XP/gold penalty yet). Enemies drop dead players from their target lists.
+- **Not modelled:** line-of-sight, pathing around obstacles (straight-line chase), enemy group aggro ("pulling"), stagger, crowd-control caps.

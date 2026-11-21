@@ -42,6 +42,7 @@ type Enemy struct {
 	Level     int
 	Category  string // exported `threat`: обычный | элита | мини-босс | босс DNG | мировой босс
 	AI        string
+	Element   string
 	RegionID  string
 	Abilities map[string]Ability // by slot
 }
@@ -141,15 +142,16 @@ func (b *builder) add(r row) error {
 	switch r.Kind {
 	case "enemy":
 		var p struct {
-			Name   string `json:"name"`
-			Level  int    `json:"level"`
-			Threat string `json:"threat"`
-			AI     string `json:"ai"`
+			Name    string `json:"name"`
+			Level   int    `json:"level"`
+			Threat  string `json:"threat"`
+			AI      string `json:"ai"`
+			Element string `json:"element"`
 		}
 		if err := json.Unmarshal(r.Payload, &p); err != nil {
 			return err
 		}
-		e := Enemy{ID: r.ID, Name: p.Name, Level: p.Level, Category: p.Threat, AI: p.AI, Abilities: map[string]Ability{}}
+		e := Enemy{ID: r.ID, Name: p.Name, Level: p.Level, Category: p.Threat, AI: p.AI, Element: p.Element, Abilities: map[string]Ability{}}
 		if r.RegionID != nil {
 			e.RegionID = *r.RegionID
 		}

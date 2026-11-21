@@ -187,6 +187,7 @@ func NewZone(def ZoneDef, cat *combatdata.Catalog) (*Zone, error) {
 		}
 		id := z.sim.AddEnemy(e.SpawnID, e.EnemyID, en.Name, en.Level, st.MaxHP, Vec{e.X, e.Y})
 		z.sim.SetEnemyStats(id, st)
+		z.sim.SetEnemyDef(id, EnemyDef{AI: en.AI, Element: en.Element, A: en.Abilities["A"], B: en.Abilities["B"]})
 	}
 	return z, nil
 }

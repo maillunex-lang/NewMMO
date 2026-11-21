@@ -19,11 +19,29 @@ type Combat struct {
 	CombatLeaveS  float64                     // seconds without combat actions before regen switches to out-of-combat
 	MinContribHP  float64                     // fraction of enemy MaxHP a player must deal to earn loot
 	CritChance    float64                     // base crit chance (canon 5%)
+
+	// Enemy AI (06 §3 library; interim numbers where canon is silent, see C-RANGE-001)
+	EnemySpeedFrac float64 // enemy chase speed as a fraction of the player speed
+	AlertS         float64 // ALERT delay before chasing (canon 0.35–0.8 s)
+	LeashM         float64 // canon 24 m
+	LoseAggroS     float64 // canon 8 s without a valid target
+	MeleeAttackM   float64 // enemy attack range for melee-like profiles
+	RangedAttackM  float64 // enemy attack range for ranged/caster profiles
+	TelegraphMinS  float64 // canon minimum 0.8 s for normal enemies
+	BlastRadiusM   float64 // radius of the telegraphed signature attack
+	PlayerRespawnS float64 // player respawn delay (interim)
+}
+
+// DefaultCombat returns the tunables without any skill data.
+func DefaultCombat() *Combat {
+	return &Combat{Skills: map[string]combatdata.Skill{}, UnitsPerMeter: 32, MeleeRangeM: 2.5, RangedRangeM: 9,
+		RangeSlackM: 1.0, RespawnS: 30, CombatLeaveS: 5, MinContribHP: 0.10, CritChance: damage.CritBase,
+		EnemySpeedFrac: 0.9, AlertS: 0.5, LeashM: 24, LoseAggroS: 8, MeleeAttackM: 2.0, RangedAttackM: 8.0,
+		TelegraphMinS: 0.8, BlastRadiusM: 2.0, PlayerRespawnS: 5}
 }
 
 func NewCombat(cat *combatdata.Catalog) *Combat {
-	c := &Combat{Skills: map[string]combatdata.Skill{}, UnitsPerMeter: 32, MeleeRangeM: 2.5, RangedRangeM: 9,
-		RangeSlackM: 1.0, RespawnS: 30, CombatLeaveS: 5, MinContribHP: 0.10, CritChance: damage.CritBase}
+	c := DefaultCombat()
 	for _, list := range cat.Skills {
 		for _, s := range list {
 			c.Skills[s.ID] = s
@@ -52,6 +70,9 @@ type Event struct {
 	Amount int      `json:"amount,omitempty"`
 	Crit   bool     `json:"crit,omitempty"`
 	HP     int      `json:"hp"`
+	AimX   float64  `json:"aim_x,omitempty"` // telegraph centre
+	AimY   float64  `json:"aim_y,omitempty"`
+	Radius float64  `json:"radius,omitempty"` // telegraph radius (world units)
 }
 
 type Contributor struct {
@@ -159,6 +180,12 @@ func (s *Sim) stepCombat() {
 			if e.classID == "" {
 				continue
 			}
+			if e.Dead {
+				if s.tick >= e.respawnAt {
+					s.respawnPlayer(e)
+				}
+				continue
+			}
 			rule := resourceRules[e.classID]
 			in := s.tick < e.combatUntil
 			var rate float64
@@ -186,9 +213,14 @@ func (s *Sim) stepCombat() {
 				e.selfDirty = true
 			}
 		case KindEnemy:
+			if !e.Dead {
+				s.stepEnemy(e)
+			}
 			if e.Dead && s.tick >= e.respawnAt {
 				e.Dead, e.HP, e.Pos = false, e.MaxHP, e.home
 				e.contrib = map[string]int{}
+				e.ai = aiState{}
+				e.shield = 0
 				e.changed = s.tick
 				s.emit(Event{Type: "respawn", Target: e.ID, HP: e.HP})
 			}
@@ -293,9 +325,12 @@ func (s *Sim) Cast(id EntityID, skillID string, target EntityID) (CastOutcome, e
 		if crit {
 			d = int(math.Round(float64(d) * damage.CritMultPvE))
 		}
-		victim.HP = max(0, victim.HP-d)
+		absorbed := min(victim.shield, d)
+		victim.shield -= absorbed
+		victim.HP = max(0, victim.HP-(d-absorbed))
 		victim.changed = s.tick
 		victim.contrib[p.Ref] += d
+		s.addThreat(victim, p.ID, float64(d))
 		out.Target, out.Amount, out.Crit, out.TargetHP = victim.ID, d, crit, victim.HP
 		s.emit(Event{Type: "damage", Caster: id, Target: victim.ID, Skill: skillID, Amount: d, Crit: crit, HP: victim.HP})
 		if victim.HP == 0 {

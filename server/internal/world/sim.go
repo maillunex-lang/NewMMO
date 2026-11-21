@@ -70,6 +70,8 @@ type Entity struct {
 	contrib     map[string]int // enemy: damage by character ref
 	respawnAt   uint64
 	selfDirty   bool
+	ai          aiState
+	def         EnemyDef
 }
 
 // View is the wire shape of an entity.
@@ -163,7 +165,7 @@ func (s *Sim) Entity(id EntityID) (Entity, bool) {
 // Returns false when the command was ignored.
 func (s *Sim) Move(id EntityID, seq uint64, target Vec) bool {
 	e, ok := s.entities[id]
-	if !ok || e.Kind != KindPlayer || seq <= e.lastSeq || math.IsNaN(target.X) || math.IsNaN(target.Y) ||
+	if !ok || e.Kind != KindPlayer || e.Dead || seq <= e.lastSeq || math.IsNaN(target.X) || math.IsNaN(target.Y) ||
 		math.IsInf(target.X, 0) || math.IsInf(target.Y, 0) {
 		return false
 	}
