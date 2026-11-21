@@ -20,10 +20,13 @@ func _ready() -> void:
 	collision_mask = 0
 	if label:
 		label.text = tr(display_name)
-		label.visible = false  # shown only when the player is close (no permanent map clutter)
+		label.visible = false  # shown only for the closest interactable near the player (no map clutter)
+		label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.95))
+		label.add_theme_constant_override("outline_size", 6)
+		label.add_theme_font_size_override("font_size", 15)
 	add_to_group("interactables")
 
-const LABEL_SHOW_RADIUS := 150.0
+const LABEL_SHOW_RADIUS := 120.0
 var _label_timer := 0.0
 
 func _process(delta: float) -> void:
@@ -32,7 +35,21 @@ func _process(delta: float) -> void:
 		return
 	_label_timer = 0.15
 	var nodes := get_tree().get_nodes_in_group("player")
-	label.visible = not nodes.is_empty() and global_position.distance_to((nodes[0] as Node2D).global_position) < LABEL_SHOW_RADIUS
+	if nodes.is_empty():
+		label.visible = false
+		return
+	var pp: Vector2 = (nodes[0] as Node2D).global_position
+	var mine := global_position.distance_to(pp)
+	if mine >= LABEL_SHOW_RADIUS:
+		label.visible = false
+		return
+	# Only the closest interactable shows its name, so labels never pile up.
+	var closest := true
+	for other in get_tree().get_nodes_in_group("interactables"):
+		if other != self and (other as Node2D).global_position.distance_to(pp) < mine:
+			closest = false
+			break
+	label.visible = closest
 
 func on_interact(player: Node) -> void:
 	if dungeon_entry_id != "" or dungeon_object_id != "":

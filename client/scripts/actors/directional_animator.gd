@@ -25,6 +25,13 @@ func _ready() -> void:
 	_sprite.sprite_frames = _build_frames()
 	play_idle()
 
+## Swap the atlas at runtime (class-coloured hero sheets share one layout).
+func set_sheet(tex: Texture2D) -> void:
+	sheet = tex
+	if _sprite != null and tex != null:
+		_sprite.sprite_frames = _build_frames()
+		play_idle()
+
 func _build_frames() -> SpriteFrames:
 	var frames := SpriteFrames.new()
 	for di in range(8):

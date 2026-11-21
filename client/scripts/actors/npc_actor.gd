@@ -17,6 +17,9 @@ func _ready() -> void:
 	if prompt:
 		prompt.visible = false
 		prompt.text = "Talk"
+		prompt.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.95))
+		prompt.add_theme_constant_override("outline_size", 6)
+		prompt.add_theme_font_size_override("font_size", 15)
 	if animator:
 		animator.play_idle()
 

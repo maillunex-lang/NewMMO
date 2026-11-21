@@ -26,6 +26,13 @@ const ENEMY_ART := {
 	"ENM-01-003": ["res://assets/monsters/wolf_sheet.png", 96, -41.0, -100.0],
 	"ENM-01-004": ["res://assets/monsters/slime_sheet.png", 96, -34.0, -62.0],
 }
+const CLASS_SHEETS := {
+	"CLS-01": "res://assets/characters/guardian_sheet.png",
+	"CLS-02": "res://assets/characters/berserker_sheet.png",
+	"CLS-03": "res://assets/characters/mage_sheet.png",
+	"CLS-04": "res://assets/characters/ranger_sheet.png",
+	"CLS-05": "res://assets/characters/oracle_sheet.png",
+}
 const DEFAULT_ENEMY_ART := ["res://assets/monsters/goblin_sheet.png", 96, -41.0, -100.0]
 const PLAYER_ART := ["res://assets/characters/guardian_sheet.png", 96, -41.0, -100.0]
 
@@ -188,6 +195,7 @@ func _apply_you(v: Dictionary) -> void:
 	if pl == null:
 		return
 	_level = int(v.get("level", _level))
+	_apply_class_art(pl)
 	pl.max_hp = float(v.get("max_hp", pl.max_hp))
 	pl.hp = float(v.get("hp", pl.hp))
 	pl.hp_changed.emit(pl.hp, pl.max_hp)
@@ -200,6 +208,13 @@ func _apply_you(v: Dictionary) -> void:
 		pl.cancel_path()
 	elif drift > 40.0:
 		pl.global_position = pl.global_position.lerp(_server_position, 0.15)
+
+func _apply_class_art(pl: Node) -> void:
+	var path: String = CLASS_SHEETS.get(_class_id, "")
+	if path == "" or pl == null or pl.get("animator") == null or str(pl.get_meta("class_art", "")) == _class_id:
+		return
+	pl.set_meta("class_art", _class_id)
+	(pl.animator as DirectionalAnimator).set_sheet(load(path) as Texture2D)
 
 func _apply_self(s: Dictionary) -> void:
 	_self_state = s
@@ -322,18 +337,33 @@ func _hud_buttons() -> Array:
 	var box := hud.get_node_or_null("SafeArea/Chrome/Skills")
 	return box.get_children() if box != null else []
 
+func _skill_icon(skill: Dictionary) -> Texture2D:
+	var path := "res://assets/ui/skills/%s.png" % str(skill.get("id", ""))
+	return load(path) as Texture2D if ResourceLoader.exists(path) else null
+
 func _refresh_buttons() -> void:
 	var buttons := _hud_buttons()
 	for i in range(buttons.size()):
 		var b := buttons[i] as Button
 		if b == null:
 			continue
+		b.expand_icon = true
+		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		b.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+		b.add_theme_constant_override("outline_size", 6)
+		b.add_theme_font_size_override("font_size", 22)
 		if i < _skills.size():
-			b.text = str(_skills[i].get("name", "?"))
+			b.icon = _skill_icon(_skills[i])
+			b.text = "" if b.icon != null else str(_skills[i].get("name", "?"))
+			b.tooltip_text = str(_skills[i].get("name", "?"))
 			b.disabled = false
+			b.modulate = Color.WHITE
 		else:
-			b.text = "—"
+			b.icon = null
+			b.text = ""
+			b.tooltip_text = ""
 			b.disabled = true
+			b.modulate = Color(1, 1, 1, 0.5)
 
 func _refresh_cooldown_labels() -> void:
 	var cds: Dictionary = _self_state.get("cooldowns", {})
@@ -341,7 +371,9 @@ func _refresh_cooldown_labels() -> void:
 	for i in range(min(buttons.size(), _skills.size())):
 		var b := buttons[i] as Button
 		var ms := int(cds.get(str(_skills[i].get("id", "")), 0))
-		b.text = str(_skills[i].get("name", "?")) + ("\n%.1f" % (ms / 1000.0) if ms > 0 else "")
+		var label := "%.1f" % (ms / 1000.0) if ms > 0 else ""
+		b.text = label if b.icon != null else str(_skills[i].get("name", "?")) + ("\n" + label if ms > 0 else "")
+		b.modulate = Color(0.45, 0.45, 0.5) if ms > 0 else Color.WHITE
 
 func nearest_enemy(max_dist: float = CAST_REACH, use_server_positions: bool = false):
 	var pl := _get_player()

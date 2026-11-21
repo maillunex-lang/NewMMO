@@ -79,7 +79,24 @@ func navigate_to_quest() -> void:
 	if target_id == "":
 		player.show_hint("Нет активной цели задания")
 		return
-	# Several nodes can share one target id (e.g. 3 clues): go to the nearest one.
+	var found := quest_target_node()
+	if found == null:
+		player.show_hint("Цель задания не найдена на этой локации")
+		return
+	player.auto_combat = false
+	player.move_to_world(found.global_position, found)
+	var label := target_id
+	if quest_manager.has_method("npc_display_name"):
+		label = quest_manager.npc_display_name(target_id)
+	player.show_hint("Путь к цели: " + label)
+
+## The nearest node of the active quest's navigation target (several nodes can share one id, e.g. 3 clues).
+func quest_target_node() -> Node2D:
+	if player == null or quest_manager == null:
+		return null
+	var target_id := str(quest_manager.get_navigation_target())
+	if target_id == "":
+		return null
 	var found: Node2D = null
 	var best := INF
 	for npc in get_tree().get_nodes_in_group("npcs"):
@@ -94,15 +111,7 @@ func navigate_to_quest() -> void:
 			if d < best:
 				best = d
 				found = poi as Node2D
-	if found == null:
-		player.show_hint("Цель задания не найдена на этой локации")
-		return
-	player.auto_combat = false
-	player.move_to_world(found.global_position, found)
-	var label := target_id
-	if quest_manager.has_method("npc_display_name"):
-		label = quest_manager.npc_display_name(target_id)
-	player.show_hint("Путь к цели: " + label)
+	return found
 
 func _on_flow(npc_id: String, flow_ids: PackedStringArray, mode: String) -> void:
 	var tex: Texture2D = load("res://assets/ui/portrait_mira.png") if npc_id == "NPC-102" else load("res://assets/ui/portrait_player.png")

@@ -85,7 +85,7 @@ func _on_locale_selected(index: int) -> void:
 	TranslationServer.set_locale(code)
 	_apply_chrome_labels()
 	if _quest and _quest.has_method("get_tracker_text"):
-		quest_text.text = _quest.get_tracker_text()
+		quest_text.text = _quest_text(_quest.get_tracker_text())
 
 func _bind_world() -> void:
 	_player = get_tree().get_first_node_in_group("player")
@@ -108,20 +108,29 @@ func _bind_world() -> void:
 			name_label.text = str(sess.character.get("name"))
 	if _quest and _quest.has_signal("quest_updated"):
 		_quest.quest_updated.connect(_on_quest)
-		quest_text.text = _quest.get_tracker_text()
+		quest_text.text = _quest_text(_quest.get_tracker_text())
 	if _quest and _quest.has_signal("quest_completed"):
 		_quest.quest_completed.connect(func(_id, reward): _flash(tr("ui.quest_complete_prefix") + str(reward)))
 
 func _on_hp(hp: float, max_hp: float) -> void:
 	health.max_value = max_hp
 	health.value = hp
+	var t := health.get_node_or_null("HpText") as Label
+	if t:
+		t.text = "%d / %d" % [roundi(hp), roundi(max_hp)]
 
 func _on_mp(mp: float, max_mp: float) -> void:
 	mana.max_value = max_mp
 	mana.value = mp
+	var t := mana.get_node_or_null("MpText") as Label
+	if t:
+		t.text = "%d / %d" % [roundi(mp), roundi(max_mp)]
+
+func _quest_text(detail: String) -> String:
+	return detail + "\n▶ " + tr("ui.quest_tap_hint")
 
 func _on_quest(_id: String, _status: String, detail: String) -> void:
-	quest_text.text = detail
+	quest_text.text = _quest_text(detail)
 
 func _on_loot(item_id: String, amount: int) -> void:
 	_flash("+%d %s" % [amount, item_id])

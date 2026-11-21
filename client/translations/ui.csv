@@ -119,3 +119,6 @@ ui.err_wrong_class,Предмет другого класса,Item of another cl
 ui.err_level_low,Недостаточный уровень,Level too low
 ui.err_bag_full,Сумка полна,Bag is full
 world.hint.resting,Отдыхаю: восстанавливаю здоровье,Resting to recover health
+ui.death_title,Вы погибли,You died
+ui.death_sub,Возрождение через несколько секунд…,Respawning in a few seconds…
+ui.quest_tap_hint,Нажмите — автопуть к цели,Tap to auto-travel to the objective

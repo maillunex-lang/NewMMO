@@ -98,7 +98,7 @@ func _run() -> void:
 	_assert(hud.size() == 1, "HUD in group")
 	var skills_box = hud[0].get_node("SafeArea/Chrome/Skills")
 	var b0 := skills_box.get_child(0) as Button
-	_assert(b0.text.begins_with("Удар бастиона") and not b0.disabled, "slot 1 = first supported Guard skill: %s" % b0.text)
+	_assert(b0.tooltip_text.begins_with("Удар бастиона") and b0.icon != null and not b0.disabled, "slot 1 = first supported Guard skill: %s" % b0.text)
 
 	# Casting asks the server (target = nearest server enemy), never decides locally.
 	player.use_skill(0)
