@@ -20,6 +20,7 @@ collision_mask = 1
 y_sort_enabled = true
 script = ExtResource("1")
 monster_id = "bandit"
+canon_enemy_id = "ENM-01-001"
 display_name = "Valley Bandit"
 max_hp = 70.0
 move_speed = 100.0

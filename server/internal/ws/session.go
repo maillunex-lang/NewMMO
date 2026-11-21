@@ -359,6 +359,32 @@ func (s *Server) commands(p *peer, owner string, id, revision int64) {
 			if !p.enqueue("inventory.delta", m.requestID, revision, result, 0) {
 				return
 			}
+		case m.typ == "combat.loot.request":
+			if s.loot == nil {
+				if !p.sendError(m.requestID, revision, "UNKNOWN_TYPE", 0, 0) {
+					return
+				}
+				continue
+			}
+			payload := rawPayload(m.payload)
+			ctx, cancel := context.WithTimeout(p.work, s.cfg.WriteTimeout)
+			result, err := s.loot.Claim(ctx, owner, id, m.typ, m.requestID, payload)
+			cancel()
+			if err != nil {
+				if !p.sendError(m.requestID, revision, questErrorCode(err), 0, 0) {
+					return
+				}
+				continue
+			}
+			revision = revisionFromResult(result, revision)
+			if !p.enqueue("combat.loot.result", m.requestID, revision, result, 0) {
+				return
+			}
+			if delta, ok := lootInventoryDelta(result); ok {
+				if !p.enqueue("inventory.delta", m.requestID, revision, delta, 0) {
+					return
+				}
+			}
 		default:
 			if !p.sendError(m.requestID, revision, "UNKNOWN_TYPE", 0, 0) {
 				return
@@ -454,7 +480,7 @@ func questErrorCode(err error) string {
 	switch msg {
 	case "NOT_FOUND", "STATE_CONFLICT", "PREREQUISITE_NOT_MET", "LEVEL_TOO_LOW",
 		"UNSUPPORTED_EVENT", "INVALID_TARGET", "CONTENT_MISMATCH", "IDEMPOTENCY_CONFLICT",
-		"REGION_CLOSED", "BAD_REQUEST", "INTERNAL":
+		"REGION_CLOSED", "RATE_LIMITED", "BAD_REQUEST", "INTERNAL":
 		return msg
 	default:
 		if u := errors.Unwrap(err); u != nil {
@@ -487,4 +513,21 @@ func revisionFromResult(result any, fallback int64) int64 {
 		}
 		return fallback
 	}
+}
+
+// lootInventoryDelta extracts the inventory part of a combat.loot.result so the bag UI keeps using
+// the existing inventory.delta path (no second client code path for drops).
+func lootInventoryDelta(result any) (map[string]any, bool) {
+	raw, err := json.Marshal(result)
+	if err != nil {
+		return nil, false
+	}
+	var probe struct {
+		InventoryRevision int64             `json:"inventory_revision"`
+		Changes           []json.RawMessage `json:"changes"`
+	}
+	if json.Unmarshal(raw, &probe) != nil || len(probe.Changes) == 0 {
+		return nil, false
+	}
+	return map[string]any{"inventory_revision": probe.InventoryRevision, "changes": probe.Changes}, true
 }

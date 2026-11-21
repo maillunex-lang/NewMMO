@@ -187,7 +187,7 @@
 - [x] bag UI snapshot/delta (T-030) — merge `23fe4cc`
 - [x] `MAT-01-*` stacks; `ITEM-Q-*` via `character_quest_items` (QUEST_KEY)
 - [x] класс CLS-01…05 selectable (character create, T-018)
-- [ ] combat loot tables / equip UI (follow-up)  
+- [~] combat loot (T-034): server-rolled drops + ledger + client feedback on `agent/director/T-034` (CI pending); equip UI + equipment drops remain  
 **Тесты:** CT-009, CT-017 + PG inventory + ONLINE_SMOKE inventory panel  
 **Статус:** [~] bag+server inventory done; loot/equip remain
 

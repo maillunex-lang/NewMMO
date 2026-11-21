@@ -51,6 +51,11 @@ type InventoryHandler interface {
 	SnapshotInventory(ctx context.Context, accountID string, characterID int64) (any, error)
 }
 
+// LootHandler is optional EX-P08 combat loot (T-034). Nil → UNKNOWN_TYPE for combat.loot.request.
+type LootHandler interface {
+	Claim(ctx context.Context, accountID string, characterID int64, typ, requestID string, payload map[string]any) (any, error)
+}
+
 type Server struct {
 	lifetime context.Context
 	cfg      Config
@@ -58,6 +63,7 @@ type Server struct {
 	quests   QuestHandler
 	dialogue DialogueHandler
 	inv      InventoryHandler
+	loot     LootHandler
 	logger   *slog.Logger
 
 	mu         sync.Mutex
@@ -82,6 +88,8 @@ func (s *Server) SetQuests(q QuestHandler) { s.quests = q }
 func (s *Server) SetDialogue(d DialogueHandler) { s.dialogue = d }
 
 func (s *Server) SetInventory(i InventoryHandler) { s.inv = i }
+
+func (s *Server) SetLoot(l LootHandler) { s.loot = l }
 
 type admission struct {
 	attempts []time.Time

@@ -4,6 +4,8 @@ extends CharacterBody2D
 signal died(monster: Node)
 
 @export var monster_id := "slime"
+## Canon enemy id (06_ENEMIES) this stage-1 stand-in reports to the server for loot (T-034). "" = offline roll only.
+@export var canon_enemy_id := ""
 @export var display_name := "Forest Slime"
 @export var max_hp := 40.0
 @export var move_speed := 90.0
@@ -78,11 +80,14 @@ func apply_damage(amount: float, from: Node = null) -> void:
 func _die(killer: Node) -> void:
 	_alive = false
 	died.emit(self)
-	if killer and killer.has_method("add_gold"):
-		killer.add_gold(randi_range(gold_min, gold_max))
-	if killer and killer.has_method("add_loot") and randf() <= loot_chance:
-		killer.add_loot(loot_item, 1)
 	var quests := get_tree().get_first_node_in_group("quest_manager")
+	var server_loot: bool = quests != null and quests.has_method("request_loot") and quests.request_loot(canon_enemy_id)
+	if not server_loot:
+		# Offline fallback only; online the server owns the roll (loot-engine.md).
+		if killer and killer.has_method("add_gold"):
+			killer.add_gold(randi_range(gold_min, gold_max))
+		if killer and killer.has_method("add_loot") and randf() <= loot_chance:
+			killer.add_loot(loot_item, 1)
 	if quests and quests.has_method("on_monster_killed"):
 		quests.on_monster_killed(monster_id)
 	queue_free()

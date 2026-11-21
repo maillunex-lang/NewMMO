@@ -159,6 +159,15 @@ func add_loot(item_id: String, amount: int = 1) -> void:
 	inventory[item_id] = int(inventory.get(item_id, 0)) + amount
 	loot_gained.emit(item_id, amount)
 
+## T-034: apply a server-rolled drop. Gold total is authoritative; item stacks arrive via inventory.delta.
+func apply_server_loot(gold_gained: int, gold_total: int, items: Array) -> void:
+	gold = gold_total
+	if gold_gained > 0:
+		loot_gained.emit("gold", gold_gained)
+	for it in items:
+		if typeof(it) == TYPE_DICTIONARY:
+			loot_gained.emit(str(it.get("item_id", "")), int(it.get("quantity", 1)))
+
 func add_gold(amount: int) -> void:
 	gold += amount
 	loot_gained.emit("gold", amount)
