@@ -71,7 +71,16 @@
 - [ ] Отчёт validation; ERROR блокирует «publish»
 - [ ] CI job на lint content  
 **Тесты:** CT-001…CT-002 из §19  
-**Статус:** [ ]
+**Статус:** [ ] in progress / not closed
+
+### EX-CONTENT-01 — Dialogue expansion (not new quests)
+**Зависит от:** EX-P01 (lint) + owner approval of plan  
+**План:** `docs/CONTENT_EXPANSION_PLAN.md`  
+**Цель:** сохранить все 240 MQ/SQ ID; переписать `10_DIALOGUES.md` до 12–25 (MQ) / 8–15 (SQ) содержательных реплик; стадии START/PROGRESS/OBJ/TURNIN/DONE; `DIA.*` only  
+**Не делать:** новые квесты; правки механик; массовый ренейм ID; раскрытие тайны Договора до гл. IV  
+**Батчи:** pilot MQ-01-01…05 + SQ-01-001…005 → REG-01 MQ → REG-01 SQ → REG-02…  
+**Приёмка:** см. §6 плана; без штампов-заглушек; state-gated текст  
+**Статус:** [ ] plan awaiting owner approval — **не начинать полный объём без «делай»**
 
 ### EX-P02 — ID registry, crossrefs, manifest
 **Зависит от:** EX-P01  
@@ -195,6 +204,9 @@
 
 ## 6. Следующий этап (предложение)
 
-**EX-P00 закрыт.** Следующий рекомендуемый этап: **EX-P01** — content parsers + JSON Schema (MD → AST), OSS research first, без установки чужого кода до подтверждения.
+**EX-P00 закрыт.** В работе по очереди владельца:
 
-После команды владельца **«делай»** — только EX-P01 (без P02+).
+1. **EX-P01** — content parsers + JSON Schema (если ещё не закрыт).
+2. **EX-CONTENT-01** — только после утверждения `docs/CONTENT_EXPANSION_PLAN.md` (пилот MQ-01-01…05 / SQ-01-001…005).
+
+Не начинать полный объём 240 диалогов и не трогать P02+ без команды **«делай»**.

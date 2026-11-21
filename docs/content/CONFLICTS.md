@@ -6,16 +6,21 @@ Recorded by EX-P00 audit. **Do not silently pick a side in code.** Owner decides
 
 | Field | Value |
 |-------|--------|
-| Status | **OPEN** |
-| Sources | `10_DIALOGUES.md` §2 uses `DIA.<QUEST_ID>.<STAGE>.<INDEX>`; client JSON uses the same. `14_CONTENT_INTEGRATION.md` §4 table lists space `DLG-*`. `13_WORLD_EVENTS.md` cross-ref also says `DLG-*`. |
-| Impact | Parsers/schemas (EX-P01/P02) and any lint that expects `DLG-` would false-fail all real dialogue IDs. |
-| Runtime today | `client/data/dialogues/mq_01_01_to_05.json` — `DIA.*` only. |
-| Options | **A)** Treat `DIA.*` as canonical (file 10 wins); document `DLG-*` as obsolete shorthand in 13/14. **B)** Rename all dialogues to `DLG-*` (huge, needs owner approval). **C)** Accept both as aliases in schema (`DIA.*` primary, `DLG-*` redirect). |
-| Recommendation | **A or C**; do not mass-rename without approval. |
+| Status | **RESOLVED** (2026-11-21) |
+| Decision | **A** — `DIA.*` is the sole canonical dialogue ID format. Do not rename existing IDs. Mentions of `DLG-*` in `13`/`14` are **obsolete shorthand**; parsers/schemas accept `DIA.*` only (WARN if `DLG-*` appears). |
+| Sources | `10_DIALOGUES.md` §2; client JSON; owner confirmation for EX-P01 / EX-CONTENT-01. |
+| History | OPEN at EX-P00 → options A/B/C → owner chose **A**. |
 
-## Other open notes (not full conflicts yet)
+## C-GODOT-001 — Engine version pin
+
+| Field | Value |
+|-------|--------|
+| Status | **RESOLVED** (policy) / **OPEN** (upgrade work) |
+| Decision | **B** — Target Godot is **4.7.2**. **Do not upgrade the engine yet.** First verify client, plugins, export templates, and Android compatibility in a dedicated check. Current project pin remains **4.3** until that gate passes. |
+| History | Noted at EX-P00 → owner chose target 4.7.2 with deferred upgrade. |
+
+## Other open notes
 
 | ID | Note |
 |----|------|
-| C-GODOT-001 | Integration cites Godot **4.7.2**; `client/project.godot` pins **4.3**. Needs owner pin before upgrade. |
 | C-POI-001 | REG-01 stub uses gameplay POI ids (`POI-BOARD-01`, `POI-WITNESS-A`, …) not full `POI-01-NNN` registry from `03_LOCATIONS.md`. Map or alias in EX-P02. |
