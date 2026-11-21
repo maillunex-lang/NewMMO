@@ -12,6 +12,7 @@ const TIME_RE := "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d{1,3})?Z$"
 const MUTATION_TYPES := {
 	"quest.accept.request": true,
 	"quest.turnin.request": true,
+	"world.interact.request": true,
 	"dialogue.open.request": true,
 	"dialogue.choice.request": true,
 	"dungeon.enter.request": true,

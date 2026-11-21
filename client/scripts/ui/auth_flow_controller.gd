@@ -1,11 +1,13 @@
 extends Control
 ## Login / register / character select+create. Layout lives in the .tscn.
-## Emits session_ticket_ready — does NOT open a WebSocket (next task).
+## Emits session_ticket_ready; when enter_online is true, starts OnlineSession (T-023).
 
 const AuthClient = preload("res://scripts/net/auth_client.gd")
 const HttpClientTransport = preload("res://scripts/net/http_client_transport.gd")
+const OnlineSession = preload("res://scripts/net/online_session.gd")
 
 signal session_ticket_ready(ticket: String, ws_url: String, character: Dictionary)
+signal online_session_started(session: Node)
 
 @onready var panel_login: Control = $SafeArea/Chrome/LoginPanel
 @onready var panel_register: Control = $SafeArea/Chrome/RegisterPanel
@@ -43,12 +45,17 @@ signal session_ticket_ready(ticket: String, ws_url: String, character: Dictionar
 @onready var title_create: Label = $SafeArea/Chrome/CharacterCreatePanel/VBox/Title
 
 var auth: RefCounted = null
+## When true (or NEWMMO_ONLINE=1), ticket starts OnlineSession → main scene.
+var enter_online := false
 var _characters: Array = []
 var _class_ids: PackedStringArray = PackedStringArray()
 var _busy := false
+var _online_session: Node = null
 
 
 func _ready() -> void:
+	if OS.get_environment("NEWMMO_ONLINE") == "1":
+		enter_online = true
 	_ensure_auth()
 	_wire_buttons()
 	_load_classes()
@@ -287,10 +294,36 @@ func _on_enter_world() -> void:
 	var data: Dictionary = res.get("data", {})
 	var ticket: String = str(data.get("ticket", ""))
 	var ws_url: String = str(data.get("ws_url", ""))
-	# Do not print ticket. Emit for the next task to consume.
+	# Do not print ticket.
 	session_ticket_ready.emit(ticket, ws_url, character)
+	if enter_online:
+		_start_online(ticket, ws_url, character)
 	_set_status(char_status, tr("ui.auth.ticket_ready"))
 	_set_busy(false)
+
+
+func _start_online(ticket: String, ws_url: String, character: Dictionary) -> void:
+	if _online_session != null and is_instance_valid(_online_session):
+		_online_session.queue_free()
+	_online_session = OnlineSession.new()
+	_online_session.name = "OnlineSession"
+	_online_session.auth = auth
+	add_child(_online_session)
+	var err: Error = _online_session.configure_from_ticket(ticket, ws_url, character)
+	if err != OK:
+		_set_status(char_status, tr("ui.auth.error_generic"))
+		return
+	online_session_started.emit(_online_session)
+	_online_session.ready_for_gameplay.connect(_on_online_ready, CONNECT_ONE_SHOT)
+
+
+func _on_online_ready(_character: Dictionary) -> void:
+	if _online_session == null:
+		return
+	# Keep session across scene change so GameWorld can attach quest_manager.
+	var tree := get_tree()
+	_online_session.reparent(tree.root)
+	tree.change_scene_to_file("res://scenes/world/main.tscn")
 
 
 func _on_logout() -> void:

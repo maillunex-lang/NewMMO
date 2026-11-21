@@ -202,18 +202,21 @@ position = Vector2(900, 860)
 interact_id = "POI-CLUE"
 display_name = "Улика 1"
 event_type = "world_interact"
+instance_id = "POI-CLUE#1"
 
 [node name="Clue2" parent="Gameplay" instance=ExtResource("13")]
 position = Vector2(960, 900)
 interact_id = "POI-CLUE"
 display_name = "Улика 2"
 event_type = "world_interact"
+instance_id = "POI-CLUE#2"
 
 [node name="Clue3" parent="Gameplay" instance=ExtResource("13")]
 position = Vector2(1020, 880)
 interact_id = "POI-CLUE"
 display_name = "Улика 3"
 event_type = "world_interact"
+instance_id = "POI-CLUE#3"
 
 [node name="ForgeryReject" parent="Gameplay" instance=ExtResource("13")]
 position = Vector2(940, 840)

@@ -124,6 +124,12 @@ func request_quest_accept(quest_id: String, build_id: String = "") -> String:
 func request_quest_turnin(quest_id: String) -> String:
 	return send_mutation("quest.turnin.request", {"quest_id": quest_id})
 
+func request_world_interact(event: String, target_id: String, instance_id: String = "") -> String:
+	var payload := {"event": event, "target_id": target_id}
+	if instance_id != "":
+		payload["instance_id"] = instance_id
+	return send_mutation("world.interact.request", payload)
+
 func request_dialogue_open(npc_id: String, dialogue_id: String) -> String:
 	return send_mutation("dialogue.open.request", {"npc_id": npc_id, "dialogue_id": dialogue_id})
 

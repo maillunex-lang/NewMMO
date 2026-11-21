@@ -4,6 +4,7 @@ extends Area2D
 @export var interact_id := "POI"
 @export var display_name := "Объект"
 @export var event_type := "world_interact"  # world_interact | npc_interact | escort_checkpoint
+@export var instance_id := ""  # required when registry count>1 (e.g. POI-CLUE#1)
 @export var important := false
 
 @onready var label: Label = $Label
@@ -24,4 +25,7 @@ func on_interact(player: Node) -> void:
 			player.pause_automation(true)
 			# Brief pause for important story interacts; resume after event
 			player.pause_automation(false)
-		quests.report_world_event(event_type, interact_id, player)
+		if quests.has_method("report_world_event_ex"):
+			quests.report_world_event_ex(event_type, interact_id, instance_id, player)
+		else:
+			quests.report_world_event(event_type, interact_id, player)

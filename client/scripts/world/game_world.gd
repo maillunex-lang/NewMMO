@@ -12,6 +12,7 @@ func _ready() -> void:
 	var forced := str(ProjectSettings.get_setting("internationalization/locale/locale", ""))
 	if forced != "":
 		TranslationServer.set_locale(forced)
+	_try_attach_online_session()
 	if quest_manager and quest_manager.has_signal("dialogue_flow_requested"):
 		quest_manager.dialogue_flow_requested.connect(_on_flow)
 	if dialogue and dialogue.has_signal("closed"):
@@ -68,3 +69,18 @@ func _on_dialogue_action(action: String, npc_id: String) -> void:
 func _on_dialogue_closed(_npc_id: String) -> void:
 	if player and player.has_method("pause_automation"):
 		player.pause_automation(false)
+
+func _try_attach_online_session() -> void:
+	var session := get_tree().get_first_node_in_group("online_session")
+	if session == null or quest_manager == null:
+		return
+	if not session.has_method("get_net") or not session.has_method("is_online"):
+		return
+	# Attach even while AUTH/CONNECTING — enable_online wires signals; READY may arrive next frames.
+	var net = session.get_net()
+	if net == null:
+		return
+	var build := ""
+	if str(net.content_build_id) != "":
+		build = str(net.content_build_id)
+	quest_manager.enable_online(net, build)

@@ -1,0 +1,182 @@
+{
+ "_comment": "Server-side interaction registry (director contract D-002, EX-P04). NOT canon: canon names objectives and server events but not target ids. target_id values are implementation ids (client stub ids kept); canon_poi/canon_loc map each to the nearest canon place. Objectives with count>1 list distinct `instances`; the server counts distinct instance ids (R-OBJ-SPAM). Extend per quest when it becomes playable (EX-P07).",
+ "version": 1,
+ "region": "REG-01",
+ "interactables": [
+  {
+   "objective_id": "OBJ-01-01-1",
+   "quest_id": "MQ-01-01",
+   "event": "npc_interact",
+   "target_id": "NPC-802",
+   "count": 1,
+   "instances": null,
+   "canon_poi": "POI-01-001",
+   "canon_loc": "LOC-01-001",
+   "note": ""
+  },
+  {
+   "objective_id": "OBJ-01-01-2",
+   "quest_id": "MQ-01-01",
+   "event": "world_interact",
+   "target_id": "POI-BOARD-01",
+   "count": 1,
+   "instances": "board in the city square",
+   "canon_poi": "POI-01-001",
+   "canon_loc": "LOC-01-001",
+   "note": ""
+  },
+  {
+   "objective_id": "OBJ-01-01-3",
+   "quest_id": "MQ-01-01",
+   "event": "world_interact",
+   "target_id": "POI-ACCEPT-01",
+   "count": 1,
+   "instances": "accept seal",
+   "canon_poi": "POI-01-001",
+   "canon_loc": "LOC-01-001",
+   "note": ""
+  },
+  {
+   "objective_id": "OBJ-01-02-1",
+   "quest_id": "MQ-01-02",
+   "event": "npc_interact",
+   "target_id": "POI-WITNESS-A",
+   "count": 1,
+   "instances": "witness voice A (not a canon NPC)",
+   "canon_poi": "POI-01-001",
+   "canon_loc": "LOC-01-001",
+   "note": ""
+  },
+  {
+   "objective_id": "OBJ-01-02-2",
+   "quest_id": "MQ-01-02",
+   "event": "npc_interact",
+   "target_id": "POI-WITNESS-B",
+   "count": 1,
+   "instances": "witness voice B (not a canon NPC)",
+   "canon_poi": "POI-01-001",
+   "canon_loc": "LOC-01-001",
+   "note": ""
+  },
+  {
+   "objective_id": "OBJ-01-02-3",
+   "quest_id": "MQ-01-02",
+   "event": "world_interact",
+   "target_id": "POI-EVIDENCE-TABLE",
+   "count": 1,
+   "instances": null,
+   "canon_poi": "POI-01-001",
+   "canon_loc": "LOC-01-001",
+   "note": ""
+  },
+  {
+   "objective_id": "OBJ-01-03-1",
+   "quest_id": "MQ-01-03",
+   "event": "world_interact",
+   "target_id": "POI-MARKER-A",
+   "count": 1,
+   "instances": null,
+   "canon_poi": "POI-01-004",
+   "canon_loc": "LOC-01-002",
+   "note": ""
+  },
+  {
+   "objective_id": "OBJ-01-03-2",
+   "quest_id": "MQ-01-03",
+   "event": "world_interact",
+   "target_id": "POI-MARKER-B",
+   "count": 1,
+   "instances": null,
+   "canon_poi": "POI-01-004",
+   "canon_loc": "LOC-01-002",
+   "note": ""
+  },
+  {
+   "objective_id": "OBJ-01-03-3",
+   "quest_id": "MQ-01-03",
+   "event": "world_interact",
+   "target_id": "POI-MEASURE-CRYSTAL",
+   "count": 1,
+   "instances": null,
+   "canon_poi": "POI-01-004",
+   "canon_loc": "LOC-01-002",
+   "note": ""
+  },
+  {
+   "objective_id": "OBJ-01-04-1",
+   "quest_id": "MQ-01-04",
+   "event": "world_interact",
+   "target_id": "POI-RESIDENT-GROUP",
+   "count": 2,
+   "instances": [
+    "POI-RESIDENT-GROUP#1",
+    "POI-RESIDENT-GROUP#2"
+   ],
+   "canon_poi": "POI-01-002",
+   "canon_loc": "LOC-01-003",
+   "note": ""
+  },
+  {
+   "objective_id": "OBJ-01-04-2",
+   "quest_id": "MQ-01-04",
+   "event": "world_interact",
+   "target_id": "POI-STABILIZE",
+   "count": 2,
+   "instances": [
+    "POI-STABILIZE#1",
+    "POI-STABILIZE#2"
+   ],
+   "canon_poi": "POI-01-002",
+   "canon_loc": "LOC-01-003",
+   "note": ""
+  },
+  {
+   "objective_id": "OBJ-01-04-3",
+   "quest_id": "MQ-01-04",
+   "event": "escort_checkpoint",
+   "target_id": "POI-SHELTER",
+   "count": 1,
+   "instances": "escort completion checkpoint",
+   "canon_poi": "POI-01-002",
+   "canon_loc": "LOC-01-003",
+   "note": ""
+  },
+  {
+   "objective_id": "OBJ-01-05-1",
+   "quest_id": "MQ-01-05",
+   "event": "world_interact",
+   "target_id": "POI-CLUE",
+   "count": 3,
+   "instances": [
+    "POI-CLUE#1",
+    "POI-CLUE#2",
+    "POI-CLUE#3"
+   ],
+   "canon_poi": "POI-01-004",
+   "canon_loc": "LOC-01-002",
+   "note": ""
+  },
+  {
+   "objective_id": "OBJ-01-05-2",
+   "quest_id": "MQ-01-05",
+   "event": "world_interact",
+   "target_id": "POI-FORGERY-REJECT",
+   "count": 1,
+   "instances": null,
+   "canon_poi": "POI-01-004",
+   "canon_loc": "LOC-01-002",
+   "note": ""
+  },
+  {
+   "objective_id": "OBJ-01-05-3",
+   "quest_id": "MQ-01-05",
+   "event": "npc_interact",
+   "target_id": "NPC-102",
+   "count": 1,
+   "instances": null,
+   "canon_poi": "POI-01-004",
+   "canon_loc": "LOC-01-002",
+   "note": ""
+  }
+ ]
+}
