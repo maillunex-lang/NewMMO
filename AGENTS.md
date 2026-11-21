@@ -10,9 +10,11 @@ Standing instructions for Cursor agents and human collaborators working in **htt
 
 ## Canon and design authority
 
-1. Approved design lives in `docs/GDD.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/WORLD_EDITOR.md`.
-2. **`docs/content/*.md` is game canon** for story, characters, geography, quest IDs, and lore naming. Do **not** invent or rewrite those without explicit owner approval. If a content file is missing, document the gap; do not silently invent canon.
-3. If requirements conflict, prefer GDD/content canon, document the conflict, propose a safe interim, and continue independent work.
+1. **Orchestrator:** `docs/content/14_CONTENT_INTEGRATION.md` links all content specs.
+2. **Execution map:** `docs/ROADMAP_EXECUTION.md` — stage order, checkboxes, acceptance tests. After finishing a stage, mark `[x]` there with commit SHA and test notes.
+3. Approved design also lives in `docs/GDD.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/WORLD_EDITOR.md`.
+4. **`docs/content/01_*.md`…`14_*.md` is game canon.** Do **not** invent or rewrite without owner approval. Conflicts → `docs/content/CONFLICTS.md`, then wait.
+5. If requirements conflict, prefer GDD/content canon, document the conflict, propose a safe interim, and continue independent work.
 
 ## Engine and architecture invariants
 
@@ -53,6 +55,6 @@ Any location generator must:
 4. Commit and push directly to `main`; report what is done / stubbed / blocked (APK, VPS, etc.).
 5. Do not mix “docs written” with “feature shipped.”
 
-## First vertical priorities (context)
+## Execution priorities
 
-Stage order: audit → visual slice → online foundation → editor/three regions → RPG → story/PvE → MMO systems → expansion → release hardening. Do not start all stages at once.
+Follow **`docs/ROADMAP_EXECUTION.md`** (EX-P00 → EX-P13). Do not start all stages at once. Do not re-implement completed checklist items. Default next step after docs/setup work: wait for owner command **«делай»**.

@@ -21,8 +21,9 @@ Documentation: GDD-01…11 approved; GDD-12 architecture is a baseline proposal.
 ## Documentation
 
 - [Agent standing rules](AGENTS.md)
+- [Execution roadmap (AI checklist)](docs/ROADMAP_EXECUTION.md)
 - [Approved design decisions](docs/GDD.md)
-- [Content canon](docs/content/README.md)
+- [Content canon](docs/content/README.md) (start: `14_CONTENT_INTEGRATION.md`)
 - [Technical architecture and vertical slice](docs/ARCHITECTURE.md)
 - [Implementation roadmap](docs/ROADMAP.md)
 - [World editor](docs/WORLD_EDITOR.md)

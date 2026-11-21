@@ -19,6 +19,8 @@
 | 10_DIALOGUES.md | Dialogue IDs | DIA.MQ-01-01…05 + NPC greetings |
 | 11_ITEMS_LOOT.md | Items / loot / materials | Synced 2026-11-21; not in client runtime (quest evidence IDs referenced) |
 | 12_DUNGEONS.md | 12 instances | Synced 2026-11-21; DNG-01-001/002 not built |
+| 13_WORLD_EVENTS.md | 18 public events | Synced 2026-11-21; not implemented |
+| 14_CONTENT_INTEGRATION.md | Integration + P00–P13 plan | Synced 2026-11-21; drives `ROADMAP_EXECUTION.md` |
 
 ## Gaps before this iteration
 
