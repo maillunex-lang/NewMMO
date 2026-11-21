@@ -1,7 +1,8 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/dungeon/dungeon_scene.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/world/interactable.tscn" id="2"]
+[ext_resource type="Texture2D" path="res://assets/dungeon/floor_stone.png" id="30"]
 [ext_resource type="Texture2D" path="res://assets/dungeon/barrel.png" id="10"]
 [ext_resource type="Texture2D" path="res://assets/dungeon/barrelsstacked.png" id="11"]
 [ext_resource type="Texture2D" path="res://assets/dungeon/woodencrate.png" id="12"]
@@ -23,11 +24,12 @@ y_sort_enabled = true
 metadata/kind = "entrance"
 metadata/room_id = "DNG-01-001-R01"
 
-[node name="Floor" type="ColorRect" parent="Rooms/R01"]
+[node name="Floor" type="TextureRect" parent="Rooms/R01"]
 z_index = -1000
 offset_right = 760.0
 offset_bottom = 560.0
-color = Color(0.16,0.14,0.2, 1)
+texture = ExtResource("30")
+modulate = Color(0.75, 0.7, 0.95, 1)
 
 [node name="Entry" type="Marker2D" parent="Rooms/R01"]
 position = Vector2(90, 460)
@@ -47,11 +49,12 @@ important = false
 metadata/kind = "fight"
 metadata/room_id = "DNG-01-001-R02"
 
-[node name="Floor" type="ColorRect" parent="Rooms/R02"]
+[node name="Floor" type="TextureRect" parent="Rooms/R02"]
 z_index = -1000
 offset_right = 760.0
 offset_bottom = 560.0
-color = Color(0.2,0.14,0.14, 1)
+texture = ExtResource("30")
+modulate = Color(1.0, 0.8, 0.78, 1)
 
 [node name="Entry" type="Marker2D" parent="Rooms/R02"]
 position = Vector2(90, 460)
@@ -89,11 +92,12 @@ metadata/enemy_id = "ENM-01-002"
 metadata/kind = "puzzle"
 metadata/room_id = "DNG-01-001-R03"
 
-[node name="Floor" type="ColorRect" parent="Rooms/R03"]
+[node name="Floor" type="TextureRect" parent="Rooms/R03"]
 z_index = -1000
 offset_right = 760.0
 offset_bottom = 560.0
-color = Color(0.14,0.18,0.22, 1)
+texture = ExtResource("30")
+modulate = Color(0.75, 0.88, 1.0, 1)
 
 [node name="Entry" type="Marker2D" parent="Rooms/R03"]
 position = Vector2(90, 460)
@@ -143,11 +147,12 @@ metadata/enemy_id = "ENM-01-003"
 metadata/kind = "miniboss"
 metadata/room_id = "DNG-01-001-R04"
 
-[node name="Floor" type="ColorRect" parent="Rooms/R04"]
+[node name="Floor" type="TextureRect" parent="Rooms/R04"]
 z_index = -1000
 offset_right = 760.0
 offset_bottom = 560.0
-color = Color(0.24,0.14,0.1, 1)
+texture = ExtResource("30")
+modulate = Color(1.0, 0.75, 0.62, 1)
 
 [node name="Entry" type="Marker2D" parent="Rooms/R04"]
 position = Vector2(90, 460)
@@ -173,11 +178,12 @@ metadata/enemy_id = "ENM-01-201"
 metadata/kind = "rest"
 metadata/room_id = "DNG-01-001-R05"
 
-[node name="Floor" type="ColorRect" parent="Rooms/R05"]
+[node name="Floor" type="TextureRect" parent="Rooms/R05"]
 z_index = -1000
 offset_right = 760.0
 offset_bottom = 560.0
-color = Color(0.14,0.22,0.16, 1)
+texture = ExtResource("30")
+modulate = Color(0.78, 1.0, 0.82, 1)
 
 [node name="Entry" type="Marker2D" parent="Rooms/R05"]
 position = Vector2(90, 460)
@@ -203,11 +209,12 @@ important = false
 metadata/kind = "boss"
 metadata/room_id = "DNG-01-001-R06"
 
-[node name="Floor" type="ColorRect" parent="Rooms/R06"]
+[node name="Floor" type="TextureRect" parent="Rooms/R06"]
 z_index = -1000
 offset_right = 760.0
 offset_bottom = 560.0
-color = Color(0.26,0.1,0.14, 1)
+texture = ExtResource("30")
+modulate = Color(1.0, 0.6, 0.66, 1)
 
 [node name="Entry" type="Marker2D" parent="Rooms/R06"]
 position = Vector2(90, 460)
@@ -245,11 +252,12 @@ metadata/enemy_id = "ENM-01-301"
 metadata/kind = "exit"
 metadata/room_id = "DNG-01-001-R07"
 
-[node name="Floor" type="ColorRect" parent="Rooms/R07"]
+[node name="Floor" type="TextureRect" parent="Rooms/R07"]
 z_index = -1000
 offset_right = 760.0
 offset_bottom = 560.0
-color = Color(0.18,0.18,0.12, 1)
+texture = ExtResource("30")
+modulate = Color(0.95, 0.95, 0.75, 1)
 
 [node name="Entry" type="Marker2D" parent="Rooms/R07"]
 position = Vector2(90, 460)
