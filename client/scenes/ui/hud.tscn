@@ -1,0 +1,107 @@
+[gd_scene load_steps=1 format=3]
+
+[node name="HUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TopBar" type="PanelContainer" parent="."]
+layout_mode = 1
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 300.0
+offset_bottom = 90.0
+
+[node name="Stats" type="VBoxContainer" parent="TopBar"]
+layout_mode = 2
+
+[node name="Name" type="Label" parent="TopBar/Stats"]
+layout_mode = 2
+text = "Lunex MMORPG · Уровень 1"
+
+[node name="Health" type="ProgressBar" parent="TopBar/Stats"]
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="Mana" type="ProgressBar" parent="TopBar/Stats"]
+layout_mode = 2
+value = 70.0
+show_percentage = false
+
+[node name="Quest" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -310.0
+offset_top = 18.0
+offset_right = -18.0
+offset_bottom = 92.0
+grow_horizontal = 0
+
+[node name="QuestText" type="Label" parent="Quest"]
+layout_mode = 2
+text = "Пролог · Осмотреть долину"
+horizontal_alignment = 1
+
+[node name="Skills" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -390.0
+offset_top = -86.0
+offset_right = -18.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_constants/separation = 5
+
+[node name="Skill1" type="Button" parent="Skills"]
+custom_minimum_size = Vector2(55, 55)
+layout_mode = 2
+text = "1"
+
+[node name="Skill2" type="Button" parent="Skills"]
+custom_minimum_size = Vector2(55, 55)
+layout_mode = 2
+text = "2"
+
+[node name="Skill3" type="Button" parent="Skills"]
+custom_minimum_size = Vector2(55, 55)
+layout_mode = 2
+text = "3"
+
+[node name="Skill4" type="Button" parent="Skills"]
+custom_minimum_size = Vector2(55, 55)
+layout_mode = 2
+text = "4"
+
+[node name="Skill5" type="Button" parent="Skills"]
+custom_minimum_size = Vector2(55, 55)
+layout_mode = 2
+text = "5"
+
+[node name="Skill6" type="Button" parent="Skills"]
+custom_minimum_size = Vector2(55, 55)
+layout_mode = 2
+text = "6"
+
+[node name="Joystick" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 22.0
+offset_top = -120.0
+offset_right = 126.0
+offset_bottom = -16.0
+grow_vertical = 0
+text = "MOVE"

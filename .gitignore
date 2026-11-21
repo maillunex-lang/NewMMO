@@ -1,0 +1,11 @@
+.godot/
+.import/
+*.apk
+*.aab
+*.keystore
+*.jks
+.env
+.env.*
+!*.example
+build/
+dist/
