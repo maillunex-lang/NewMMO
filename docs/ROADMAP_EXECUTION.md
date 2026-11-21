@@ -158,25 +158,25 @@
 - [x] illegal option → `PREREQUISITE_NOT_MET`; wrong contact → reject — T-024
 - [~] proximity — **R-PROX deferred** (same as quests; EX-P08/P09)
 - [x] Stage-1 flows MQ-01-01…05 from `content/dialogues/flows_reg01.json` + `dialogue_line` entities — T-024
-- [~] клиент показывает серверные опции / choice (T-025)  
+- [x] клиент показывает серверные опции / choice (T-025, `222f68e`)  
 **Тесты:** CT-008, CT-014 + unit + CI `server-db` + ONLINE_SMOKE  
-**Статус:** [~] T-024 DONE (`a24e3d6`); T-025 client wiring in progress
+**Статус:** [x] **EX-P05 закрыт 2026-11-21** — T-024 + T-025; R-PROX deferred
 
 ### EX-P06 — Godot quest/dialogue UI polish (editable .tscn)
-**Зависит от:** EX-P05 (или параллельно тонкий UI после P04 с mock)  
-**Приёмка:** HUD/журнал/диалоги по Theme; landscape; без программной геометрии экранов  
+**Зависит от:** EX-P05 ✔  
+**Приёмка:** HUD/журнал/диалоги по Theme; landscape; без программной геометрии экранов; locale switcher  
 **Тесты:** ручной + headless smoke  
-**Статус:** [~] HUD/диалог + safe-area (T-004), журнал квестов + `tr()` (T-007) готовы на локальном stub; осталось: привязка к серверу (после P04/P05), переключатель локали, Godot 4.7.2 (по гейту)
+**Статус:** [~] T-004/T-007/T-015/T-025 ✔; T-026 locale switcher in review
 
 ### EX-P07 — Vertical slice REG-01 (играбельный контракт интеграции)
 **Зависит от:** EX-P04…P06  
 **Объём (не 240):**  
 - [x] 5 MQ локально (DONE-E) — **перевести на сервер**  
-- [ ] + довести MQ-01-01…05 на Go + persist  
-- [ ] + 5 SQ из `09_QUESTS_SIDE.md` (только REG-01, выбранные по канону)  
-- [ ] награды через ledger  
-**Тесты:** CT-012, CT-018 (урезанный), `mq01_smoke` против API  
-**Статус:** [~]
+- [x] MQ-01-01…05 на Go + persist (T-020…T-025)  
+- [~] + 5 SQ из `09_QUESTS_SIDE.md` (только REG-01) — SQ-01-001 engine path (T-027); 002…005 next  
+- [x] награды через ledger (T-020; SQ uses same path)  
+**Тесты:** CT-012, CT-018 (урезанный), `mq01_smoke` против API, PG SQ-01-001  
+**Статус:** [~] T-027 in review
 
 ### EX-P08 — Inventory, loot, 5 classes
 **Зависит от:** EX-P07; канон 05 + 11  
@@ -295,8 +295,8 @@
 ## Актуальный handoff для Cursor-директора (2026-11-21)
 
 - **Завершено:** EX-P00–P03, T-018 REST auth, T-019 WebSocket (PR #2), T-020 quest engine (PR #3, `4461aa7`), T-022 login UI, T-015 Godot 4.7.2; EX-CONTENT-01 pilot интегрирован.
-- **Текущий этап:** EX-P05 [~]. **Сейчас:** T-025 client dialogue wiring. **Далее:** EX-P06 UI polish → EX-P07 vertical slice.
-- **Не завершено:** live E2E against running Go server (manual/env), R-PROX (S-02), Android device measurements, EX-P06–P13. Не отмечать их `[x]` по наличию stub или документации.
+- **Текущий этап:** EX-P06 [~] + EX-P07 [~]. **Сейчас:** T-026 locale + T-027 SQ-01-001. **Далее:** SQ-01-002…005 registry + EX-P07 closeout.
+- **Не завершено:** live E2E against running Go server (manual/env), R-PROX (S-02), Android device measurements, EX-P07–P13. Не отмечать их `[x]` по наличию stub или документации.
 - **Рабочие масштабы локаций:** деревня 200×200 м, город 500×500 м, открытая зона 1000×1000 м, большая дикая 1500×1500 м, подземелье 150–400 м маршрута; источник `docs/content/03_LOCATIONS.md`, предварительно до Android-профилирования.
 - **Автономия Cursor:** может корректировать план, выдавать и принимать задачи, обновлять статусы и сливать прошедшие проверки изменения. Без согласия владельца не менять канон, игровой баланс/монетизацию, архитектурные пины, не добавлять зависимости, не развёртывать VPS и не удалять данные.
-- **Первое действие:** принять T-025; закрыть EX-P05; затем EX-P06/P07.
+- **Первое действие:** принять T-026/T-027; продолжить SQ-01-002…005.

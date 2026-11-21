@@ -179,7 +179,10 @@ func (e *Engine) Interact(ctx context.Context, accountID string, characterID int
 		return ProgressDelta{}, ErrBadRequest
 	}
 	switch event {
-	case "npc_interact", "world_interact", "escort_checkpoint":
+	case "npc_interact", "world_interact", "escort_checkpoint",
+		// EX-P07 side-quest events (same progress path; registry supplies target).
+		"inspect_object", "operate_mechanism", "npc_talk",
+		"collect_quest_evidence", "reach_trigger", "choose_option":
 	default:
 		return ProgressDelta{}, ErrUnsupportedEvent
 	}

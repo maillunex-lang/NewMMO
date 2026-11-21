@@ -28,8 +28,14 @@ func TestFlagName(t *testing.T) {
 	if FlagName("MQ-01-01", "START") != "QF-MQ-01-01-START" {
 		t.Fatal(FlagName("MQ-01-01", "START"))
 	}
-	if FlagName("SQ-01-001", "START") != "SQF-SQ-01-001-ACCEPTED" {
+	if FlagName("SQ-01-001", "START") != "SQF-01-001-ACCEPTED" {
 		t.Fatal(FlagName("SQ-01-001", "START"))
+	}
+	if FlagName("SQ-01-001", "REWARD") != "SQR-01-001-PAID" {
+		t.Fatal(FlagName("SQ-01-001", "REWARD"))
+	}
+	if FlagName("SQ-01-001", "DONE") != "SQF-01-001-DONE" {
+		t.Fatal(FlagName("SQ-01-001", "DONE"))
 	}
 }
 

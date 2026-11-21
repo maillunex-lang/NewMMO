@@ -8,10 +8,13 @@ extends Control
 @onready var auto_btn: Button = $SafeArea/Chrome/AutoCombat
 @onready var interact_btn: Button = $SafeArea/Chrome/Interact
 @onready var journal_btn: Button = $SafeArea/Chrome/JournalBtn
+@onready var locale_btn: OptionButton = $SafeArea/Chrome/LocaleBtn
 @onready var joystick: Control = $SafeArea/Chrome/Joystick
 @onready var skills: HBoxContainer = $SafeArea/Chrome/Skills
 
 @export var player_name_placeholder := "…"
+
+const LocaleSettings = preload("res://scripts/ui/locale_settings.gd")
 
 var _player: Node = null
 var _quest: Node = null
@@ -30,6 +33,8 @@ func _ready() -> void:
 		interact_btn.pressed.connect(_on_interact)
 	if journal_btn:
 		journal_btn.pressed.connect(_on_journal)
+	if locale_btn:
+		_setup_locale_btn()
 	if joystick and joystick.has_signal("direction_changed"):
 		joystick.direction_changed.connect(_on_joystick)
 	loot_log.text = ""
@@ -47,6 +52,23 @@ func _apply_chrome_labels() -> void:
 		interact_btn.text = tr("ui.talk")
 	if journal_btn:
 		journal_btn.text = tr("ui.journal")
+
+func _setup_locale_btn() -> void:
+	var current := LocaleSettings.load_locale()
+	TranslationServer.set_locale(current)
+	locale_btn.set_block_signals(true)
+	locale_btn.select(0 if current.begins_with("ru") else 1)
+	locale_btn.set_block_signals(false)
+	if not locale_btn.item_selected.is_connected(_on_locale_selected):
+		locale_btn.item_selected.connect(_on_locale_selected)
+
+func _on_locale_selected(index: int) -> void:
+	var code := "ru" if index == 0 else "en"
+	LocaleSettings.save_locale(code)
+	TranslationServer.set_locale(code)
+	_apply_chrome_labels()
+	if _quest and _quest.has_method("get_tracker_text"):
+		quest_text.text = _quest.get_tracker_text()
 
 func _bind_world() -> void:
 	_player = get_tree().get_first_node_in_group("player")

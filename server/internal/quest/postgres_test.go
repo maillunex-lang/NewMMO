@@ -217,6 +217,142 @@ func TestQuestHappyPathPostgres(t *testing.T) {
 	}
 }
 
+func TestSideQuestSQ01001Postgres(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	t.Cleanup(cancel)
+
+	if os.Getenv("NEWMMO_REQUIRE_ROLE_URLS") != "1" && os.Getenv("NEWMMO_TEST_APP_DATABASE_URL") == "" {
+		t.Skip("set NEWMMO_TEST_APP_DATABASE_URL for quest integration")
+	}
+	for _, name := range []string{"NEWMMO_TEST_DATABASE_URL", "NEWMMO_TEST_MIGRATE_DATABASE_URL", "NEWMMO_TEST_APP_DATABASE_URL"} {
+		if os.Getenv(name) == "" {
+			t.Fatalf("required quest integration setting is missing: %s", name)
+		}
+	}
+
+	migrator, err := pgxpool.New(ctx, os.Getenv("NEWMMO_TEST_MIGRATE_DATABASE_URL"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(migrator.Close)
+	pool, err := pgxpool.New(ctx, os.Getenv("NEWMMO_TEST_APP_DATABASE_URL"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(pool.Close)
+
+	cat := NewCatalog()
+	if err := cat.LoadInteractables(ResolveInteractablesPath("")); err != nil {
+		t.Fatal(err)
+	}
+	buildID, err := cat.ActiveBuildID(ctx, pool)
+	if err != nil || buildID == "" {
+		t.Fatal(err)
+	}
+	if err := cat.LoadFromDB(ctx, pool, buildID); err != nil {
+		t.Fatal(err)
+	}
+	engine := NewEngine(pool, cat, RegionConfig{})
+	store, err := auth.Open(ctx, auth.Config{DatabaseURL: os.Getenv("NEWMMO_TEST_APP_DATABASE_URL")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(store.Close)
+
+	var rnd [8]byte
+	_, _ = rand.Read(rnd[:])
+	var accountID string
+	if err := migrator.QueryRow(ctx, `INSERT INTO public.accounts (login, password_hash) VALUES ($1, 'fixture')
+		RETURNING account_id::text`, "sq_"+hex.EncodeToString(rnd[:])).Scan(&accountID); err != nil {
+		t.Fatal(err)
+	}
+	var nameBytes [10]byte
+	_, _ = rand.Read(nameBytes[:])
+	for i := range nameBytes {
+		nameBytes[i] = 'a' + nameBytes[i]%26
+	}
+	charIDStr, err := store.CreateCharacter(ctx, accountID, string(nameBytes[:]), "CLS-01")
+	if err != nil {
+		t.Fatal(err)
+	}
+	characterID, err := strconv.ParseInt(charIDStr, 10, 64)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Prereq MQ-01-03 COMPLETED (SQ-01-001 unlock).
+	if _, err := migrator.Exec(ctx, `
+		INSERT INTO public.character_quest_states
+			(character_id, quest_id, state, content_build_id, objective_progress, accepted_at, completed_at)
+		VALUES ($1, 'MQ-01-03', 'COMPLETED', $2, '{}'::jsonb, now(), now())`, characterID, buildID); err != nil {
+		t.Fatal("seed MQ-01-03:", err)
+	}
+
+	ids := []string{
+		"550e8400-e29b-41d4-a716-446655440201",
+		"550e8400-e29b-41d4-a716-446655440202",
+		"550e8400-e29b-41d4-a716-446655440203",
+		"550e8400-e29b-41d4-a716-446655440204",
+		"550e8400-e29b-41d4-a716-446655440205",
+		"550e8400-e29b-41d4-a716-446655440206",
+		"550e8400-e29b-41d4-a716-446655440207",
+	}
+	accept, err := engine.Accept(ctx, accountID, characterID, Envelope{
+		Type: "quest.accept.request", RequestID: ids[0],
+		Payload: map[string]any{"quest_id": "SQ-01-001", "content_build_id": buildID},
+	})
+	if err != nil || accept.State != "ACTIVE" {
+		t.Fatalf("accept SQ: %#v err=%v", accept, err)
+	}
+
+	steps := []struct {
+		event, target, instance string
+	}{
+		{"inspect_object", "SQA-01-001-01", "SQA-01-001-01#1"},
+		{"inspect_object", "SQA-01-001-01", "SQA-01-001-01#2"},
+		{"inspect_object", "SQA-01-001-01", "SQA-01-001-01#3"},
+		{"inspect_object", "SQA-01-001-02", ""},
+		{"operate_mechanism", "SQA-01-001-03", ""},
+	}
+	var last ProgressDelta
+	for i, step := range steps {
+		payload := map[string]any{"event": step.event, "target_id": step.target}
+		if step.instance != "" {
+			payload["instance_id"] = step.instance
+		}
+		last, err = engine.Interact(ctx, accountID, characterID, Envelope{
+			Type: "world.interact.request", RequestID: ids[i+1], Payload: payload,
+		})
+		if err != nil {
+			t.Fatalf("interact %d: %v", i, err)
+		}
+	}
+	if !last.Ready {
+		t.Fatalf("expected ready: %#v", last)
+	}
+	reward, err := engine.TurnIn(ctx, accountID, characterID, Envelope{
+		Type: "quest.turnin.request", RequestID: ids[6],
+		Payload: map[string]any{"quest_id": "SQ-01-001"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if reward.XPTotal < 110 || reward.GoldTotal < 22 {
+		t.Fatalf("reward %#v", reward)
+	}
+	var flag bool
+	if err := pool.QueryRow(ctx, `
+		SELECT (flags->>'SQF-01-001-ACCEPTED')::boolean FROM public.characters WHERE character_id=$1`,
+		characterID).Scan(&flag); err != nil || !flag {
+		t.Fatalf("ACCEPTED flag missing: %v %v", flag, err)
+	}
+	if err := pool.QueryRow(ctx, `
+		SELECT (flags->>'SQR-01-001-PAID')::boolean FROM public.characters WHERE character_id=$1`,
+		characterID).Scan(&flag); err != nil || !flag {
+		t.Fatalf("PAID flag missing: %v %v", flag, err)
+	}
+}
+
 func TestLoadRegionConfigEnv(t *testing.T) {
 	cfg := LoadRegionConfig(func(k string) string {
 		switch k {

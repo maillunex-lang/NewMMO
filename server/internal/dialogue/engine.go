@@ -291,6 +291,14 @@ func contactFor(questID string) string {
 		return "NPC-102"
 	case "MQ-01-01", "MQ-01-02", "MQ-01-05":
 		return "NPC-802"
+	case "SQ-01-001":
+		return "NPC-802"
+	case "SQ-01-002":
+		return "NPC-801"
+	case "SQ-01-003", "SQ-01-004":
+		return "NPC-102"
+	case "SQ-01-005":
+		return "NPC-906"
 	default:
 		if strings.HasPrefix(questID, "MQ-01-") {
 			return "NPC-802"

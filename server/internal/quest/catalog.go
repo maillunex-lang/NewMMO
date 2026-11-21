@@ -293,10 +293,16 @@ func FlagName(questID, suffix string) string {
 		return "QF-" + questID + "-" + suffix
 	}
 	if strings.HasPrefix(questID, "SQ-") {
-		if suffix == "START" {
-			return "SQF-" + questID + "-ACCEPTED"
+		// Canon: SQF-01-001-ACCEPTED / SQR-01-001-PAID (strip SQ- prefix).
+		num := strings.TrimPrefix(questID, "SQ-")
+		switch suffix {
+		case "START":
+			return "SQF-" + num + "-ACCEPTED"
+		case "REWARD":
+			return "SQR-" + num + "-PAID"
+		default:
+			return "SQF-" + num + "-" + suffix
 		}
-		return "SQF-" + questID + "-" + suffix
 	}
 	return questID + "-" + suffix
 }
