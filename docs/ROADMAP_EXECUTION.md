@@ -132,6 +132,7 @@
 ### EX-P04 — Go quest state machine (authoritative)
 **Зависит от:** EX-P03  
 **Заменяет** клиентский stub как источник истины (клиент остаётся UI)  
+**OSS research:** [x] T-003 `docs/research/go-websocket.md` (merge): рекомендация coder/websocket v1.8.15 (резерв gorilla v1.5.3), JSON v1 без сжатия — **ждёт OK владельца** на зависимость; затем директор публикует WS-контракт D-003  
 **Приёмка:** LOCKED→…→COMPLETED; idempotent accept/turn-in; `reward_claims` unique  
 **Тесты:** CT-010, CT-011, CT-013  
 **Статус:** [ ]
