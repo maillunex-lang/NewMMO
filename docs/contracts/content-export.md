@@ -1,6 +1,6 @@
 # Contract: content export bundle (D-001)
 
-**Owner:** director · **Version:** `schema_version = 1`, contract rev **1.1** (T-010 review applied) · **Producer:** `python3 tools/content/export.py` · **Consumer (EX-P03):** → `server/internal/content`
+**Owner:** director · **Version:** `schema_version = 1`, contract rev **1.2** (T-010 review + T-013 review applied) · **Producer:** `python3 tools/content/export.py` · **Consumer (EX-P03):** → `server/internal/content`
 Source of truth is the canon `docs/content/01…13`; the bundle is a deterministic, hash-addressed snapshot of it. Executors implement
 against this file; changes go through a director task (bump `schema_version`).
 
@@ -19,7 +19,7 @@ Same canon ⇒ byte-identical files and the same `build_id` (no timestamps insid
 ## 2. `manifest.json`
 
 The file is the canonical body: keys sorted, separators `(",",":")`, UTF-8, non-ASCII unescaped, **one line + LF**. **`build_id = manifest_sha256 = SHA-256 of the exact file bytes`**
-(canon `14` §13.2). The loader **never re-serializes** the manifest: it hashes the raw bytes, compares with `BUILD_ID`, then parses. (This removes any cross-language JSON canonicalization risk — T-010 R-12.)
+(canon `14` §13.2). The loader **never re-serializes** the manifest: it hashes the raw bytes, compares with `BUILD_ID`, then parses strictly. **Canonical form is a producer obligation** (`export.py`); the loader does **not** check canonicality — a hash-consistent, strictly valid manifest in another representation is accepted and simply yields a different `build_id` (content-addressing by exact bytes; decision on T-013 I-02, 2026-11-21). (This removes any cross-language JSON canonicalization risk — T-010 R-12.)
 `manifest_sha256`/`build_id` are therefore **not** fields inside the file.
 
 | Field | Type | Meaning |
@@ -56,7 +56,7 @@ The file is the canonical body: keys sorted, separators `(",",":")`, UTF-8, non-
 3. SHA-256 of the exact bytes of `entities.jsonl` equals `entities_sha256`; line count equals `entity_count`; per-kind counts equal `counts`.
 4. **Strict parsing (T-010 R-05):** valid UTF-8 only (no BOM); reject duplicate object keys, NaN/Infinity, non-object lines; every line has exactly the 7 keys of §3 with the right types; `id` unique; `kind ∈ counts`; lines sorted by `(kind, id)`; LF only.
 5. **Bounds:** bundle ≤ 64 MiB, `entities.jsonl` line ≤ 1 MiB, JSON nesting ≤ 16, `entity_count` ≤ 100 000; streaming read (no whole-file buffering of unbounded input).
-6. `crossrefs.json` hash matches `crossrefs_sha256`.
+6. `crossrefs.json`: hash matches `crossrefs_sha256` **and** it is strictly valid UTF-8 JSON whose top level is an object with the keys `schema`, `entities`, `unresolved`, `soft_group_ids` (size within the bundle bound). It is informational: consumers never trust it for authorization or gameplay (T-013 I-03).
 Any failure ⇒ reject with a structured error code (`db-content.md` §3), best-effort audit, active pointer untouched.
 
 ## 5. Invariants and mappings

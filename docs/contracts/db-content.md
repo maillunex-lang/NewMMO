@@ -1,6 +1,6 @@
 # Contract: PostgreSQL content registry + migrations (D-001 / EX-P03)
 
-**Owner:** director · **rev 1.1** (applies T-010 review R-01…R-13) · Adapts `14_CONTENT_INTEGRATION.md` §13.2 and §16 (reference SQL; gameplay tables come in EX-P04). Server lane writes the SQL files
+**Owner:** director · **rev 1.2** (T-010 review R-01…R-13; T-013 review I-01…I-11) · Adapts `14_CONTENT_INTEGRATION.md` §13.2 and §16 (reference SQL; gameplay tables come in EX-P04). Server lane writes the SQL files
 and Go code against this contract; the SQL below is the **required shape**, not a script to paste blindly.
 
 ## 1. Scope of EX-P03
@@ -63,7 +63,8 @@ encode(sha256(convert_to(string_agg(
 1. **Row guards (triggers):** `content_entities`: `UPDATE`/`DELETE` allowed only while the parent build is `staged`. `content_builds`: `DELETE` only while `staged`; `UPDATE` may change **only** `status`, `published_at`, `retired_at`, and **only** along the allowed transitions `staged→published`, `published→retired`, `retired→published`; never anything→`staged`; `build_id`, `manifest*`, `entity_count`, `ingest_digest`, `schema_version`, `created_at` are immutable after insert.
 2. **`TRUNCATE`** on `content_builds`, `content_entities`, `content_active`, `content_audit` is rejected by statement-level triggers (defense in depth) and not granted.
 3. **Pointer guard:** a `BEFORE UPDATE` trigger on `content_active` requires `NEW.build_id` to reference a build whose `status` is `published` (set in the same transaction before the pointer flips) and requires `build_id`/`previous_build_id` consistency (`previous_build_id` = old `build_id`); `content_audit` rows are append-only (no UPDATE/DELETE).
-4. **Roles (privileges are the real boundary; triggers are defense in depth):** `newmmo_migrator` owns the objects; `newmmo_content_publisher` has the DML needed by Stage/Publish/Rollback (used by `contentctl`/admin publish); `newmmo_app` has **`SELECT` only** on all four tables. The application role is never a table owner. DB owner/superuser remains the trusted boundary.
+4. **DB-level digest enforcement (T-013 I-01):** the `content_builds` guard trigger, on the transition `staged → published`, **recomputes the `ingest_digest` and entity count from the stored rows with the same SQL formula and rejects the transition on mismatch** — so the check holds for every writer, not only for the Go `Publish()` path.
+5. **Roles (privileges are the real boundary; triggers are defense in depth):** `newmmo_migrator` owns the objects; `newmmo_content_publisher` has the DML needed by Stage/Publish/Rollback (used by `contentctl`/admin publish); `newmmo_app` has **`SELECT` only** on all four tables. The application role is never a table owner. **Trust boundary (decision 2026-11-21):** `newmmo_content_publisher` is a **trusted operator credential** used only by `contentctl`/admin publish (never by the game runtime, never embedded in the client). It can stage and publish arbitrary content by design; the guards protect integrity (no tampering after staging, no illegal transitions, no pointer to unverified builds), they do not make the publisher an untrusted party. Limit exposure operationally (separate secret, not in the app's environment, audit review). DB owner/superuser remains the ultimate trusted boundary.
 
 ## 3. Operations
 
@@ -101,3 +102,8 @@ Clean `up → down → up` (isolated empty DB); stage the real bundle (4925 enti
 R-01 seeded singleton + `expected_current` (§2, §3) · R-02 transition/immutable-column guards, TRUNCATE triggers, roles (§2) · R-03 lock order + retries (§3) · R-04 SQL-computed `ingest_digest` over all stored columns incl. payload (§2), advisory lock, staged TTL (§3) ·
 R-05 strict parsing and bounds (`content-export.md` §4) · R-06 global-namespace invariant (`content-export.md` §5) · R-07 canon §14 mapping (`content-export.md` §5) · R-08 FK/retention rule (§3) · R-09 pointer guard (§2) ·
 R-10 text+CHECK hashes, jsonb type checks (§2); COPY-vs-INSERT left to a benchmark in T-009 · R-11 separate goose toolchain, single migration job, no Down on live data (§4) · R-12 manifest hashed as raw bytes — no cross-language canonicalization (`content-export.md` §2) · R-13 error codes + best-effort audit (§3).
+
+## 8. Review log (T-013, `docs/reviews/T-013-content-loader-review.md`)
+I-01 trust boundary documented + DB-level digest check on `staged→published` (§2 item 4, T-014) · I-02 canonical manifest is a producer obligation, loader is hash-of-raw-bytes (`content-export.md` §2) · I-03 strict `crossrefs.json` parse (`content-export.md` §4) ·
+I-04 CI `pipefail` (fixed in `ci.yml`) · I-05 CI sets `NEWMMO_REQUIRE_ROLE_URLS=1`; tests must fail on missing role URLs and assert `current_user` (T-014) · I-06 documented: input bounded at 64 MiB, whole decoded set held in memory (peak-RSS benchmark deferred) ·
+I-07 golden SQL-digest vector + delimiter/Unicode tests (T-014) · I-08 audit deadline noted (T-014) · I-09 TTL cleanup/GC deferred to EX-P04 · I-10 two-simultaneous-goose-runners step added to CI · I-11 `Status` must query the singleton independently and fail loudly if absent (T-014).

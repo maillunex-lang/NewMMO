@@ -71,6 +71,7 @@ jobs:
       NEWMMO_TEST_DATABASE_URL: postgres://newmmo_content_publisher:ci_publisher_pw@127.0.0.1:5432/newmmo_ci?sslmode=disable
       NEWMMO_TEST_APP_DATABASE_URL: postgres://newmmo_app:ci_app_pw@127.0.0.1:5432/newmmo_ci?sslmode=disable
       NEWMMO_CONTENT_EXPORT_DIR: ${{ github.workspace }}/build/content/export
+      NEWMMO_REQUIRE_ROLE_URLS: "1"   # tests must fail (not fall back) when a role URL is missing
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -92,13 +93,35 @@ jobs:
           GOOSE_DRIVER: postgres
           GOOSE_DBSTRING: ${{ env.NEWMMO_TEST_MIGRATE_DATABASE_URL }}
         run: |
+          set -euo pipefail
           goose -dir server/migrations up
           goose -dir server/migrations reset
           goose -dir server/migrations up
           goose -dir server/migrations status
+      - name: Two simultaneous goose runners must leave a consistent schema (T-010 R-11 / T-013 I-10)
+        env:
+          GOOSE_DRIVER: postgres
+          GOOSE_DBSTRING: ${{ env.NEWMMO_TEST_MIGRATE_DATABASE_URL }}
+        run: |
+          set -uo pipefail
+          goose -dir server/migrations reset
+          goose -dir server/migrations up > /tmp/goose-a.log 2>&1 & pa=$!
+          goose -dir server/migrations up > /tmp/goose-b.log 2>&1 & pb=$!
+          wait $pa; ra=$?; wait $pb; rb=$?
+          echo "runner A exit=$ra, runner B exit=$rb"; tail -n 5 /tmp/goose-a.log /tmp/goose-b.log
+          if [ $ra -ne 0 ] && [ $rb -ne 0 ]; then echo "both runners failed"; exit 1; fi
+          set -e
+          goose -dir server/migrations up            # must be a clean no-op / completion
+          n=$(psql "$NEWMMO_TEST_MIGRATE_DATABASE_URL" -Atc "select count(*) from goose_db_version where version_id > 0")
+          echo "applied migrations: $n"
+          want=$(ls server/migrations/*.sql | wc -l)
+          [ "$n" = "$want" ]
+          v=$(psql "$NEWMMO_TEST_MIGRATE_DATABASE_URL" -Atc "select count(distinct version_id) from goose_db_version where version_id > 0")
+          [ "$v" = "$want" ]
       - name: Go vet + tests with database (no skips expected in content package)
         working-directory: server
         run: |
+          set -euo pipefail
           go vet ./...
           go test ./internal/content -race -count=1 -v 2>&1 | tee /tmp/content-test.log
           if grep -E -- "--- SKIP" /tmp/content-test.log; then echo "database tests were skipped"; exit 1; fi
