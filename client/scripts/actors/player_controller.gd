@@ -29,6 +29,18 @@ var _auto_busy := false
 var inventory: Dictionary = {}  # item_id -> amount
 var gold := 0
 var online_dead := false  # T-038d: server says this character is dead (movement frozen until respawn)
+## Autopath: obstacle-aware routing for taps / quest travel. `tap_target` is always the CURRENT waypoint, so
+## the online movement intent (sent from tap_target) makes the server walk the same polyline.
+var auto_path: AutoPath = null
+var _path := PackedVector2Array()
+var _path_i := 0
+var _path_goal := Vector2.INF
+var _arrive_target: Node2D = null
+var _stuck_t := 0.0
+var _replans := 0
+const WAYPOINT_REACH := 10.0
+const ARRIVE_INTERACT_DIST := 120.0
+const REPLAN_GOAL_SHIFT := 48.0
 
 func _ready() -> void:
 	hp = max_hp
@@ -41,10 +53,48 @@ func set_joystick(dir: Vector2) -> void:
 	joystick_dir = dir
 	if dir.length() > 0.15:
 		tap_active = false  # manual override
+		cancel_path()
 
-func move_to_world(pos: Vector2) -> void:
-	tap_target = pos
+## Walk to `pos`, routing around obstacles. `interact_with` is interacted with automatically on arrival.
+## Calling it again with (almost) the same goal keeps the current route, so it is cheap to call every tick.
+func move_to_world(pos: Vector2, interact_with: Node2D = null) -> void:
+	if tap_active and _path.size() > 0 and _path_goal != Vector2.INF and pos.distance_to(_path_goal) < REPLAN_GOAL_SHIFT:
+		if interact_with != null:
+			_arrive_target = interact_with
+		return
+	_arrive_target = interact_with
+	_replans = 0
+	_plan_to(pos)
+
+func _plan_to(pos: Vector2) -> void:
+	_path_goal = pos
+	_path_i = 0
+	_stuck_t = 0.0
+	_path = auto_path.find_path(global_position, pos) if auto_path != null and auto_path.is_ready() else PackedVector2Array([pos])
+	if _path.is_empty():
+		_path_goal = Vector2.INF
+		tap_active = false
+		show_hint("Путь не найден")
+		return
+	tap_target = _path[0]
 	tap_active = true
+
+func cancel_path() -> void:
+	_path = PackedVector2Array()
+	_path_i = 0
+	_path_goal = Vector2.INF
+	_arrive_target = null
+
+func has_path() -> bool:
+	return _path.size() > 0
+
+func _finish_path() -> void:
+	var target := _arrive_target
+	cancel_path()
+	tap_active = false
+	if target != null and is_instance_valid(target) and target.has_method("on_interact") \
+			and global_position.distance_to(target.global_position) <= ARRIVE_INTERACT_DIST:
+		target.on_interact(self)
 
 func pause_automation(paused: bool) -> void:
 	automation_paused = paused
@@ -69,15 +119,27 @@ func _physics_process(delta: float) -> void:
 	if joystick_dir.length() > 0.15:
 		desired = joystick_dir
 		tap_active = false
+		cancel_path()
 	elif tap_active:
 		var to := tap_target - global_position
+		if _path.size() > 0 and to.length() < WAYPOINT_REACH:
+			_path_i += 1
+			if _path_i >= _path.size():
+				_finish_path()
+				to = Vector2.ZERO
+			else:
+				tap_target = _path[_path_i]
+				to = tap_target - global_position
 		if to.length() < 6.0:
-			tap_active = false
+			if _path.size() == 0:
+				tap_active = false
 		else:
 			desired = to.normalized()
 
+	var before := global_position
 	velocity = desired * move_speed
 	move_and_slide()
+	_check_stuck(before, desired, delta)
 
 	if desired.length() > 0.1:
 		animator.set_direction_from_vector(desired)
@@ -87,6 +149,32 @@ func _physics_process(delta: float) -> void:
 
 	if auto_combat and not automation_paused:
 		_auto_combat_tick()
+
+## Blocked by something the grid did not predict (NPC, monster): re-plan twice, then give up visibly.
+func _check_stuck(before: Vector2, desired: Vector2, delta: float) -> void:
+	if _path.size() == 0 or desired.length() < 0.1:
+		_stuck_t = 0.0
+		return
+	if global_position.distance_to(before) < move_speed * delta * 0.25:
+		_stuck_t += delta
+	else:
+		_stuck_t = 0.0
+	if _stuck_t < 0.6:
+		return
+	_stuck_t = 0.0
+	if _path_goal != Vector2.INF and global_position.distance_to(_path_goal) <= ARRIVE_INTERACT_DIST * 0.6:
+		_finish_path()  # pressed against a prop right next to the goal: close enough
+		return
+	if _replans >= 2:
+		cancel_path()
+		tap_active = false
+		show_hint("Путь заблокирован")
+		return
+	_replans += 1
+	var goal := _path_goal
+	var target := _arrive_target
+	_plan_to(goal)
+	_arrive_target = target
 
 func _auto_combat_tick() -> void:
 	var wc := get_tree().get_first_node_in_group("world_controller")
@@ -100,8 +188,7 @@ func _auto_combat_tick() -> void:
 		return
 	var dist := global_position.distance_to(target.global_position)
 	if dist > attack_range * 0.9:
-		tap_target = target.global_position
-		tap_active = true
+		move_to_world(target.global_position)
 	elif _attack_cd <= 0.0:
 		_auto_busy = true
 		await use_skill(0)

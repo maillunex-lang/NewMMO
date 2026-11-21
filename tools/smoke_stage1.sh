@@ -88,6 +88,9 @@ run_godot_capture "Map verify: Dawn Valley anchors reachable" "MAPGEN_VERIFY" --
 run_godot_capture "World client smoke" "WORLD_SMOKE_OK" -- \
   --headless --path "$ROOT/client" --script res://scripts/dev/world_smoke.gd
 
+run_godot_capture "Autopath smoke (routes around props, auto-interact)" "AUTOPATH_SMOKE_OK" -- \
+  --headless --path "$ROOT/client" --script res://scripts/dev/autopath_smoke.gd
+
 echo "== Server tests =="
 (cd "$ROOT/server" && go test ./...)
 

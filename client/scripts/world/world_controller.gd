@@ -138,6 +138,7 @@ func _reset_stream(p: Dictionary) -> void:
 			if player != null:
 				player.global_position = Vector2(float(v["x"]), float(v["y"]))
 				player.tap_active = false
+				player.cancel_path()
 		_apply_view(v)
 	_active = true
 	_waiting_snapshot = false
@@ -193,6 +194,7 @@ func _apply_you(v: Dictionary) -> void:
 	if drift > 160.0 or bool(v.get("dead", false)):
 		pl.global_position = _server_position        # respawn / correction after a long stall
 		pl.tap_active = false
+		pl.cancel_path()
 	elif drift > 40.0:
 		pl.global_position = pl.global_position.lerp(_server_position, 0.15)
 
@@ -387,14 +389,15 @@ func auto_tick() -> void:
 	var e = nearest_enemy(900.0, true)
 	if e == null:
 		pl.tap_active = false
+		pl.cancel_path()
 		return
 	var dist := _server_position.distance_to(e.target_pos)
 	var reach := maxf(65.0, _attack_reach - 35.0)
 	if dist > reach:
-		pl.tap_target = e.target_pos
-		pl.tap_active = true
+		pl.move_to_world(e.target_pos)
 		return
 	pl.tap_active = false
+	pl.cancel_path()
 	if _auto_cast_timer > 0.0:
 		return
 	var cds: Dictionary = _self_state.get("cooldowns", {})

@@ -7,6 +7,7 @@ extends Node2D
 @onready var inventory_ui: Control = $CanvasLayer/Inventory
 @onready var quest_manager: Node = $QuestManager
 @onready var camera: Camera2D = $DawnValley/Player/Camera2D
+var _autopath: AutoPath = null
 
 func _ready() -> void:
 	add_to_group("game_world")
@@ -18,6 +19,9 @@ func _ready() -> void:
 		var forced := str(ProjectSettings.get_setting("internationalization/locale/locale", ""))
 		if forced != "":
 			TranslationServer.set_locale(forced)
+	_autopath = AutoPath.new()
+	_autopath.build($DawnValley)
+	player.auto_path = _autopath
 	_try_attach_online_session()
 	if quest_manager and quest_manager.has_signal("dialogue_flow_requested"):
 		quest_manager.dialogue_flow_requested.connect(_on_flow)
@@ -89,8 +93,11 @@ func navigate_to_quest() -> void:
 		player.show_hint("Цель задания не найдена на этой локации")
 		return
 	player.auto_combat = false
-	player.move_to_world(found.global_position)
-	player.show_hint("Путь к цели: " + target_id)
+	player.move_to_world(found.global_position, found)
+	var label := target_id
+	if quest_manager.has_method("npc_display_name"):
+		label = quest_manager.npc_display_name(target_id)
+	player.show_hint("Путь к цели: " + label)
 
 func _on_flow(npc_id: String, flow_ids: PackedStringArray, mode: String) -> void:
 	var tex: Texture2D = load("res://assets/ui/portrait_mira.png") if npc_id == "NPC-102" else load("res://assets/ui/portrait_player.png")
